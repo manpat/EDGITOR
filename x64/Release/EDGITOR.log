@@ -1,50 +1,50 @@
 ﻿  main.cpp
-C:\PROJECTS\EDGITOR\FUNCTIONS.h(36,31): warning C4244: 'return': conversion from 'double' to 'float', possible loss of data
-C:\PROJECTS\EDGITOR\FUNCTIONS.h(121,23): warning C4244: '=': conversion from 'double' to 'int16_t', possible loss of data
-C:\PROJECTS\EDGITOR\FUNCTIONS.h(122,23): warning C4244: '=': conversion from 'double' to 'int16_t', possible loss of data
-C:\PROJECTS\EDGITOR\FUNCTIONS.h(123,23): warning C4244: '=': conversion from 'double' to 'int16_t', possible loss of data
-C:\PROJECTS\EDGITOR\FUNCTIONS.h(128,14): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\PROJECTS\EDGITOR\FUNCTIONS.h(129,14): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\PROJECTS\EDGITOR\FUNCTIONS.h(130,14): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\PROJECTS\EDGITOR\FUNCTIONS.h(133,57): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-C:\PROJECTS\EDGITOR\FUNCTIONS.h(135,57): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-C:\PROJECTS\EDGITOR\FUNCTIONS.h(137,57): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-C:\PROJECTS\EDGITOR\FUNCTIONS.h(139,10): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\PROJECTS\EDGITOR\FUNCTIONS.h(140,10): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\PROJECTS\EDGITOR\FUNCTIONS.h(141,10): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\PROJECTS\EDGITOR\FUNCTIONS.h(144,12): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-C:\PROJECTS\EDGITOR\FUNCTIONS.h(145,12): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-C:\PROJECTS\EDGITOR\FUNCTIONS.h(146,12): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-C:\PROJECTS\EDGITOR\FUNCTIONS.h(148,14): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\PROJECTS\EDGITOR\FUNCTIONS.h(149,14): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\PROJECTS\EDGITOR\FUNCTIONS.h(150,14): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\PROJECTS\EDGITOR\FUNCTIONS.h(152,63): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-C:\PROJECTS\EDGITOR\FUNCTIONS.h(153,41): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-C:\PROJECTS\EDGITOR\FUNCTIONS.h(154,63): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-C:\PROJECTS\EDGITOR\FUNCTIONS.h(155,41): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-C:\PROJECTS\EDGITOR\FUNCTIONS.h(156,63): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-C:\PROJECTS\EDGITOR\FUNCTIONS.h(157,41): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-C:\PROJECTS\EDGITOR\FUNCTIONS.h(159,32): warning C4244: 'argument': conversion from 'float' to 'int16_t', possible loss of data
-C:\PROJECTS\EDGITOR\FUNCTIONS.h(159,26): warning C4244: 'argument': conversion from 'float' to 'int16_t', possible loss of data
-C:\PROJECTS\EDGITOR\FUNCTIONS.h(159,18): warning C4244: 'argument': conversion from 'double' to 'int16_t', possible loss of data
-C:\PROJECTS\EDGITOR\FUNCTIONS.h(160,32): warning C4244: 'argument': conversion from 'float' to 'int16_t', possible loss of data
-C:\PROJECTS\EDGITOR\FUNCTIONS.h(160,26): warning C4244: 'argument': conversion from 'float' to 'int16_t', possible loss of data
-C:\PROJECTS\EDGITOR\FUNCTIONS.h(160,18): warning C4244: 'argument': conversion from 'double' to 'int16_t', possible loss of data
-C:\PROJECTS\EDGITOR\FUNCTIONS.h(161,32): warning C4244: 'argument': conversion from 'float' to 'int16_t', possible loss of data
-C:\PROJECTS\EDGITOR\FUNCTIONS.h(161,26): warning C4244: 'argument': conversion from 'float' to 'int16_t', possible loss of data
-C:\PROJECTS\EDGITOR\FUNCTIONS.h(161,18): warning C4244: 'argument': conversion from 'double' to 'int16_t', possible loss of data
-C:\PROJECTS\EDGITOR\FUNCTIONS.h(502,98): warning C4244: 'argument': conversion from 'float' to 'int16_t', possible loss of data
-C:\PROJECTS\EDGITOR\FUNCTIONS.h(502,92): warning C4244: 'argument': conversion from 'float' to 'int16_t', possible loss of data
-C:\PROJECTS\EDGITOR\FUNCTIONS.h(502,36): warning C4244: 'argument': conversion from 'float' to 'int16_t', possible loss of data
-C:\PROJECTS\EDGITOR\FUNCTIONS.h(503,66): warning C4244: 'argument': conversion from 'float' to 'int16_t', possible loss of data
-C:\PROJECTS\EDGITOR\FUNCTIONS.h(503,60): warning C4244: 'argument': conversion from 'float' to 'int16_t', possible loss of data
-C:\PROJECTS\EDGITOR\FUNCTIONS.h(503,36): warning C4244: 'argument': conversion from 'float' to 'int16_t', possible loss of data
-C:\PROJECTS\EDGITOR\main.cpp(113,44): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-C:\PROJECTS\EDGITOR\main.cpp(176,83): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\PROJECTS\EDGITOR\main.cpp(178,105): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\ENDESGA\Documents\GitHub\EDGITOR\FUNCTIONS.h(33,31): warning C4244: 'return': conversion from 'double' to 'float', possible loss of data
+C:\Users\ENDESGA\Documents\GitHub\EDGITOR\FUNCTIONS.h(118,23): warning C4244: '=': conversion from 'double' to 'int16_t', possible loss of data
+C:\Users\ENDESGA\Documents\GitHub\EDGITOR\FUNCTIONS.h(119,23): warning C4244: '=': conversion from 'double' to 'int16_t', possible loss of data
+C:\Users\ENDESGA\Documents\GitHub\EDGITOR\FUNCTIONS.h(120,23): warning C4244: '=': conversion from 'double' to 'int16_t', possible loss of data
+C:\Users\ENDESGA\Documents\GitHub\EDGITOR\FUNCTIONS.h(125,14): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\ENDESGA\Documents\GitHub\EDGITOR\FUNCTIONS.h(126,14): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\ENDESGA\Documents\GitHub\EDGITOR\FUNCTIONS.h(127,14): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\ENDESGA\Documents\GitHub\EDGITOR\FUNCTIONS.h(130,57): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\ENDESGA\Documents\GitHub\EDGITOR\FUNCTIONS.h(132,57): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\ENDESGA\Documents\GitHub\EDGITOR\FUNCTIONS.h(134,57): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\ENDESGA\Documents\GitHub\EDGITOR\FUNCTIONS.h(136,10): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\ENDESGA\Documents\GitHub\EDGITOR\FUNCTIONS.h(137,10): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\ENDESGA\Documents\GitHub\EDGITOR\FUNCTIONS.h(138,10): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\ENDESGA\Documents\GitHub\EDGITOR\FUNCTIONS.h(141,12): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\ENDESGA\Documents\GitHub\EDGITOR\FUNCTIONS.h(142,12): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\ENDESGA\Documents\GitHub\EDGITOR\FUNCTIONS.h(143,12): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\ENDESGA\Documents\GitHub\EDGITOR\FUNCTIONS.h(145,14): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\ENDESGA\Documents\GitHub\EDGITOR\FUNCTIONS.h(146,14): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\ENDESGA\Documents\GitHub\EDGITOR\FUNCTIONS.h(147,14): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\ENDESGA\Documents\GitHub\EDGITOR\FUNCTIONS.h(149,63): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\ENDESGA\Documents\GitHub\EDGITOR\FUNCTIONS.h(150,41): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\ENDESGA\Documents\GitHub\EDGITOR\FUNCTIONS.h(151,63): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\ENDESGA\Documents\GitHub\EDGITOR\FUNCTIONS.h(152,41): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\ENDESGA\Documents\GitHub\EDGITOR\FUNCTIONS.h(153,63): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\ENDESGA\Documents\GitHub\EDGITOR\FUNCTIONS.h(154,41): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\ENDESGA\Documents\GitHub\EDGITOR\FUNCTIONS.h(156,32): warning C4244: 'argument': conversion from 'float' to 'int16_t', possible loss of data
+C:\Users\ENDESGA\Documents\GitHub\EDGITOR\FUNCTIONS.h(156,26): warning C4244: 'argument': conversion from 'float' to 'int16_t', possible loss of data
+C:\Users\ENDESGA\Documents\GitHub\EDGITOR\FUNCTIONS.h(156,18): warning C4244: 'argument': conversion from 'double' to 'int16_t', possible loss of data
+C:\Users\ENDESGA\Documents\GitHub\EDGITOR\FUNCTIONS.h(157,32): warning C4244: 'argument': conversion from 'float' to 'int16_t', possible loss of data
+C:\Users\ENDESGA\Documents\GitHub\EDGITOR\FUNCTIONS.h(157,26): warning C4244: 'argument': conversion from 'float' to 'int16_t', possible loss of data
+C:\Users\ENDESGA\Documents\GitHub\EDGITOR\FUNCTIONS.h(157,18): warning C4244: 'argument': conversion from 'double' to 'int16_t', possible loss of data
+C:\Users\ENDESGA\Documents\GitHub\EDGITOR\FUNCTIONS.h(158,32): warning C4244: 'argument': conversion from 'float' to 'int16_t', possible loss of data
+C:\Users\ENDESGA\Documents\GitHub\EDGITOR\FUNCTIONS.h(158,26): warning C4244: 'argument': conversion from 'float' to 'int16_t', possible loss of data
+C:\Users\ENDESGA\Documents\GitHub\EDGITOR\FUNCTIONS.h(158,18): warning C4244: 'argument': conversion from 'double' to 'int16_t', possible loss of data
+C:\Users\ENDESGA\Documents\GitHub\EDGITOR\FUNCTIONS.h(499,98): warning C4244: 'argument': conversion from 'float' to 'int16_t', possible loss of data
+C:\Users\ENDESGA\Documents\GitHub\EDGITOR\FUNCTIONS.h(499,92): warning C4244: 'argument': conversion from 'float' to 'int16_t', possible loss of data
+C:\Users\ENDESGA\Documents\GitHub\EDGITOR\FUNCTIONS.h(499,36): warning C4244: 'argument': conversion from 'float' to 'int16_t', possible loss of data
+C:\Users\ENDESGA\Documents\GitHub\EDGITOR\FUNCTIONS.h(500,66): warning C4244: 'argument': conversion from 'float' to 'int16_t', possible loss of data
+C:\Users\ENDESGA\Documents\GitHub\EDGITOR\FUNCTIONS.h(500,60): warning C4244: 'argument': conversion from 'float' to 'int16_t', possible loss of data
+C:\Users\ENDESGA\Documents\GitHub\EDGITOR\FUNCTIONS.h(500,36): warning C4244: 'argument': conversion from 'float' to 'int16_t', possible loss of data
+C:\Users\ENDESGA\Documents\GitHub\EDGITOR\main.cpp(128,44): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\ENDESGA\Documents\GitHub\EDGITOR\main.cpp(196,83): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\ENDESGA\Documents\GitHub\EDGITOR\main.cpp(198,105): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
   Generating code
   1 of 279 functions ( 0.4%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
     0 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
-  EDGITOR.vcxproj -> C:\PROJECTS\EDGITOR\x64\Release\EDGITOR.exe
+  EDGITOR.vcxproj -> C:\Users\ENDESGA\Documents\GitHub\EDGITOR\x64\Release\EDGITOR.exe
