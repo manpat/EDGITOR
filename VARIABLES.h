@@ -54,7 +54,7 @@ int16_t CANVAS_MOUSE_CELL_Y = 0;
 int16_t CANVAS_PITCH = (sizeof(uint32_t) * CANVAS_W);
 
 SDL_Texture* BG_GRID_TEXTURE;
-uint_fast32_t* BG_GRID_PIXELS;
+uint32_t* BG_GRID_PIXELS;
 int16_t CELL_W = 16;
 int16_t CELL_H = 16;
 int16_t BG_GRID_W = 0;
@@ -72,7 +72,7 @@ float SRC_COLA, DEST_COLA, NEW_COLA;
 
 // LAYER
 uint16_t CURRENT_LAYER = 0;
-uint_fast32_t* CURRENT_LAYER_PTR = nullptr;
+uint32_t* CURRENT_LAYER_PTR = nullptr;
 int16_t LAYER_UPDATE = 0;
 int16_t LAYER_UPDATE_X1 = INT16_MAX;
 int16_t LAYER_UPDATE_Y1 = INT16_MAX;

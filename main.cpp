@@ -11,7 +11,7 @@
  //   MAIN LOOP   ///////////////////////////////////////////////// ///////  //////   /////    ///     //      /
 //
 
-int main(int argc, char* argv[])
+int main()
 {
 	std::cout << (UINT16_MAX) << std::endl << (INT16_MAX) << std::endl;
 
@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
 
 		SDL_GetWindowSize(WINDOW, &WINDOW_W, &WINDOW_H);
 		SDL_GetWindowPosition(WINDOW, &WINDOW_X, &WINDOW_Y);
-		SDL_SetRenderTarget(RENDERER, NULL);
+		SDL_SetRenderTarget(RENDERER, nullptr);
 		SDL_SetRenderDrawColor(RENDERER, 0, 0, 0, 255);
 		SDL_RenderClear(RENDERER);
 
@@ -171,7 +171,7 @@ int main(int argc, char* argv[])
 		float bg_h = ((CANVAS_H_ANIM / (float)CELL_H) * (float)CELL_H);
 		F_RECT = {CANVAS_X_ANIM, CANVAS_Y_ANIM, bg_w, bg_h};
 		SDL_SetTextureBlendMode(BG_GRID_TEXTURE, SDL_BLENDMODE_BLEND);
-		SDL_RenderCopyF(RENDERER, BG_GRID_TEXTURE, NULL, &F_RECT);
+		SDL_RenderCopyF(RENDERER, BG_GRID_TEXTURE, nullptr, &F_RECT);
 		SDL_SetRenderDrawColor(RENDERER, 0, 0, 0, 255);
 		F_RECT = { maxf(0,CANVAS_X_ANIM), maxf(0,CANVAS_Y_ANIM + (CANVAS_H_ANIM)), minf(WINDOW_W,bg_w), CELL_H * CANVAS_ZOOM };
 		SDL_RenderFillRectF(RENDERER, &F_RECT);
@@ -180,10 +180,10 @@ int main(int argc, char* argv[])
 		
 		F_RECT = {CANVAS_X_ANIM, CANVAS_Y_ANIM, CANVAS_W_ANIM, CANVAS_H_ANIM};
 
-		for (int16_t i = 0; i < LAYERS.size(); i++)
+		for (auto const& layer : LAYERS)
 		{
-			SDL_SetTextureBlendMode(LAYERS[i].texture, LAYERS[i].blendmode);
-			SDL_RenderCopyF(RENDERER, LAYERS[i].texture, NULL, &F_RECT);
+			SDL_SetTextureBlendMode(layer.texture, layer.blendmode);
+			SDL_RenderCopyF(RENDERER, layer.texture, nullptr, &F_RECT);
 		}
 
 		SDL_SetRenderDrawColor(RENDERER, 51, 51, 51, 255);
@@ -192,10 +192,10 @@ int main(int argc, char* argv[])
 		SDL_SetRenderDrawColor(RENDERER, 0, 0, 0, 255);
 
 		SDL_SetTextureBlendMode(BRUSH_TEXTURE, SDL_BLENDMODE_BLEND);
-		SDL_RenderCopyF(RENDERER, BRUSH_TEXTURE, NULL, &F_RECT);
+		SDL_RenderCopyF(RENDERER, BRUSH_TEXTURE, nullptr, &F_RECT);
 
 		//I_RECT = { 10, 10, 32, 360 };
-		//SDL_RenderCopy(RENDERER, UI_TEXTURE_HUEBAR, NULL, &I_RECT);
+		//SDL_RenderCopy(RENDERER, UI_TEXTURE_HUEBAR, nullptr, &I_RECT);
 
 		//FC_Draw(font, RENDERER, 36, 10, "%i\n%i\n%i\n%i", BRUSH_UPDATE, LAYER_UPDATE, CANVAS_MOUSE_X, CANVAS_MOUSE_Y);
 

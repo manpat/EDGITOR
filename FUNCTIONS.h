@@ -28,15 +28,6 @@ int16_t sign(int16_t x) {
 	return (x > 0) - (x < 0);
 }
 
-inline float random()
-{
-	return (float)(rand() % 101) * 0.01;
-}
-
-inline float random_n(int16_t n)
-{
-	return (float)(random() * n);
-}
 
 inline int16_t min(int16_t a, int16_t b)
 {
@@ -185,12 +176,12 @@ inline void layer_new(int16_t _x, int16_t _y, int16_t _a, SDL_BlendMode _b)
 
 inline bool in_canvas(const uint16_t x, const uint16_t y)
 {
-	return ((x >= 0 && x < CANVAS_W) && (y >= 0 && y < CANVAS_H));
+	return (x < CANVAS_W && y < CANVAS_H);
 }
 
 inline bool out_canvas(const uint16_t x, const uint16_t y)
 {
-	return (x < 0 || x >= CANVAS_W || y < 0 || y >= CANVAS_H);
+	return (x >= CANVAS_W || y >= CANVAS_H);
 }
 
 inline void set_pixel(const int16_t x, const int16_t y, const uint32_t c)
@@ -230,9 +221,9 @@ inline bool floodfill_check_not(const uint16_t x, const uint16_t y, const uint_f
 	return ((CURRENT_LAYER_PTR[y * CANVAS_W + x] == col) && (BRUSH_PIXELS[y * CANVAS_W + x] == col));
 }
 
-void floodfill_core(uint16_t x, uint16_t y, const uint16_t width, const uint16_t height, const uint_fast32_t col_old, const uint_fast32_t col_new);
+inline void floodfill_core(uint16_t x, uint16_t y, const uint16_t width, const uint16_t height, const uint_fast32_t col_old, const uint_fast32_t col_new);
 
-static void floodfill(uint16_t x, uint16_t y, const uint16_t width, const uint16_t height, const uint_fast32_t col_old, const uint_fast32_t col_new)
+inline void floodfill(uint16_t x, uint16_t y, const uint16_t width, const uint16_t height, const uint_fast32_t col_old, const uint_fast32_t col_new)
 {
 	while (true)
 	{
@@ -246,7 +237,7 @@ static void floodfill(uint16_t x, uint16_t y, const uint16_t width, const uint16
 	LAYER_UPDATE = 2;
 }
 
-static inline void floodfill_core(uint16_t x, uint16_t y, const uint16_t width, const uint16_t height, const uint_fast32_t col_old, const uint_fast32_t col_new)
+inline void floodfill_core(uint16_t x, uint16_t y, const uint16_t width, const uint16_t height, const uint_fast32_t col_old, const uint_fast32_t col_new)
 {
 	std::thread t1;
 	int lastRowLength = 0;
@@ -329,7 +320,7 @@ inline void INIT_RENDERER()
 		BRUSH_PIXELS[i] = 0x00000000;
 	}
 	BRUSH_TEXTURE = SDL_CreateTexture(RENDERER, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, CANVAS_W, CANVAS_H);
-	//SDL_UpdateTexture(CANVAS_TEXTURE, NULL, &CANVAS_PIXELS[0], (sizeof(uint32_t) * CANVAS_W));
+	//SDL_UpdateTexture(CANVAS_TEXTURE, nullptr, &CANVAS_PIXELS[0], (sizeof(uint32_t) * CANVAS_W));
 	
 	// DEFAULT LAYER
 	layer_new(0, 0, 255, SDL_BLENDMODE_BLEND);
@@ -350,7 +341,7 @@ inline void INIT_RENDERER()
 	// BACKGROUND GRID TEXTURE
 	BG_GRID_W = ((int16_t)ceil((double)CANVAS_W / (double)CELL_W));
 	BG_GRID_H = ((int16_t)ceil((double)CANVAS_H / (double)CELL_H));
-	BG_GRID_PIXELS = new uint_fast32_t[(size_t)(BG_GRID_W * BG_GRID_H)];
+	BG_GRID_PIXELS = new uint32_t[(size_t)(BG_GRID_W * BG_GRID_H)];
 	BG_GRID_TEXTURE = SDL_CreateTexture(RENDERER, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, BG_GRID_W, BG_GRID_H);
 	for (int i = 0; i < BG_GRID_W; i++)
 	{
@@ -360,7 +351,7 @@ inline void INIT_RENDERER()
 		}
 	}
 	SDL_SetTextureBlendMode(BG_GRID_TEXTURE, SDL_BLENDMODE_NONE);
-	SDL_UpdateTexture(BG_GRID_TEXTURE, NULL, BG_GRID_PIXELS, BG_GRID_W * sizeof(uint_fast32_t));
+	SDL_UpdateTexture(BG_GRID_TEXTURE, nullptr, BG_GRID_PIXELS, BG_GRID_W * sizeof(uint_fast32_t));
 
 	// UI
 	// HUEBAR
@@ -418,7 +409,7 @@ inline void INIT_RENDERER()
 			UI_PIXELS_HUEBAR[i * 16 + j] = _tcol;
 		}
 	}
-	SDL_UpdateTexture(UI_TEXTURE_HUEBAR, NULL, &UI_PIXELS_HUEBAR[0], (sizeof(uint32_t) * 16));
+	SDL_UpdateTexture(UI_TEXTURE_HUEBAR, nullptr, &UI_PIXELS_HUEBAR[0], (sizeof(uint32_t) * 16));
 }
 
 inline void EVENT_LOOP() {
