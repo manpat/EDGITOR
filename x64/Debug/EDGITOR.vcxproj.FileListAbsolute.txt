@@ -1,4 +1,0 @@
-C:\PROJECTS\EDGITOR\x64\Debug\EDGITOR.exe
-C:\PROJECTS\EDGITOR\x64\Debug\EDGITOR.pdb
-C:\Users\ENDESGA\Documents\GitHub\EDGITOR\x64\Debug\EDGITOR.exe
-C:\Users\ENDESGA\Documents\GitHub\EDGITOR\x64\Debug\EDGITOR.pdb
