@@ -1,4 +1,4 @@
-<img src="https://github.com/ENDESGA/EDGITOR/master/git/title.png" />
+<img src="https://github.com/ENDESGA/EDGITOR/tree/master/git/title.png" />
 
 *- - - - - - -*
 # EDGITOR
