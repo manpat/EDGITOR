@@ -16,8 +16,8 @@ int main()
 	std::cout << (UINT16_MAX) << std::endl << (INT16_MAX) << std::endl;
 
 	INIT_SDL();
-	INIT_WINDOW();
-	INIT_RENDERER();
+	auto WINDOW = INIT_WINDOW();
+	auto RENDERER = INIT_RENDERER(WINDOW);
 
 	while (!QUIT)
 	{
@@ -42,18 +42,18 @@ int main()
 			BRUSH_UPDATE_Y2 = (clamp(BRUSH_UPDATE_Y2, 0, CANVAS_H));
 
 			// set the sdl_rect
-			I_RECT.x = BRUSH_UPDATE_X1;
-			I_RECT.y = BRUSH_UPDATE_Y1;
-			I_RECT.w = (BRUSH_UPDATE_X2 - BRUSH_UPDATE_X1);
-			I_RECT.h = (BRUSH_UPDATE_Y2 - BRUSH_UPDATE_Y1);
+			SDL_Rect const I_RECT {
+				BRUSH_UPDATE_X1, BRUSH_UPDATE_Y1,
+				(BRUSH_UPDATE_X2 - BRUSH_UPDATE_X1), (BRUSH_UPDATE_Y2 - BRUSH_UPDATE_Y1),
+			};
 
 			SDL_SetTextureBlendMode(BRUSH_TEXTURE, SDL_BLENDMODE_NONE);
 			SDL_UpdateTexture(BRUSH_TEXTURE, &I_RECT, &BRUSH_PIXELS[BRUSH_UPDATE_Y1 * CANVAS_W + BRUSH_UPDATE_X1], CANVAS_PITCH);
 
-			LAYER_UPDATE_X1 = min(LAYER_UPDATE_X1, BRUSH_UPDATE_X1);
-			LAYER_UPDATE_Y1 = min(LAYER_UPDATE_Y1, BRUSH_UPDATE_Y1);
-			LAYER_UPDATE_X2 = max(LAYER_UPDATE_X2, BRUSH_UPDATE_X2);
-			LAYER_UPDATE_Y2 = max(LAYER_UPDATE_Y2, BRUSH_UPDATE_Y2);
+			LAYER_UPDATE_X1 = std::min(LAYER_UPDATE_X1, BRUSH_UPDATE_X1);
+			LAYER_UPDATE_Y1 = std::min(LAYER_UPDATE_Y1, BRUSH_UPDATE_Y1);
+			LAYER_UPDATE_X2 = std::max(LAYER_UPDATE_X2, BRUSH_UPDATE_X2);
+			LAYER_UPDATE_Y2 = std::max(LAYER_UPDATE_Y2, BRUSH_UPDATE_Y2);
 
 			BRUSH_UPDATE_X1 = INT16_MAX;
 			BRUSH_UPDATE_Y1 = INT16_MAX;
@@ -64,13 +64,11 @@ int main()
 		}
 
 		// LAYER UPDATE
-		int t_layer_update_w = max(LAYER_UPDATE_X2 - LAYER_UPDATE_X1, 0), t_layer_update_h = max(LAYER_UPDATE_Y2 - LAYER_UPDATE_Y1, 0);
+		int t_layer_update_w = std::max(LAYER_UPDATE_X2 - LAYER_UPDATE_X1, 0), t_layer_update_h = std::max(LAYER_UPDATE_Y2 - LAYER_UPDATE_Y1, 0);
 
 		if ((LAYER_UPDATE == 1) && (t_layer_update_w > 0) && (t_layer_update_h > 0))
 		{
-			I_RECT = { LAYER_UPDATE_X1, LAYER_UPDATE_Y1, t_layer_update_w, t_layer_update_h };
-
-			std::shared_ptr<UNDO_DATA> _u(new UNDO_DATA((uint16_t)t_layer_update_w, (uint16_t)t_layer_update_h));
+			auto _u = std::make_shared<UNDO_DATA>((uint16_t)t_layer_update_w, (uint16_t)t_layer_update_h);
 			_u->x = (uint16_t)LAYER_UPDATE_X1;
 			_u->y = (uint16_t)LAYER_UPDATE_Y1;
 			_u->type = CURRENT_TOOL;
@@ -79,7 +77,7 @@ int main()
 			uint32_t cols, cold, NEW_COL;
 			int _pos;
 			float __d = (1.0f / 255.0f), tdest_cola, tsrc_cola;
-			uint32_t* PD = (LAYERS[CURRENT_LAYER].pixels);
+			uint32_t* PD = (LAYERS[CURRENT_LAYER].pixels.get());
 			for (int16_t _Y = LAYER_UPDATE_Y1; _Y < LAYER_UPDATE_Y2; ++_Y) {
 				for (int16_t _X = LAYER_UPDATE_X1; _X < LAYER_UPDATE_X2; ++_X) {
 					_pos = (_Y * CANVAS_W + _X);
@@ -125,12 +123,14 @@ int main()
 				}
 			}
 
+			SDL_Rect const I_RECT { LAYER_UPDATE_X1, LAYER_UPDATE_Y1, t_layer_update_w, t_layer_update_h };
+
 			SDL_SetTextureBlendMode(BRUSH_TEXTURE, SDL_BLENDMODE_NONE);
 			SDL_UpdateTexture(BRUSH_TEXTURE, &I_RECT, &BRUSH_PIXELS[LAYER_UPDATE_Y1 * CANVAS_W + LAYER_UPDATE_X1], CANVAS_PITCH);
 
 			while (UNDO_POS > 0) {
-				(UNDO_LIST[UNDO_LIST.size() - 1]->redo_pixels).clear();
-				(UNDO_LIST[UNDO_LIST.size() - 1]->undo_pixels).clear();
+				UNDO_LIST.back()->redo_pixels.clear();
+				UNDO_LIST.back()->undo_pixels.clear();
 				UNDO_LIST.pop_back();
 				UNDO_POS--;
 			};
@@ -167,15 +167,25 @@ int main()
 
 		//F_RECT = {CANVAS_X_ANIM, CANVAS_Y_ANIM, CANVAS_W_ANIM, CANVAS_H_ANIM};
 		
+		SDL_FRect F_RECT {};
+
 		float bg_w = ((CANVAS_W_ANIM / (float)CELL_W) * (float)CELL_W);
 		float bg_h = ((CANVAS_H_ANIM / (float)CELL_H) * (float)CELL_H);
-		F_RECT = {CANVAS_X_ANIM, CANVAS_Y_ANIM, bg_w, bg_h};
+		F_RECT = SDL_FRect {CANVAS_X_ANIM, CANVAS_Y_ANIM, bg_w, bg_h};
 		SDL_SetTextureBlendMode(BG_GRID_TEXTURE, SDL_BLENDMODE_BLEND);
 		SDL_RenderCopyF(RENDERER, BG_GRID_TEXTURE, nullptr, &F_RECT);
+
 		SDL_SetRenderDrawColor(RENDERER, 0, 0, 0, 255);
-		F_RECT = { maxf(0,CANVAS_X_ANIM), maxf(0,CANVAS_Y_ANIM + (CANVAS_H_ANIM)), minf(WINDOW_W,bg_w), CELL_H * CANVAS_ZOOM };
+		F_RECT = SDL_FRect {
+			std::max(0.0f, CANVAS_X_ANIM), std::max(0.0f,CANVAS_Y_ANIM + (CANVAS_H_ANIM)),
+			std::min(float(WINDOW_W),bg_w), CELL_H * CANVAS_ZOOM
+		};
 		SDL_RenderFillRectF(RENDERER, &F_RECT);
-		F_RECT = { maxf(0,CANVAS_X_ANIM + (CANVAS_W_ANIM)), maxf(0,CANVAS_Y_ANIM), CELL_W * CANVAS_ZOOM, minf(WINDOW_H,bg_h) };
+
+		F_RECT = SDL_FRect {
+			std::max(0.0f, CANVAS_X_ANIM + (CANVAS_W_ANIM)), std::max(0.0f, CANVAS_Y_ANIM),
+			CELL_W * CANVAS_ZOOM, std::min(float(WINDOW_H),bg_h)
+		};
 		SDL_RenderFillRectF(RENDERER, &F_RECT);
 		
 		F_RECT = {CANVAS_X_ANIM, CANVAS_Y_ANIM, CANVAS_W_ANIM, CANVAS_H_ANIM};

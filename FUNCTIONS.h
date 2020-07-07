@@ -19,54 +19,8 @@ inline int16_t clamp(int16_t x, int16_t lo, int16_t hi)
 	return (x) < (lo) ? (lo) : (x) > (hi) ? (hi) : (x);
 }
 
-inline uint16_t u16clamp(const uint16_t x, const uint16_t lo, const uint16_t hi)
-{
-	return x < lo ? lo : x > hi ? hi : x;
-}
-
 int16_t sign(int16_t x) {
 	return (x > 0) - (x < 0);
-}
-
-
-inline int16_t min(int16_t a, int16_t b)
-{
-	return a < b ? a : b;
-}
-
-inline int16_t max(int16_t a, int16_t b)
-{
-	return a > b ? a : b;
-}
-
-inline double dmin(double a, double b)
-{
-	return a < b ? a : b;
-}
-
-inline double dmax(double a, double b)
-{
-	return a > b ? a : b;
-}
-
-inline float minf(float a, float b)
-{
-	return a < b ? a : b;
-}
-
-inline float maxf(float a, float b)
-{
-	return a > b ? a : b;
-}
-
-inline uint16_t u16min(const uint16_t a, const uint16_t b)
-{
-	return a < b ? a : b;
-}
-
-inline uint16_t u16max(const uint16_t a, const uint16_t b)
-{
-	return a > b ? a : b;
 }
 
 void HSVtoRGB(int16_t H, double S, double V, int16_t output[3]) {
@@ -154,24 +108,20 @@ void lab2rgb(float l_s, float a_s, float b_s, float& R, float& G, float& B)
  //   CANVAS FUNCTIONS   ///////////////////////////////////////////////// ///////  //////   /////    ///     //      /
 //
 
-inline void layer_new(int16_t _x, int16_t _y, int16_t _a, SDL_BlendMode _b)
+inline void layer_new(SDL_Renderer* _renderer, int16_t _x, int16_t _y, int16_t _a, SDL_BlendMode _b)
 {
 	LAYER_INFO new_layer;
-	new_layer.texture = SDL_CreateTexture(RENDERER, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, CANVAS_W, CANVAS_H);
+	new_layer.texture = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, CANVAS_W, CANVAS_H);
 
-	new_layer.pixels = new uint32_t[CANVAS_W * CANVAS_H];
-	for (int i = 0; i < CANVAS_W * CANVAS_H; i++)
-	{
-		new_layer.pixels[i] = 0x00000000;
-	}
+	new_layer.pixels = std::make_unique<uint32_t[]>(CANVAS_W * CANVAS_H);
 	new_layer.x = _x;
 	new_layer.y = _y;
 	new_layer.alpha = _a;
 	new_layer.blendmode = _b;
-	LAYERS.push_back(new_layer);
+	LAYERS.push_back(std::move(new_layer));
 	CANVAS_UPDATE = 1;
 	CURRENT_LAYER = 0;
-	CURRENT_LAYER_PTR = LAYERS[CURRENT_LAYER].pixels;
+	CURRENT_LAYER_PTR = LAYERS[CURRENT_LAYER].pixels.get();
 }
 
 inline bool in_canvas(const uint16_t x, const uint16_t y)
@@ -189,10 +139,10 @@ inline void set_pixel(const int16_t x, const int16_t y, const uint32_t c)
 	if (out_canvas(x, y)) return;
 
 	BRUSH_PIXELS[y * CANVAS_W + x] = c;
-	BRUSH_UPDATE_X1 = min(BRUSH_UPDATE_X1, x - 1);
-	BRUSH_UPDATE_Y1 = min(BRUSH_UPDATE_Y1, y - 1);
-	BRUSH_UPDATE_X2 = max(BRUSH_UPDATE_X2, x + 1);
-	BRUSH_UPDATE_Y2 = max(BRUSH_UPDATE_Y2, y + 1);
+	BRUSH_UPDATE_X1 = std::min(BRUSH_UPDATE_X1, int16_t(x - 1));
+	BRUSH_UPDATE_Y1 = std::min(BRUSH_UPDATE_Y1, int16_t(y - 1));
+	BRUSH_UPDATE_X2 = std::max(BRUSH_UPDATE_X2, int16_t(x + 1));
+	BRUSH_UPDATE_Y2 = std::max(BRUSH_UPDATE_Y2, int16_t(y + 1));
 }
 
 void set_pixel_line(int16_t x0, int16_t y0, const int16_t x1, const int16_t y1, uint32_t c)
@@ -211,19 +161,19 @@ void set_pixel_line(int16_t x0, int16_t y0, const int16_t x1, const int16_t y1, 
 	LAYER_UPDATE = 2;
 }
 
-inline bool floodfill_check(const uint16_t x, const uint16_t y, const uint_fast32_t col)
+inline bool floodfill_check(const uint16_t x, const uint16_t y, const uint32_t col)
 {
 	return ((CURRENT_LAYER_PTR[y * CANVAS_W + x] != col) || (BRUSH_PIXELS[y * CANVAS_W + x] != col));
 }
 
-inline bool floodfill_check_not(const uint16_t x, const uint16_t y, const uint_fast32_t col)
+inline bool floodfill_check_not(const uint16_t x, const uint16_t y, const uint32_t col)
 {
 	return ((CURRENT_LAYER_PTR[y * CANVAS_W + x] == col) && (BRUSH_PIXELS[y * CANVAS_W + x] == col));
 }
 
-inline void floodfill_core(uint16_t x, uint16_t y, const uint16_t width, const uint16_t height, const uint_fast32_t col_old, const uint_fast32_t col_new);
+inline void floodfill_core(uint16_t x, uint16_t y, const uint16_t width, const uint16_t height, const uint32_t col_old, const uint32_t col_new);
 
-inline void floodfill(uint16_t x, uint16_t y, const uint16_t width, const uint16_t height, const uint_fast32_t col_old, const uint_fast32_t col_new)
+inline void floodfill(uint16_t x, uint16_t y, const uint16_t width, const uint16_t height, const uint32_t col_old, const uint32_t col_new)
 {
 	while (true)
 	{
@@ -237,9 +187,8 @@ inline void floodfill(uint16_t x, uint16_t y, const uint16_t width, const uint16
 	LAYER_UPDATE = 2;
 }
 
-inline void floodfill_core(uint16_t x, uint16_t y, const uint16_t width, const uint16_t height, const uint_fast32_t col_old, const uint_fast32_t col_new)
+inline void floodfill_core(uint16_t x, uint16_t y, const uint16_t width, const uint16_t height, const uint32_t col_old, const uint32_t col_new)
 {
-	std::thread t1;
 	int lastRowLength = 0;
 	do
 	{
@@ -295,9 +244,9 @@ inline void INIT_SDL()
 	SDL_Init(SDL_INIT_EVENTS | SDL_INIT_VIDEO);
 }
 
-inline void INIT_WINDOW()
+inline SDL_Window* INIT_WINDOW()
 {
-	WINDOW = SDL_CreateWindow("EDGITOR", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 2, 2, SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN);
+	auto WINDOW = SDL_CreateWindow("EDGITOR", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 2, 2, SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN);
 	SDL_SetWindowFullscreen(WINDOW, SDL_WINDOW_FULLSCREEN_DESKTOP);
 	SDL_GetWindowSize(WINDOW, &DISPLAY_W, &DISPLAY_H);
 	SDL_SetWindowFullscreen(WINDOW, 0);
@@ -307,26 +256,23 @@ inline void INIT_WINDOW()
 	WINDOW_X = ((DISPLAY_W / 2) - (WINDOW_W / 2));
 	WINDOW_Y = ((DISPLAY_H / 2) - (WINDOW_H / 2));
 	SDL_SetWindowPosition(WINDOW, WINDOW_X, WINDOW_Y);
+	return WINDOW;
 }
 
-inline void INIT_RENDERER()
+inline SDL_Renderer* INIT_RENDERER(SDL_Window* WINDOW)
 {
-	RENDERER = SDL_CreateRenderer(WINDOW, -1, SDL_RENDERER_ACCELERATED);
+	auto RENDERER = SDL_CreateRenderer(WINDOW, -1, SDL_RENDERER_ACCELERATED);
 
 	// BRUSH SURFACE
-	BRUSH_PIXELS = new uint32_t[CANVAS_W * CANVAS_H];
-	for (int i = 0; i < CANVAS_W * CANVAS_H; i++)
-	{
-		BRUSH_PIXELS[i] = 0x00000000;
-	}
+	BRUSH_PIXELS = new uint32_t[CANVAS_W * CANVAS_H] {};
 	BRUSH_TEXTURE = SDL_CreateTexture(RENDERER, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, CANVAS_W, CANVAS_H);
 	//SDL_UpdateTexture(CANVAS_TEXTURE, nullptr, &CANVAS_PIXELS[0], (sizeof(uint32_t) * CANVAS_W));
 	
 	// DEFAULT LAYER
-	layer_new(0, 0, 255, SDL_BLENDMODE_BLEND);
+	layer_new(RENDERER, 0, 0, 255, SDL_BLENDMODE_BLEND);
 	
 	// SET DEFAULT CANVAS UNDO
-	std::shared_ptr<UNDO_DATA> _u1(new UNDO_DATA(0, 0));
+	auto _u1 = std::make_shared<UNDO_DATA>(0, 0);
 	_u1->x = 0;
 	_u1->y = 0;
 	_u1->w = 0;
@@ -334,6 +280,9 @@ inline void INIT_RENDERER()
 	UNDO_LIST.push_back(_u1);
 
 	// LOAD FONTS
+	font = FC_CreateFont();
+	font_under = FC_CreateFont();
+	font_bold = FC_CreateFont();
 	FC_LoadFont(font, RENDERER, "IBMPlexMono-Regular.ttf", 16, FC_MakeColor(192, 192, 192, 255), TTF_STYLE_NORMAL);
 	FC_LoadFont(font_under, RENDERER, "IBMPlexMono-Regular.ttf", 16, FC_MakeColor(192, 192, 192, 255), TTF_STYLE_UNDERLINE);
 	FC_LoadFont(font_bold, RENDERER, "IBMPlexMono-Bold.ttf", 16, FC_MakeColor(255, 0, 64, 255), TTF_STYLE_BOLD);
@@ -341,7 +290,7 @@ inline void INIT_RENDERER()
 	// BACKGROUND GRID TEXTURE
 	BG_GRID_W = ((int16_t)ceil((double)CANVAS_W / (double)CELL_W));
 	BG_GRID_H = ((int16_t)ceil((double)CANVAS_H / (double)CELL_H));
-	BG_GRID_PIXELS = new uint32_t[(size_t)(BG_GRID_W * BG_GRID_H)];
+	auto BG_GRID_PIXELS = std::make_unique<uint32_t[]>(BG_GRID_W * BG_GRID_H);
 	BG_GRID_TEXTURE = SDL_CreateTexture(RENDERER, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, BG_GRID_W, BG_GRID_H);
 	for (int i = 0; i < BG_GRID_W; i++)
 	{
@@ -351,7 +300,7 @@ inline void INIT_RENDERER()
 		}
 	}
 	SDL_SetTextureBlendMode(BG_GRID_TEXTURE, SDL_BLENDMODE_NONE);
-	SDL_UpdateTexture(BG_GRID_TEXTURE, nullptr, BG_GRID_PIXELS, BG_GRID_W * sizeof(uint_fast32_t));
+	SDL_UpdateTexture(BG_GRID_TEXTURE, nullptr, BG_GRID_PIXELS.get(), BG_GRID_W * sizeof(uint32_t));
 
 	// UI
 	// HUEBAR
@@ -410,16 +359,18 @@ inline void INIT_RENDERER()
 		}
 	}
 	SDL_UpdateTexture(UI_TEXTURE_HUEBAR, nullptr, &UI_PIXELS_HUEBAR[0], (sizeof(uint32_t) * 16));
+	return RENDERER;
 }
 
 inline void EVENT_LOOP() {
-
-	MOUSEBUTTON_PRESSED_LEFT = 0;
-	MOUSEBUTTON_PRESSED_MIDDLE = 0;
-	MOUSEBUTTON_PRESSED_RIGHT = 0;
+	MOUSEBUTTON_PRESSED_LEFT = false;
+	MOUSEBUTTON_PRESSED_MIDDLE = false;
+	MOUSEBUTTON_PRESSED_RIGHT = false;
 
 	MOUSE_PREVX = MOUSE_X;
 	MOUSE_PREVY = MOUSE_Y;
+
+	int DISPLAY_MOUSE_X {}, DISPLAY_MOUSE_Y {};
 	SDL_GetGlobalMouseState(&DISPLAY_MOUSE_X, &DISPLAY_MOUSE_Y);
 	MOUSE_X = (DISPLAY_MOUSE_X - WINDOW_X);
 	MOUSE_Y = (DISPLAY_MOUSE_Y - WINDOW_Y);
@@ -435,6 +386,8 @@ inline void EVENT_LOOP() {
 	CANVAS_MOUSE_CELL_X = (int16_t)floor(t_CANVAS_MOUSE_X / (double)CELL_W);
 	CANVAS_MOUSE_CELL_Y = (int16_t)floor(t_CANVAS_MOUSE_Y / (double)CELL_H);
 
+	SDL_Event EVENT {};
+
 	while (SDL_PollEvent(&EVENT))
 	{
 		if ((SDL_QUIT == EVENT.type) || (SDL_KEYDOWN == EVENT.type && SDL_SCANCODE_ESCAPE == EVENT.key.keysym.scancode))
@@ -448,40 +401,40 @@ inline void EVENT_LOOP() {
 		case SDL_MOUSEBUTTONUP:
 			if (EVENT.button.button == SDL_BUTTON_LEFT)
 			{
-				MOUSEBUTTON_LEFT = 0;
-				MOUSEBUTTON_PRESSED_LEFT = 0;
+				MOUSEBUTTON_LEFT = false;
+				MOUSEBUTTON_PRESSED_LEFT = false;
 			}
 
 			if (EVENT.button.button == SDL_BUTTON_MIDDLE)
 			{
-				MOUSEBUTTON_MIDDLE = 0;
-				MOUSEBUTTON_PRESSED_MIDDLE = 0;
+				MOUSEBUTTON_MIDDLE = false;
+				MOUSEBUTTON_PRESSED_MIDDLE = false;
 			}
 
 			if (EVENT.button.button == SDL_BUTTON_RIGHT)
 			{
-				MOUSEBUTTON_RIGHT = 0;
-				MOUSEBUTTON_PRESSED_RIGHT = 0;
+				MOUSEBUTTON_RIGHT = false;
+				MOUSEBUTTON_PRESSED_RIGHT = false;
 			}
 			break;
 
 		case SDL_MOUSEBUTTONDOWN:
 			if (EVENT.button.button == SDL_BUTTON_LEFT)
 			{
-				MOUSEBUTTON_LEFT = 1;
-				MOUSEBUTTON_PRESSED_LEFT = 1;
+				MOUSEBUTTON_LEFT = true;
+				MOUSEBUTTON_PRESSED_LEFT = true;
 			}
 
 			if (EVENT.button.button == SDL_BUTTON_MIDDLE)
 			{
-				MOUSEBUTTON_MIDDLE = 1;
-				MOUSEBUTTON_PRESSED_MIDDLE = 1;
+				MOUSEBUTTON_MIDDLE = true;
+				MOUSEBUTTON_PRESSED_MIDDLE = true;
 			}
 
 			if (EVENT.button.button == SDL_BUTTON_RIGHT)
 			{
-				MOUSEBUTTON_RIGHT = 1;
-				MOUSEBUTTON_PRESSED_RIGHT = 1;
+				MOUSEBUTTON_RIGHT = true;
+				MOUSEBUTTON_PRESSED_RIGHT = true;
 			}
 			break;
 
@@ -522,7 +475,7 @@ inline void EVENT_LOOP() {
 	if (MOUSEBUTTON_PRESSED_RIGHT)
 	{
 		// NON-CONTIGUOUS / COLOUR REPLACE
-		/*uint_fast32_t _tcol;
+		/*uint32_t _tcol;
 		for (int i = 0; i < CANVAS_H; i++)
 		{
 			for (int j = 0; j < CANVAS_W; j++)
