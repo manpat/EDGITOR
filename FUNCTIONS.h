@@ -4,9 +4,6 @@
  //   FUNCTIONS   ///////////////////////////////////////////////// ///////  //////   /////    ///     //      /
 //
 
-//#include <iostream>
-//using namespace std;
-
 inline float reach_tween(float a, float b, float t)
 {
 	return (a != b) ? (a + ((1 / t) * (b - a))) : (a);
