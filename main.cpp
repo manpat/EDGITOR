@@ -215,6 +215,7 @@ int main(int argc, char* argv[])
 
 		// RENDER BRUSH TEXTURE
 		// could probably add a 'if (BRUSH_UPDATE)' so it doesn't always render an empty texture when not drawing
+		F_RECT = { CANVAS_X_ANIM, CANVAS_Y_ANIM, bg_w, bg_h };
 		SDL_SetTextureBlendMode(BRUSH_TEXTURE, SDL_BLENDMODE_BLEND);
 		SDL_RenderCopyF(RENDERER, BRUSH_TEXTURE, NULL, &F_RECT);
 
