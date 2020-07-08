@@ -101,7 +101,20 @@ void lab2rgb(float l_s, float a_s, float b_s, float& R, float& G, float& B)
 	R = clamp(var_R * 255., 0.0f, 255.0f);
 	G = clamp(var_G * 255., 0.0f, 255.0f);
 	B = clamp(var_B * 255., 0.0f, 255.0f);
+}
 
+
+inline uint32_t blend_colors(uint32_t src_color, uint32_t dst_color) {
+	const float src_cola = (src_color & 0x000000ff) / 255.0f;
+	const float dest_cola = (dst_color & 0x000000ff) / 255.0f * (1. - src_cola);
+	const float new_cola = (src_cola + dest_cola);
+	const float tdest_cola = (dest_cola / 255.0f);
+	const float tsrc_cola = (src_cola / 255.0f);
+	return (uint32_t)(
+		((uint8_t)((((((src_color & 0xff000000) >> 24) * tsrc_cola) + (((dst_color & 0xff000000) >> 24) * tdest_cola))) / new_cola * 255) << 24) |
+		((uint8_t)((((((src_color & 0x00ff0000) >> 16) * tsrc_cola) + (((dst_color & 0x00ff0000) >> 16) * tdest_cola))) / new_cola * 255) << 16) |
+		((uint8_t)((((((src_color & 0x0000ff00) >> 8) * tsrc_cola) + (((dst_color & 0x0000ff00) >> 8) * tdest_cola))) / new_cola * 255) << 8) |
+		(uint8_t)(new_cola * 255.0f));
 }
 
   //
@@ -243,24 +256,25 @@ inline void floodfill_core(uint16_t x, uint16_t y, const uint16_t width, const u
 
 void function_undo(int n)
 {
-	const bool _is_undo = ((n + 1) >= 1);
+	const bool _is_undo = (n >= 0);
 	UNDO_POS = (clamp(UNDO_POS + n, 0, UNDO_LIST.size() - 1));
+
 	const int _tpos = (UNDO_LIST.size() - (UNDO_POS + (!_is_undo)));
-	const int _type = (UNDO_LIST[_tpos]->type);
-	const int _x = (UNDO_LIST[_tpos]->x);
-	const int _y = (UNDO_LIST[_tpos]->y);
-	const int _w = (UNDO_LIST[_tpos]->w);
-	const int _s = (_is_undo ? UNDO_LIST[_tpos]->undo_pixels.size() : UNDO_LIST[_tpos]->redo_pixels.size());
-	uint16_t _l = (UNDO_LIST[_tpos]->layer);
-	uint32_t _c;
-	std::vector<uint32_t>& _p = (_is_undo ? UNDO_LIST[_tpos]->undo_pixels : UNDO_LIST[_tpos]->redo_pixels); // not sure if & is needed
-	for (int i = 0; i < _s; i++)
+	const auto undo_entry = UNDO_LIST[_tpos].get();
+	const int start_x = (undo_entry->x);
+	const int start_y = (undo_entry->y);
+	const uint16_t _l = (undo_entry->layer);
+	const std::vector<uint32_t>& _p = (_is_undo ? undo_entry->undo_pixels : undo_entry->redo_pixels);
+
+	for (int y = 0; y < undo_entry->h; y++)
 	{
-		_c = (_p[i]);
-		if (!_is_undo && (_c == 0x00000000)) continue; // only needs to set blank pixels if we're undoing
-		if (_c == 0xffffff00 && _type == 1) _c = 0x00000000; // if the undo type is Eraser, then we clear the pixels
-		set_pixel_layer(_x + (i % _w), _y + (i / _w), _c, _l);
+		for (int x = 0; x < undo_entry->w; x++)
+		{
+			const int index = x + y * undo_entry->w;
+			set_pixel_layer(x + start_x, y + start_y, _p[index], _l);
+		}
 	}
+
 	UNDO_UPDATE = 1;
 	UNDO_UPDATE_LAYER = _l;
 	UNDO_UPDATE_RECT = { BRUSH_UPDATE_X1, BRUSH_UPDATE_Y1, (BRUSH_UPDATE_X2 - BRUSH_UPDATE_X1), (BRUSH_UPDATE_Y2 - BRUSH_UPDATE_Y1) };

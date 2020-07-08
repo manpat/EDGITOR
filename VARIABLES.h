@@ -58,8 +58,6 @@ float CANVAS_Y_ANIM = 0.0;
 float CANVAS_W_ANIM = 0.0;
 float CANVAS_H_ANIM = 0.0;
 
-float SRC_COLA, DEST_COLA, NEW_COLA;
-
 // LAYER
 uint16_t CURRENT_LAYER = 0;
 uint32_t* CURRENT_LAYER_PTR = nullptr;
@@ -123,7 +121,6 @@ std::vector<UIBOX_INFO> UI_BOX;
 // UNDO
 struct UNDO_DATA
 {
-	uint16_t type = 0;
 	uint16_t layer = 0;
 	uint16_t x = 0;
 	uint16_t y = 0;
@@ -132,16 +129,19 @@ struct UNDO_DATA
 	std::vector<uint32_t> undo_pixels;
 	std::vector<uint32_t> redo_pixels;
 
-	UNDO_DATA(uint16_t _w, uint16_t _h) : undo_pixels(_w* _h), redo_pixels(_w* _h)
+	UNDO_DATA(uint16_t _w, uint16_t _h)
+		: w {_w}
+		, h {_h}
+		, undo_pixels(_w*_h)
+		, redo_pixels(_w*_h)
 	{
-		this->w = _w;
-		this->h = _h;
 	}
 
-	void _set_pixel(uint16_t p, uint32_t uc, uint32_t rc)
+	void set(uint16_t xx, uint16_t yy, uint32_t prev_col, uint32_t new_col)
 	{
-		undo_pixels[p] = uc;
-		redo_pixels[p] = rc;
+		int index = xx + yy * this->w;
+		undo_pixels[index] = prev_col;
+		redo_pixels[index] = new_col;
 	}
 };
 
@@ -151,3 +151,5 @@ uint16_t UNDO_UPDATE = 0;
 uint16_t UNDO_UPDATE_LAYER = 0;
 SDL_Rect UNDO_UPDATE_RECT = { 0, 0, 1, 1 };
 uint32_t UNDO_COL = 0xff0040c0;
+
+
