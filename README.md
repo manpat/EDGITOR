@@ -1,5 +1,6 @@
 <img src="https://github.com/ENDESGA/EDGITOR/blob/master/git/title.png" />
 [pron. EDGE-itor]
+
 *- - - - - - -*
 
 ### minimal C++ pixelart editor
