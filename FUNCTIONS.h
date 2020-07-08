@@ -145,6 +145,17 @@ inline void set_pixel(const int16_t x, const int16_t y, const uint32_t c)
 	BRUSH_UPDATE_Y2 = std::max(BRUSH_UPDATE_Y2, int16_t(y + 1));
 }
 
+inline void set_pixel_layer(const int16_t x, const int16_t y, const uint32_t c, uint16_t l)
+{
+	if (out_canvas(x, y)) return;
+
+	LAYERS[l].pixels[y * CANVAS_W + x] = c;
+	BRUSH_UPDATE_X1 = std::min(BRUSH_UPDATE_X1, int16_t(x - 1));
+	BRUSH_UPDATE_Y1 = std::min(BRUSH_UPDATE_Y1, int16_t(y - 1));
+	BRUSH_UPDATE_X2 = std::max(BRUSH_UPDATE_X2, int16_t(x + 1));
+	BRUSH_UPDATE_Y2 = std::max(BRUSH_UPDATE_Y2, int16_t(y + 1));
+}
+
 void set_pixel_line(int16_t x0, int16_t y0, const int16_t x1, const int16_t y1, uint32_t c)
 {
 	int16_t dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
@@ -230,6 +241,33 @@ inline void floodfill_core(uint16_t x, uint16_t y, const uint16_t width, const u
 	} while (lastRowLength != 0 && ++y < height);
 }
 
+void function_undo(int n)
+{
+	const bool _is_undo = ((n + 1) >= 1);
+	UNDO_POS = (clamp(UNDO_POS + n, 0, UNDO_LIST.size() - 1));
+	const int _tpos = (UNDO_LIST.size() - (UNDO_POS + (!_is_undo)));
+	const int _type = (UNDO_LIST[_tpos]->type);
+	const int _x = (UNDO_LIST[_tpos]->x);
+	const int _y = (UNDO_LIST[_tpos]->y);
+	const int _w = (UNDO_LIST[_tpos]->w);
+	const int _s = (_is_undo ? UNDO_LIST[_tpos]->undo_pixels.size() : UNDO_LIST[_tpos]->redo_pixels.size());
+	uint16_t _l = (UNDO_LIST[_tpos]->layer);
+	uint32_t _c;
+	std::vector<uint32_t>& _p = (_is_undo ? UNDO_LIST[_tpos]->undo_pixels : UNDO_LIST[_tpos]->redo_pixels); // not sure if & is needed
+	for (int i = 0; i < _s; i++)
+	{
+		_c = (_p[i]);
+		if (!_is_undo && (_c == 0x00000000)) continue; // only needs to set blank pixels if we're undoing
+		if (_c == 0xffffff00 && _type == 1) _c = 0x00000000; // if the undo type is Eraser, then we clear the pixels
+		set_pixel_layer(_x + (i % _w), _y + (i / _w), _c, _l);
+	}
+	UNDO_UPDATE = 1;
+	UNDO_UPDATE_LAYER = _l;
+	UNDO_UPDATE_RECT = { BRUSH_UPDATE_X1, BRUSH_UPDATE_Y1, (BRUSH_UPDATE_X2 - BRUSH_UPDATE_X1), (BRUSH_UPDATE_Y2 - BRUSH_UPDATE_Y1) };
+	CURRENT_LAYER = _l;
+	CANVAS_UPDATE = true;
+}
+
   //
  //   SYSTEM FUNCTIONS   ///////////////////////////////////////////////// ///////  //////   /////    ///     //      /
 //
@@ -292,9 +330,9 @@ inline SDL_Renderer* INIT_RENDERER(SDL_Window* WINDOW)
 	BG_GRID_H = ((int16_t)ceil((double)CANVAS_H / (double)CELL_H));
 	auto BG_GRID_PIXELS = std::make_unique<uint32_t[]>(BG_GRID_W * BG_GRID_H);
 	BG_GRID_TEXTURE = SDL_CreateTexture(RENDERER, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, BG_GRID_W, BG_GRID_H);
-	for (int i = 0; i < BG_GRID_W; i++)
+	for (int i = 0; i < BG_GRID_H; i++)
 	{
-		for (int j = 0; j < BG_GRID_H; j++)
+		for (int j = 0; j < BG_GRID_W; j++)
 		{
 			BG_GRID_PIXELS[i * BG_GRID_W + j] = (((j + (i % 2)) % 2) ? (0x1a1a1aff) : (0x212121ff));// (((int)(i + floor((double)i / (double)bg_grid_w)) % 2) ? (0x1a1a1aff) : (0x212121ff));
 		}
@@ -489,7 +527,7 @@ inline void EVENT_LOOP() {
 				LAYER_UPDATE = 2;
 			}
 		}*/
-		floodfill((uint16_t)CANVAS_MOUSE_X, (uint16_t)CANVAS_MOUSE_Y, CANVAS_W, CANVAS_H, 0x00000000, 0xff0000ff);
+		//floodfill((uint16_t)CANVAS_MOUSE_X, (uint16_t)CANVAS_MOUSE_Y, CANVAS_W, CANVAS_H, 0x00000000, 0xff0000ff);
 		/*std::thread t1(floodfill, (uint16_t)CANVAS_MOUSE_X-1, (uint16_t)CANVAS_MOUSE_Y, CANVAS_W, CANVAS_H, 0x00000000, 0xff0000ff);
 		//std::thread t2(floodfill, (uint16_t)CANVAS_MOUSE_X+1, (uint16_t)CANVAS_MOUSE_Y, CANVAS_W, CANVAS_H, 0x00000000, 0xff0000ff);
 		//std::thread t3(floodfill, (uint16_t)CANVAS_MOUSE_X, (uint16_t)CANVAS_MOUSE_Y-1, CANVAS_W, CANVAS_H, 0x00000000, 0xff0000ff);
@@ -501,5 +539,8 @@ inline void EVENT_LOOP() {
 		//t2.join();
 		//t3.join();
 		//t4.join();
+
+		function_undo(1);
+
 	}
 }

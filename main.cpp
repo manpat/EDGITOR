@@ -1,6 +1,5 @@
 #include <iostream>
 #include <vector>
-#include <thread>
 #include <algorithm>
 #include <SDL.h>
 #include <SDL_ttf.h>
@@ -72,7 +71,7 @@ int main(int argc, char* argv[])
 		}
 
 		// LAYER UPDATE
-		int t_layer_update_w = std::max(LAYER_UPDATE_X2 - LAYER_UPDATE_X1, 0), t_layer_update_h = std::max(LAYER_UPDATE_Y2 - LAYER_UPDATE_Y1, 0); // probably don't need these max()
+		int t_layer_update_w = std::max((int)LAYER_UPDATE_X2 - (int)LAYER_UPDATE_X1, 0), t_layer_update_h = std::max((int)LAYER_UPDATE_Y2 - (int)LAYER_UPDATE_Y1, 0); // probably don't need these max()
 
 		if ((LAYER_UPDATE == 1) && (t_layer_update_w > 0) && (t_layer_update_h > 0))
 		{
@@ -136,7 +135,7 @@ int main(int argc, char* argv[])
 				}
 			}
 
-			// clear the brush texture (since we made all pixels 0x00000000
+			// clear the brush texture (since we made all pixels 0x00000000)
 			SDL_Rect const I_RECT { LAYER_UPDATE_X1, LAYER_UPDATE_Y1, t_layer_update_w, t_layer_update_h };
 
 			SDL_SetTextureBlendMode(BRUSH_TEXTURE, SDL_BLENDMODE_NONE);
@@ -171,6 +170,32 @@ int main(int argc, char* argv[])
 
 				LAYER_UPDATE = -1;
 			}
+		}
+
+		// CANVAS UPDATE
+		if (CANVAS_UPDATE) {
+			if (UNDO_UPDATE)
+			{
+				SDL_SetTextureBlendMode(LAYERS[UNDO_UPDATE_LAYER].texture, SDL_BLENDMODE_NONE);
+				UNDO_UPDATE_RECT.x = (clamp(UNDO_UPDATE_RECT.x, 0, CANVAS_W - 1));
+				UNDO_UPDATE_RECT.y = (clamp(UNDO_UPDATE_RECT.y, 0, CANVAS_H - 1));
+				UNDO_UPDATE_RECT.w = (clamp(UNDO_UPDATE_RECT.w, 1, CANVAS_W));
+				UNDO_UPDATE_RECT.h = (clamp(UNDO_UPDATE_RECT.h, 1, CANVAS_H));
+				SDL_UpdateTexture(LAYERS[UNDO_UPDATE_LAYER].texture, &UNDO_UPDATE_RECT, &LAYERS[UNDO_UPDATE_LAYER].pixels[UNDO_UPDATE_RECT.y * CANVAS_W + UNDO_UPDATE_RECT.x], CANVAS_PITCH);
+			}
+			else
+			{
+				for (int i = 0; i < (int)(LAYERS.size()); i++)
+				{
+					SDL_SetTextureBlendMode(LAYERS[i].texture, SDL_BLENDMODE_NONE);
+					SDL_UpdateTexture(LAYERS[i].texture, NULL, &LAYERS[i].pixels[0], CANVAS_PITCH);
+				}
+			}
+
+			SDL_UpdateTexture(BRUSH_TEXTURE, NULL, BRUSH_PIXELS, CANVAS_PITCH);
+			CANVAS_UPDATE = 0;
+			UNDO_UPDATE = 0;
+			UNDO_UPDATE_LAYER = 0;
 		}
 
 
@@ -217,7 +242,7 @@ int main(int argc, char* argv[])
 
 		// the grey box around the canvas
 		SDL_SetRenderDrawColor(RENDERER, 51, 51, 51, 255);
-		F_RECT = { CANVAS_X_ANIM - 2, CANVAS_Y_ANIM - 2, bg_w + 4, bg_h + 4 };
+		F_RECT = { CANVAS_X_ANIM - 2.0f, CANVAS_Y_ANIM - 2.0f, bg_w + 4.0f, bg_h + 4.0f };
 		SDL_RenderDrawRectF(RENDERER, &F_RECT);
 		SDL_SetRenderDrawColor(RENDERER, 0, 0, 0, 255);
 
@@ -232,6 +257,7 @@ int main(int argc, char* argv[])
 		//SDL_RenderCopy(RENDERER, UI_TEXTURE_HUEBAR, nullptr, &I_RECT);
 
 		//FC_Draw(font, RENDERER, 36, 10, "%i\n%i\n%i\n%i", BRUSH_UPDATE, LAYER_UPDATE, CANVAS_MOUSE_X, CANVAS_MOUSE_Y);
+		FC_Draw(font, RENDERER, 36, 10, "%i", UNDO_LIST.size());
 
 		SDL_SetRenderDrawColor(RENDERER, 0, 0, 0, 0);
 		SDL_RenderPresent(RENDERER);

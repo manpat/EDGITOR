@@ -25,12 +25,12 @@ int DISPLAY_W;
 int DISPLAY_H;
 
 // CANVAS
-int16_t CANVAS_UPDATE = 0;
+bool CANVAS_UPDATE = false;
 float CANVAS_ZOOM = 1.0;
 float CANVAS_X = 32.0;
 float CANVAS_Y = 32.0;
 uint16_t CANVAS_W = 2000;
-uint16_t CANVAS_H = 2000;
+uint16_t CANVAS_H = 1000;
 int16_t CANVAS_MOUSE_X = 0;
 int16_t CANVAS_MOUSE_Y = 0;
 int16_t CANVAS_MOUSE_CLICKX = 0;
@@ -146,8 +146,8 @@ struct UNDO_DATA
 };
 
 std::vector<std::shared_ptr<UNDO_DATA>> UNDO_LIST;
-int16_t UNDO_POS = 0;
-int16_t UNDO_UPDATE = 0;
-int16_t UNDO_UPDATE_LAYER = 0;
+uint16_t UNDO_POS = 0;
+uint16_t UNDO_UPDATE = 0;
+uint16_t UNDO_UPDATE_LAYER = 0;
 SDL_Rect UNDO_UPDATE_RECT = { 0, 0, 1, 1 };
 uint32_t UNDO_COL = 0xff0040c0;
