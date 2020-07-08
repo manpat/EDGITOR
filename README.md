@@ -1,5 +1,5 @@
 <img src="https://github.com/ENDESGA/EDGITOR/blob/master/git/title.png" />
-
+[pron. EDGE-itor]
 *- - - - - - -*
 
 ### minimal C++ pixelart editor
@@ -18,7 +18,7 @@ EDGITOR was designed to be extremely concise and clean from the ground up. It us
 ## COMMUNITY DRIVEN
 EDGITOR is now open source, and I'd love for this to grow via the community! Feel free to send pull requests, and add features to this so it can grow faster like never before!
 
-This project was made in VS2019, and I don't have a Cmake file prepared for it - sorry!
+This project was made in VS2019, and I don't have a Cmake file prepared for it - sorry! So feel free to create a Cmake file for others~
 
 *- - - - - - -*
 
