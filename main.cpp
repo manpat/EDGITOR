@@ -12,7 +12,7 @@
  //   MAIN LOOP   ///////////////////////////////////////////////// ///////  //////   /////    ///     //      /
 //
 
-int main(int argc, char* argv[])
+int main(int, char*[])
 {
 	// MAIN INIT
 	INIT_SDL();
@@ -44,14 +44,14 @@ int main(int argc, char* argv[])
 			BRUSH_UPDATE_X2 = (clamp(BRUSH_UPDATE_X2, 0, CANVAS_W));
 			BRUSH_UPDATE_Y2 = (clamp(BRUSH_UPDATE_Y2, 0, CANVAS_H));
 
-			SDL_Rect const I_RECT {
+			SDL_Rect const brush_dirty_rect {
 				BRUSH_UPDATE_X1, BRUSH_UPDATE_Y1,
 				(BRUSH_UPDATE_X2 - BRUSH_UPDATE_X1), (BRUSH_UPDATE_Y2 - BRUSH_UPDATE_Y1),
 			};
 
 			// update the brush texture
 			SDL_SetTextureBlendMode(BRUSH_TEXTURE, SDL_BLENDMODE_NONE);
-			SDL_UpdateTexture(BRUSH_TEXTURE, &I_RECT, &BRUSH_PIXELS[BRUSH_UPDATE_Y1 * CANVAS_W + BRUSH_UPDATE_X1], CANVAS_PITCH);
+			SDL_UpdateTexture(BRUSH_TEXTURE, &brush_dirty_rect, &BRUSH_PIXELS[BRUSH_UPDATE_Y1 * CANVAS_W + BRUSH_UPDATE_X1], CANVAS_PITCH);
 
 			// the layer updates only when we stop drawing - for performance.
 			// so we constantly update the min and max bounds
@@ -74,85 +74,66 @@ int main(int argc, char* argv[])
 
 		if ((LAYER_UPDATE == 1) && (t_layer_update_w > 0) && (t_layer_update_h > 0))
 		{
-			auto _u = std::make_shared<UNDO_DATA>((uint16_t)t_layer_update_w, (uint16_t)t_layer_update_h);
-			_u->x = (uint16_t)LAYER_UPDATE_X1;
-			_u->y = (uint16_t)LAYER_UPDATE_Y1;
-			_u->type = CURRENT_TOOL;
-			_u->layer = CURRENT_LAYER;
+			UNDO_DATA _u {(uint16_t)t_layer_update_w, (uint16_t)t_layer_update_h};
+			_u.x = (uint16_t)LAYER_UPDATE_X1;
+			_u.y = (uint16_t)LAYER_UPDATE_Y1;
+			_u.layer = CURRENT_LAYER;
 
-			uint32_t cols, cold, NEW_COL;
-			int _pos;
-			float _d = (1.0f / 255.0f), tdest_cola, tsrc_cola; // '_d' is used to save a bit of calculations
-			uint32_t* PD = (LAYERS[CURRENT_LAYER].pixels.get());
-			for (int16_t _Y = LAYER_UPDATE_Y1; _Y < LAYER_UPDATE_Y2; ++_Y) {
-				for (int16_t _X = LAYER_UPDATE_X1; _X < LAYER_UPDATE_X2; ++_X) {
-					_pos = (_Y * CANVAS_W + _X);
-					cols = BRUSH_PIXELS[_pos];
-					cold = PD[_pos];
+			COLOR* layer_data = (LAYERS[CURRENT_LAYER].pixels.get());
+			for (int16_t _y = LAYER_UPDATE_Y1; _y < LAYER_UPDATE_Y2; ++_y) {
+				for (int16_t _x = LAYER_UPDATE_X1; _x < LAYER_UPDATE_X2; ++_x) {
+					const int _pos = (_y * CANVAS_W + _x);
+					const COLOR brush_color = BRUSH_PIXELS[_pos];
+					const COLOR dest_color = layer_data[_pos];
 
-					if (cols == 0x00000000) // if there's an empty pixel in the brush texture
+					const COLOR empty{0, 0, 0, 0};
+
+					BRUSH_PIXELS[_pos] = empty; // clear the brush pixel
+
+					if (brush_color == empty) // if there's an empty pixel in the brush texture
 					{
-						// make it save the destination pixel as the undo and redo
-						_u->_set_pixel(((_Y - LAYER_UPDATE_Y1) * t_layer_update_w + (_X - LAYER_UPDATE_X1)), cold, cold);
+						_u.set(_x - LAYER_UPDATE_X1, _y - LAYER_UPDATE_Y1, dest_color, dest_color);
 						continue;
 					}
-					else
+
 					if (CURRENT_TOOL == 1) // if it's the erase tool
 					{
-						BRUSH_PIXELS[_pos] = 0x00000000; // clear the brush pixel
-						PD[_pos] = 0x00000000; // erase the destination pixel
-						_u->_set_pixel(((_Y - LAYER_UPDATE_Y1) * t_layer_update_w + (_X - LAYER_UPDATE_X1)), cold, 0xffffff00); // set the redo to the erase colour
-						// 0xffffff00 is invisible-white, and a colour that can be connected to "is empty" for erasure
+						layer_data[_pos] = empty; // erase the destination pixel
+						_u.set(_x - LAYER_UPDATE_X1, _y - LAYER_UPDATE_Y1, dest_color, empty);
 						continue;
 					}
 
-					if (cold == 0x00000000) // if destination pixel is empty
+					if (dest_color == empty) // if destination pixel is empty
 					{
-						BRUSH_PIXELS[_pos] = 0x00000000; // clear the brush pixel
-						PD[_pos] = cols; // make destination the saved brush pixel
-						_u->_set_pixel(((_Y - LAYER_UPDATE_Y1) * t_layer_update_w + (_X - LAYER_UPDATE_X1)), cold, cols); // save redo and undo
+						layer_data[_pos] = brush_color; // make destination the saved brush pixel
+						_u.set(_x - LAYER_UPDATE_X1, _y - LAYER_UPDATE_Y1, dest_color, brush_color);
 						continue;
 					}
 
 					// if it isn't any of those edge cases, we properly mix the colours
-					//
-					//  THIS COULD BE MORE EFFICIENT !! (it uses floats where it could use pre-calculated int divisions)
-					//
-					SRC_COLA = (cols & 0x000000ff) * _d;
-					DEST_COLA = (cold & 0x000000ff) * _d * (1. - SRC_COLA);
-					NEW_COLA = (SRC_COLA + DEST_COLA);
-					tdest_cola = (_d * DEST_COLA);
-					tsrc_cola = (_d * SRC_COLA);
-					NEW_COL = (uint32_t)(
-						((uint8_t)((((((cols & 0xff000000) >> 24) * tsrc_cola) + (((cold & 0xff000000) >> 24) * tdest_cola)) / NEW_COLA) * 255) << 24) |
-						((uint8_t)((((((cols & 0x00ff0000) >> 16) * tsrc_cola) + (((cold & 0x00ff0000) >> 16) * tdest_cola)) / NEW_COLA) * 255) << 16) |
-						((uint8_t)((((((cols & 0x0000ff00) >> 8) * tsrc_cola) + (((cold & 0x0000ff00) >> 8) * tdest_cola)) / NEW_COLA) * 255) << 8) |
-						(uint8_t)(NEW_COLA * 255));
-					PD[_pos] = NEW_COL;
-					BRUSH_PIXELS[_pos] = 0x00000000;
-					_u->_set_pixel(((_Y - LAYER_UPDATE_Y1) * t_layer_update_w + (_X - LAYER_UPDATE_X1)), cold, NEW_COL);
+					const COLOR new_col = blend_colors(brush_color, dest_color);
+					layer_data[_pos] = new_col;
+					_u.set(_x - LAYER_UPDATE_X1, _y - LAYER_UPDATE_Y1, dest_color, new_col);
 				}
 			}
 
 			// clear the brush texture (since we made all pixels 0x00000000)
-			SDL_Rect const I_RECT { LAYER_UPDATE_X1, LAYER_UPDATE_Y1, t_layer_update_w, t_layer_update_h };
+			const SDL_Rect dirty_rect { LAYER_UPDATE_X1, LAYER_UPDATE_Y1, t_layer_update_w, t_layer_update_h };
 
 			SDL_SetTextureBlendMode(BRUSH_TEXTURE, SDL_BLENDMODE_NONE);
-			SDL_UpdateTexture(BRUSH_TEXTURE, &I_RECT, &BRUSH_PIXELS[LAYER_UPDATE_Y1 * CANVAS_W + LAYER_UPDATE_X1], CANVAS_PITCH);
+			SDL_UpdateTexture(BRUSH_TEXTURE, &dirty_rect, &BRUSH_PIXELS[LAYER_UPDATE_Y1 * CANVAS_W + LAYER_UPDATE_X1], CANVAS_PITCH);
 
 			// if we're back a few steps in the undo reel, we clear all the above undo steps.
 			while (UNDO_POS > 0) {
-				UNDO_LIST.back()->redo_pixels.clear();
-				UNDO_LIST.back()->undo_pixels.clear();
 				UNDO_LIST.pop_back();
 				UNDO_POS--;
 			};
 
 			// add the new undo
-			UNDO_LIST.push_back(_u);
+			UNDO_LIST.push_back(std::move(_u));
 			
 			// update the layer we drew to
-			SDL_UpdateTexture(LAYERS[CURRENT_LAYER].texture, &I_RECT, &PD[LAYER_UPDATE_Y1 * CANVAS_W + LAYER_UPDATE_X1], CANVAS_PITCH);
+			SDL_UpdateTexture(LAYERS[CURRENT_LAYER].texture, &dirty_rect, &layer_data[LAYER_UPDATE_Y1 * CANVAS_W + LAYER_UPDATE_X1], CANVAS_PITCH);
 
 			LAYER_UPDATE = 0;
 		}
@@ -184,14 +165,13 @@ int main(int argc, char* argv[])
 			}
 			else
 			{
-				for (int i = 0; i < (int)(LAYERS.size()); i++)
-				{
-					SDL_SetTextureBlendMode(LAYERS[i].texture, SDL_BLENDMODE_NONE);
-					SDL_UpdateTexture(LAYERS[i].texture, NULL, &LAYERS[i].pixels[0], CANVAS_PITCH);
+				for (const auto& layer: LAYERS) {
+					SDL_SetTextureBlendMode(layer.texture, SDL_BLENDMODE_NONE);
+					SDL_UpdateTexture(layer.texture, nullptr, &layer.pixels[0], CANVAS_PITCH);
 				}
 			}
 
-			SDL_UpdateTexture(BRUSH_TEXTURE, NULL, BRUSH_PIXELS, CANVAS_PITCH);
+			SDL_UpdateTexture(BRUSH_TEXTURE, nullptr, BRUSH_PIXELS.get(), CANVAS_PITCH);
 			CANVAS_UPDATE = 0;
 			UNDO_UPDATE = 0;
 			UNDO_UPDATE_LAYER = 0;
@@ -233,7 +213,7 @@ int main(int argc, char* argv[])
 		F_RECT = {CANVAS_X_ANIM, CANVAS_Y_ANIM, CANVAS_W_ANIM, CANVAS_H_ANIM};
 
 		// RENDER THE LAYERS
-		for (auto const& layer : LAYERS)
+		for (const auto& layer: LAYERS)
 		{
 			SDL_SetTextureBlendMode(layer.texture, layer.blendmode);
 			SDL_RenderCopyF(RENDERER, layer.texture, nullptr, &F_RECT);
@@ -255,8 +235,8 @@ int main(int argc, char* argv[])
 		//I_RECT = { 10, 10, 32, 360 };
 		//SDL_RenderCopy(RENDERER, UI_TEXTURE_HUEBAR, nullptr, &I_RECT);
 
-		//FC_Draw(font, RENDERER, 36, 10, "%i\n%i\n%i\n%i", BRUSH_UPDATE, LAYER_UPDATE, CANVAS_MOUSE_X, CANVAS_MOUSE_Y);
 		FC_Draw(font, RENDERER, 36, 10, "%i", UNDO_LIST.size());
+		FC_Draw(font, RENDERER, 36, 30, "%i\n%i\n", BRUSH_UPDATE, LAYER_UPDATE);
 
 		SDL_SetRenderDrawColor(RENDERER, 0, 0, 0, 0);
 		SDL_RenderPresent(RENDERER);
@@ -276,7 +256,6 @@ int main(int argc, char* argv[])
 
 	FC_FreeFont(font);
 	FC_FreeFont(font_bold);
-	delete[] BRUSH_PIXELS;
 	SDL_DestroyRenderer(RENDERER);
 	SDL_DestroyWindow(WINDOW);
 	SDL_Quit();
