@@ -151,3 +151,6 @@ UpgradeLog*.XML
 UpgradeLog*.htm
 ServiceFabricBackup/
 *.rptproj.bak
+
+# build folder
+build/
