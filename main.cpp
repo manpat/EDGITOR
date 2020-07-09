@@ -14,8 +14,6 @@
 
 int main(int, char*[])
 {
-	std::cout << (UINT16_MAX) << std::endl << (INT16_MAX) << std::endl;
-
 	// MAIN INIT
 	INIT_SDL();
 	auto WINDOW = INIT_WINDOW();
