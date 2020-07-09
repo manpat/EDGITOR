@@ -19,8 +19,9 @@ EDGITOR was designed to be extremely concise and clean from the ground up. It us
 ## COMMUNITY DRIVEN
 EDGITOR is now open source, and I'd love for this to grow via the community! Feel free to send pull requests, and add features to this so it can grow faster like never before!
 
-/* This project was made in VS2019, and I don't have a Cmake file prepared for it - sorry! So feel free to create a Cmake file for others~ */
-Now you can use Cmake! (macOS only, other platforms will be soon)
+~~This project was made in VS2019, and I don't have a Cmake file prepared for it - sorry! So feel free to create a Cmake file for others~~
+
+Now you can use Cmake! (macOS only, other platforms will be added soon)
 *- - - - - - -*
 
 [SDL_FontCache](https://github.com/grimfang4/SDL_FontCache) (with some fixes) by grimfang4 
