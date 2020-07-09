@@ -9,7 +9,7 @@
 #include "FUNCTIONS.h"
 
   //
- //   MAIN LOOP   ///////////////////////////////////////////////// ///////  //////   /////    ///     //      /
+ //   MAIN LOOP   ///////////////////////////////////////////////// ///////  //////   /////    ////     ///      //       /
 //
 
 int main(int, char*[])
@@ -23,6 +23,10 @@ int main(int, char*[])
 	{
 		const Uint64 fps_start = SDL_GetPerformanceCounter(); // fps counter
 
+		BRUSH_UPDATE = 0; // reset brush update
+
+		float t_win_w = (float)WINDOW_W, t_win_h = (float)WINDOW_H; // temporary window size
+
 		// SET WINDOW X, Y, W, H
 		// CLEAR RENDER TARGET
 		SDL_GetWindowSize(WINDOW, &WINDOW_W, &WINDOW_H);
@@ -31,9 +35,16 @@ int main(int, char*[])
 		SDL_SetRenderDrawColor(RENDERER, 0, 0, 0, 255);
 		SDL_RenderClear(RENDERER);
 
-	///////////////////////////////////////////////// ///////  //////   /////    ///     //      /
+		// recenter the canvas if the window changes size
+		if ((WINDOW_W != t_win_w) || (WINDOW_H != t_win_h))
+		{
+			CANVAS_X = (((float)WINDOW_W * .5f) - ((t_win_w * .5f) - CANVAS_X));
+			CANVAS_Y = (((float)WINDOW_H * .5f) - ((t_win_h * .5f) - CANVAS_Y));
+		}
+
+		///////////////////////////////////////////////// ///////  //////   /////    ////     ///      //       /
 		EVENT_LOOP();
-	///////////////////////////////////////////////// ///////  //////   /////    ///     //      /
+		///////////////////////////////////////////////// ///////  //////   /////    ////     ///      //       /
 
 		// UPDATE THE BRUSH TEXTURE PER-CHANGE
 		// this is because a complex shape might be drawn in one tick; like floodfill
@@ -65,8 +76,6 @@ int main(int, char*[])
 			BRUSH_UPDATE_Y1 = INT16_MAX;
 			BRUSH_UPDATE_X2 = INT16_MIN;
 			BRUSH_UPDATE_Y2 = INT16_MIN;
-
-			BRUSH_UPDATE = 0;
 		}
 
 		// LAYER UPDATE
@@ -183,10 +192,10 @@ int main(int, char*[])
 		// RENDER
 		// smooth lerping animation to make things SLIGHTLY smooth when panning and zooming
 		// the '4.0' can be any integer, and will be a changeable option in Settings
-		CANVAS_X_ANIM = (float)(reach_tween(CANVAS_X_ANIM, CANVAS_X, 4.0));
-		CANVAS_Y_ANIM = (float)(reach_tween(CANVAS_Y_ANIM, CANVAS_Y, 4.0));
-		CANVAS_W_ANIM = (float)(reach_tween(CANVAS_W_ANIM, (float)CANVAS_W * CANVAS_ZOOM, 4.0));
-		CANVAS_H_ANIM = (float)(reach_tween(CANVAS_H_ANIM, (float)CANVAS_H * CANVAS_ZOOM, 4.0));
+		CANVAS_X_ANIM = reach_tween(CANVAS_X_ANIM, floor(CANVAS_X), 4.0);
+		CANVAS_Y_ANIM = reach_tween(CANVAS_Y_ANIM, floor(CANVAS_Y), 4.0);
+		CANVAS_W_ANIM = reach_tween(CANVAS_W_ANIM, floor((float)CANVAS_W * CANVAS_ZOOM), 4.0);
+		CANVAS_H_ANIM = reach_tween(CANVAS_H_ANIM, floor((float)CANVAS_H * CANVAS_ZOOM), 4.0);
 		
 		SDL_FRect F_RECT {};
 
@@ -197,13 +206,13 @@ int main(int, char*[])
 		SDL_SetTextureBlendMode(BG_GRID_TEXTURE, SDL_BLENDMODE_BLEND);
 		SDL_RenderCopyF(RENDERER, BG_GRID_TEXTURE, nullptr, &F_RECT);
 
+		// these 2 rects cover the overhang the background grid has beyond the canvas
 		SDL_SetRenderDrawColor(RENDERER, 0, 0, 0, 255);
 		F_RECT = SDL_FRect {
 			std::max(0.0f, CANVAS_X_ANIM), std::max(0.0f,CANVAS_Y_ANIM + (CANVAS_H_ANIM)),
 			std::min(float(WINDOW_W),bg_w), CELL_H * CANVAS_ZOOM
 		};
 		SDL_RenderFillRectF(RENDERER, &F_RECT);
-
 		F_RECT = SDL_FRect {
 			std::max(0.0f, CANVAS_X_ANIM + (CANVAS_W_ANIM)), std::max(0.0f, CANVAS_Y_ANIM),
 			CELL_W * CANVAS_ZOOM, std::min(float(WINDOW_H),bg_h)
@@ -226,10 +235,12 @@ int main(int, char*[])
 		SDL_SetRenderDrawColor(RENDERER, 0, 0, 0, 255);
 
 		// RENDER BRUSH TEXTURE
-		// could probably add a 'if (BRUSH_UPDATE)' so it doesn't always render an empty texture when not drawing
-		F_RECT = { CANVAS_X_ANIM, CANVAS_Y_ANIM, bg_w, bg_h };
-		SDL_SetTextureBlendMode(BRUSH_TEXTURE, SDL_BLENDMODE_BLEND);
-		SDL_RenderCopyF(RENDERER, BRUSH_TEXTURE, nullptr, &F_RECT);
+		if (BRUSH_UPDATE)
+		{
+			F_RECT = { CANVAS_X_ANIM, CANVAS_Y_ANIM, bg_w, bg_h };
+			SDL_SetTextureBlendMode(BRUSH_TEXTURE, SDL_BLENDMODE_BLEND);
+			SDL_RenderCopyF(RENDERER, BRUSH_TEXTURE, nullptr, &F_RECT);
+		}
 
 		// TEST HUE BAR
 		//I_RECT = { 10, 10, 32, 360 };
@@ -264,5 +275,5 @@ int main(int, char*[])
 }
 
   //
- //   END   ///////////////////////////////////////////////// ///////  //////   /////    ///     //      /
+ //   END   ///////////////////////////////////////////////// ///////  //////   /////    ////     ///      //       /
 //

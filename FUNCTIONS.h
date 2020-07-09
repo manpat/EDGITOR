@@ -1,7 +1,7 @@
 #pragma once
 
   //
- //   FUNCTIONS   ///////////////////////////////////////////////// ///////  //////   /////    ///     //      /
+ //   FUNCTIONS   ///////////////////////////////////////////////// ///////  //////   /////    ////     ///      //       /
 //
 
 inline float reach_tween(float a, float b, float t)
@@ -117,7 +117,7 @@ inline COLOR blend_colors(COLOR src_color, COLOR dst_color) {
 }
 
   //
- //   CANVAS FUNCTIONS   ///////////////////////////////////////////////// ///////  //////   /////    ///     //      /
+ //   CANVAS FUNCTIONS   ///////////////////////////////////////////////// ///////  //////   /////    ////     ///      //       /
 //
 
 inline void layer_new(SDL_Renderer* _renderer, int16_t _x, int16_t _y, int16_t _a, SDL_BlendMode _b)
@@ -282,7 +282,7 @@ void function_undo(int n)
 }
 
   //
- //   SYSTEM FUNCTIONS   ///////////////////////////////////////////////// ///////  //////   /////    ///     //      /
+ //   SYSTEM FUNCTIONS   ///////////////////////////////////////////////// ///////  //////   /////    ////     ///      //       /
 //
 
 inline void INIT_SDL()
@@ -459,7 +459,7 @@ inline void EVENT_LOOP() {
 			float t_CANVAS_ZOOM = CANVAS_ZOOM;
 			CANVAS_ZOOM = clamp(CANVAS_ZOOM + ((float)event.wheel.y * (CANVAS_ZOOM * 0.5f) * 0.5f), 1.0f, 50.0f);
 			CANVAS_ZOOM = clamp(CANVAS_ZOOM + (float)event.wheel.y, 1.0f, 100.0f);
-			CANVAS_ZOOM = floorf(CANVAS_ZOOM);
+			CANVAS_ZOOM = floor(CANVAS_ZOOM);
 			if (t_CANVAS_ZOOM != CANVAS_ZOOM)
 			{
 				float _mx = (((float)MOUSE_X - (float)CANVAS_X) / (float)t_CANVAS_ZOOM), _my = (((float)MOUSE_Y - (float)CANVAS_Y) / (float)t_CANVAS_ZOOM);
@@ -540,7 +540,7 @@ inline void EVENT_LOOP() {
 		//t3.join();
 		//t4.join();
 
-		function_undo(1);
+		//function_undo(1);
 
 	}
 }
