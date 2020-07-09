@@ -403,32 +403,32 @@ inline void EVENT_LOOP() {
 	CANVAS_MOUSE_CELL_X = (int16_t)floor(t_CANVAS_MOUSE_X / (double)CELL_W);
 	CANVAS_MOUSE_CELL_Y = (int16_t)floor(t_CANVAS_MOUSE_Y / (double)CELL_H);
 
-	SDL_Event EVENT {};
+	SDL_Event event {};
 
-	while (SDL_PollEvent(&EVENT))
+	while (SDL_PollEvent(&event))
 	{
-		if ((SDL_QUIT == EVENT.type) || (SDL_KEYDOWN == EVENT.type && SDL_SCANCODE_ESCAPE == EVENT.key.keysym.scancode))
+		if ((SDL_QUIT == event.type) || (SDL_KEYDOWN == event.type && SDL_SCANCODE_ESCAPE == event.key.keysym.scancode))
 		{
 			QUIT = 1;
 			break;
 		}
 
-		switch (EVENT.type)
+		switch (event.type)
 		{
 		case SDL_MOUSEBUTTONUP:
-			if (EVENT.button.button == SDL_BUTTON_LEFT)
+			if (event.button.button == SDL_BUTTON_LEFT)
 			{
 				MOUSEBUTTON_LEFT = false;
 				MOUSEBUTTON_PRESSED_LEFT = false;
 			}
 
-			if (EVENT.button.button == SDL_BUTTON_MIDDLE)
+			if (event.button.button == SDL_BUTTON_MIDDLE)
 			{
 				MOUSEBUTTON_MIDDLE = false;
 				MOUSEBUTTON_PRESSED_MIDDLE = false;
 			}
 
-			if (EVENT.button.button == SDL_BUTTON_RIGHT)
+			if (event.button.button == SDL_BUTTON_RIGHT)
 			{
 				MOUSEBUTTON_RIGHT = false;
 				MOUSEBUTTON_PRESSED_RIGHT = false;
@@ -436,29 +436,29 @@ inline void EVENT_LOOP() {
 			break;
 
 		case SDL_MOUSEBUTTONDOWN:
-			if (EVENT.button.button == SDL_BUTTON_LEFT)
+			if (event.button.button == SDL_BUTTON_LEFT)
 			{
 				MOUSEBUTTON_LEFT = true;
 				MOUSEBUTTON_PRESSED_LEFT = true;
 			}
 
-			if (EVENT.button.button == SDL_BUTTON_MIDDLE)
+			if (event.button.button == SDL_BUTTON_MIDDLE)
 			{
 				MOUSEBUTTON_MIDDLE = true;
 				MOUSEBUTTON_PRESSED_MIDDLE = true;
 			}
 
-			if (EVENT.button.button == SDL_BUTTON_RIGHT)
+			if (event.button.button == SDL_BUTTON_RIGHT)
 			{
 				MOUSEBUTTON_RIGHT = true;
 				MOUSEBUTTON_PRESSED_RIGHT = true;
 			}
 			break;
 
-		case SDL_MOUSEWHEEL:
+		case SDL_MOUSEWHEEL: {
 			float t_CANVAS_ZOOM = CANVAS_ZOOM;
-			CANVAS_ZOOM = clamp(CANVAS_ZOOM + ((float)EVENT.wheel.y * (CANVAS_ZOOM * 0.5f) * 0.5f), 1.0f, 50.0f);
-			CANVAS_ZOOM = clamp(CANVAS_ZOOM + (float)EVENT.wheel.y, 1.0f, 100.0f);
+			CANVAS_ZOOM = clamp(CANVAS_ZOOM + ((float)event.wheel.y * (CANVAS_ZOOM * 0.5f) * 0.5f), 1.0f, 50.0f);
+			CANVAS_ZOOM = clamp(CANVAS_ZOOM + (float)event.wheel.y, 1.0f, 100.0f);
 			CANVAS_ZOOM = floorf(CANVAS_ZOOM);
 			if (t_CANVAS_ZOOM != CANVAS_ZOOM)
 			{
@@ -469,6 +469,27 @@ inline void EVENT_LOOP() {
 				CANVAS_Y += (float)((_nmy - _my) * CANVAS_ZOOM);
 			}
 			break;
+		}
+
+		case SDL_KEYDOWN: {
+			const auto keysym = event.key.keysym;
+			if (keysym.mod & KMOD_CTRL) {
+				switch (keysym.sym) {
+				case SDLK_z: {
+					if (keysym.mod & KMOD_SHIFT) {
+						// because it's the superior 'redo' shortcut :)
+						function_undo(-1);
+					} else {
+						function_undo(1);
+					}
+					break;
+				}
+				case SDLK_y: function_undo(-1);  break;
+				default: break;
+				}
+			}
+			break;
+		}
 		}
 	}
 
@@ -506,7 +527,7 @@ inline void EVENT_LOOP() {
 				LAYER_UPDATE = 2;
 			}
 		}*/
-		//floodfill((uint16_t)CANVAS_MOUSE_X, (uint16_t)CANVAS_MOUSE_Y, CANVAS_W, CANVAS_H, 0x00000000, 0xff0000ff);
+		// floodfill((uint16_t)CANVAS_MOUSE_X, (uint16_t)CANVAS_MOUSE_Y, CANVAS_W, CANVAS_H, 0x00000000, 0xff0000ff);
 		/*std::thread t1(floodfill, (uint16_t)CANVAS_MOUSE_X-1, (uint16_t)CANVAS_MOUSE_Y, CANVAS_W, CANVAS_H, 0x00000000, 0xff0000ff);
 		//std::thread t2(floodfill, (uint16_t)CANVAS_MOUSE_X+1, (uint16_t)CANVAS_MOUSE_Y, CANVAS_W, CANVAS_H, 0x00000000, 0xff0000ff);
 		//std::thread t3(floodfill, (uint16_t)CANVAS_MOUSE_X, (uint16_t)CANVAS_MOUSE_Y-1, CANVAS_W, CANVAS_H, 0x00000000, 0xff0000ff);
