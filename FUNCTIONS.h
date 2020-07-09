@@ -254,6 +254,7 @@ void function_undo(int n)
 	uint16_t _l = (UNDO_LIST[_tpos]->layer);
 	uint32_t _c;
 	std::vector<uint32_t>& _p = (_is_undo ? UNDO_LIST[_tpos]->undo_pixels : UNDO_LIST[_tpos]->redo_pixels); // not sure if & is needed
+	//
 	for (int i = 0; i < _s; i++)
 	{
 		_c = (_p[i]);

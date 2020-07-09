@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <memory>
 #include <SDL.h>
 #include <SDL_ttf.h>
 #include "SDL_FontCache.h"
@@ -13,8 +14,6 @@
 
 int main(int argc, char* argv[])
 {
-	std::cout << (UINT16_MAX) << std::endl << (INT16_MAX) << std::endl;
-
 	// MAIN INIT
 	INIT_SDL();
 	auto WINDOW = INIT_WINDOW();
