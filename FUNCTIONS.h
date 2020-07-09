@@ -103,18 +103,17 @@ void lab2rgb(float l_s, float a_s, float b_s, float& R, float& G, float& B)
 	B = clamp(var_B * 255., 0.0f, 255.0f);
 }
 
-
-inline uint32_t blend_colors(uint32_t src_color, uint32_t dst_color) {
-	const float src_cola = (src_color & 0x000000ff) / 255.0f;
-	const float dest_cola = (dst_color & 0x000000ff) / 255.0f * (1. - src_cola);
+inline COLOR blend_colors(COLOR src_color, COLOR dst_color) {
+	const float src_cola = src_color.a / 255.0f;
+	const float dest_cola = dst_color.a / 255.0f * (1. - src_cola);
 	const float new_cola = (src_cola + dest_cola);
-	const float tdest_cola = (dest_cola / 255.0f);
-	const float tsrc_cola = (src_cola / 255.0f);
-	return (uint32_t)(
-		((uint8_t)((((((src_color & 0xff000000) >> 24) * tsrc_cola) + (((dst_color & 0xff000000) >> 24) * tdest_cola))) / new_cola * 255) << 24) |
-		((uint8_t)((((((src_color & 0x00ff0000) >> 16) * tsrc_cola) + (((dst_color & 0x00ff0000) >> 16) * tdest_cola))) / new_cola * 255) << 16) |
-		((uint8_t)((((((src_color & 0x0000ff00) >> 8) * tsrc_cola) + (((dst_color & 0x0000ff00) >> 8) * tdest_cola))) / new_cola * 255) << 8) |
-		(uint8_t)(new_cola * 255.0f));
+
+	return COLOR {
+		uint8_t((src_color.r/255.0f * src_cola + dst_color.r/255.0f * dest_cola) / new_cola * 255.0f),
+		uint8_t((src_color.g/255.0f * src_cola + dst_color.g/255.0f * dest_cola) / new_cola * 255.0f),
+		uint8_t((src_color.b/255.0f * src_cola + dst_color.b/255.0f * dest_cola) / new_cola * 255.0f),
+		uint8_t(new_cola * 255.0f),
+	};
 }
 
   //
@@ -124,9 +123,9 @@ inline uint32_t blend_colors(uint32_t src_color, uint32_t dst_color) {
 inline void layer_new(SDL_Renderer* _renderer, int16_t _x, int16_t _y, int16_t _a, SDL_BlendMode _b)
 {
 	LAYER_INFO new_layer;
-	new_layer.texture = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, CANVAS_W, CANVAS_H);
+	new_layer.texture = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, CANVAS_W, CANVAS_H);
 
-	new_layer.pixels = std::make_unique<uint32_t[]>(CANVAS_W * CANVAS_H);
+	new_layer.pixels = std::make_unique<COLOR[]>(CANVAS_W * CANVAS_H);
 	new_layer.x = _x;
 	new_layer.y = _y;
 	new_layer.alpha = _a;
@@ -147,7 +146,7 @@ inline bool out_canvas(const uint16_t x, const uint16_t y)
 	return (x >= CANVAS_W || y >= CANVAS_H);
 }
 
-inline void set_pixel(const int16_t x, const int16_t y, const uint32_t c)
+inline void set_pixel(const int16_t x, const int16_t y, const COLOR c)
 {
 	if (out_canvas(x, y)) return;
 
@@ -158,7 +157,7 @@ inline void set_pixel(const int16_t x, const int16_t y, const uint32_t c)
 	BRUSH_UPDATE_Y2 = std::max(BRUSH_UPDATE_Y2, int16_t(y + 1));
 }
 
-inline void set_pixel_layer(const int16_t x, const int16_t y, const uint32_t c, uint16_t l)
+inline void set_pixel_layer(const int16_t x, const int16_t y, const COLOR c, uint16_t l)
 {
 	if (out_canvas(x, y)) return;
 
@@ -169,7 +168,7 @@ inline void set_pixel_layer(const int16_t x, const int16_t y, const uint32_t c, 
 	BRUSH_UPDATE_Y2 = std::max(BRUSH_UPDATE_Y2, int16_t(y + 1));
 }
 
-void set_pixel_line(int16_t x0, int16_t y0, const int16_t x1, const int16_t y1, uint32_t c)
+void set_pixel_line(int16_t x0, int16_t y0, const int16_t x1, const int16_t y1, COLOR c)
 {
 	int16_t dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
 	int16_t dy = -abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
@@ -185,19 +184,19 @@ void set_pixel_line(int16_t x0, int16_t y0, const int16_t x1, const int16_t y1, 
 	LAYER_UPDATE = 2;
 }
 
-inline bool floodfill_check(const uint16_t x, const uint16_t y, const uint32_t col)
+inline bool floodfill_check(const uint16_t x, const uint16_t y, const COLOR col)
 {
 	return ((CURRENT_LAYER_PTR[y * CANVAS_W + x] != col) || (BRUSH_PIXELS[y * CANVAS_W + x] != col));
 }
 
-inline bool floodfill_check_not(const uint16_t x, const uint16_t y, const uint32_t col)
+inline bool floodfill_check_not(const uint16_t x, const uint16_t y, const COLOR col)
 {
 	return ((CURRENT_LAYER_PTR[y * CANVAS_W + x] == col) && (BRUSH_PIXELS[y * CANVAS_W + x] == col));
 }
 
-inline void floodfill_core(uint16_t x, uint16_t y, const uint16_t width, const uint16_t height, const uint32_t col_old, const uint32_t col_new);
+inline void floodfill_core(uint16_t x, uint16_t y, const uint16_t width, const uint16_t height, const COLOR col_old, const COLOR col_new);
 
-inline void floodfill(uint16_t x, uint16_t y, const uint16_t width, const uint16_t height, const uint32_t col_old, const uint32_t col_new)
+inline void floodfill(uint16_t x, uint16_t y, const uint16_t width, const uint16_t height, const COLOR col_old, const COLOR col_new)
 {
 	while (true)
 	{
@@ -211,7 +210,7 @@ inline void floodfill(uint16_t x, uint16_t y, const uint16_t width, const uint16
 	LAYER_UPDATE = 2;
 }
 
-inline void floodfill_core(uint16_t x, uint16_t y, const uint16_t width, const uint16_t height, const uint32_t col_old, const uint32_t col_new)
+inline void floodfill_core(uint16_t x, uint16_t y, const uint16_t width, const uint16_t height, const COLOR col_old, const COLOR col_new)
 {
 	int lastRowLength = 0;
 	do
@@ -260,11 +259,11 @@ void function_undo(int n)
 	UNDO_POS = (clamp(UNDO_POS + n, 0, UNDO_LIST.size() - 1));
 
 	const int _tpos = (UNDO_LIST.size() - (UNDO_POS + (!_is_undo)));
-	const auto undo_entry = UNDO_LIST[_tpos].get();
+	const auto undo_entry = &UNDO_LIST[_tpos];
 	const int start_x = (undo_entry->x);
 	const int start_y = (undo_entry->y);
 	const uint16_t _l = (undo_entry->layer);
-	const std::vector<uint32_t>& _p = (_is_undo ? undo_entry->undo_pixels : undo_entry->redo_pixels);
+	const std::vector<COLOR>& _p = (_is_undo ? undo_entry->undo_pixels : undo_entry->redo_pixels);
 
 	for (int y = 0; y < undo_entry->h; y++)
 	{
@@ -316,20 +315,20 @@ inline SDL_Renderer* INIT_RENDERER(SDL_Window* WINDOW)
 	auto RENDERER = SDL_CreateRenderer(WINDOW, -1, SDL_RENDERER_ACCELERATED);
 
 	// BRUSH SURFACE
-	BRUSH_PIXELS = new uint32_t[CANVAS_W * CANVAS_H] {};
-	BRUSH_TEXTURE = SDL_CreateTexture(RENDERER, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, CANVAS_W, CANVAS_H);
+	BRUSH_PIXELS = std::make_unique<COLOR[]>(CANVAS_W * CANVAS_H);
+	BRUSH_TEXTURE = SDL_CreateTexture(RENDERER, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, CANVAS_W, CANVAS_H);
 	//SDL_UpdateTexture(CANVAS_TEXTURE, nullptr, &CANVAS_PIXELS[0], (sizeof(uint32_t) * CANVAS_W));
 	
 	// DEFAULT LAYER
 	layer_new(RENDERER, 0, 0, 255, SDL_BLENDMODE_BLEND);
 	
 	// SET DEFAULT CANVAS UNDO
-	auto _u1 = std::make_shared<UNDO_DATA>(0, 0);
-	_u1->x = 0;
-	_u1->y = 0;
-	_u1->w = 0;
-	_u1->h = 0;
-	UNDO_LIST.push_back(_u1);
+	UNDO_DATA _u1 {0, 0};
+	_u1.x = 0;
+	_u1.y = 0;
+	_u1.w = 0;
+	_u1.h = 0;
+	UNDO_LIST.push_back(std::move(_u1));
 
 	// LOAD FONTS
 	font = FC_CreateFont();
@@ -342,75 +341,41 @@ inline SDL_Renderer* INIT_RENDERER(SDL_Window* WINDOW)
 	// BACKGROUND GRID TEXTURE
 	BG_GRID_W = ((int16_t)ceil((double)CANVAS_W / (double)CELL_W));
 	BG_GRID_H = ((int16_t)ceil((double)CANVAS_H / (double)CELL_H));
-	auto BG_GRID_PIXELS = std::make_unique<uint32_t[]>(BG_GRID_W * BG_GRID_H);
-	BG_GRID_TEXTURE = SDL_CreateTexture(RENDERER, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, BG_GRID_W, BG_GRID_H);
+	auto BG_GRID_PIXELS = std::make_unique<COLOR[]>(BG_GRID_W * BG_GRID_H);
+	BG_GRID_TEXTURE = SDL_CreateTexture(RENDERER, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, BG_GRID_W, BG_GRID_H);
 	for (int i = 0; i < BG_GRID_H; i++)
 	{
 		for (int j = 0; j < BG_GRID_W; j++)
 		{
-			BG_GRID_PIXELS[i * BG_GRID_W + j] = (((j + (i % 2)) % 2) ? (0x1a1a1aff) : (0x212121ff));// (((int)(i + floor((double)i / (double)bg_grid_w)) % 2) ? (0x1a1a1aff) : (0x212121ff));
+			const COLOR cell_colors[] {
+				COLOR {0x1a, 0x1a, 0x1a, 0xff},
+				COLOR {0x21, 0x21, 0x21, 0xff},
+			};
+
+			BG_GRID_PIXELS[i * BG_GRID_W + j] = cell_colors[(i+j) % 2];
 		}
 	}
 	SDL_SetTextureBlendMode(BG_GRID_TEXTURE, SDL_BLENDMODE_NONE);
-	SDL_UpdateTexture(BG_GRID_TEXTURE, nullptr, BG_GRID_PIXELS.get(), BG_GRID_W * sizeof(uint32_t));
+	SDL_UpdateTexture(BG_GRID_TEXTURE, nullptr, BG_GRID_PIXELS.get(), BG_GRID_W * sizeof(COLOR));
 
 	// UI
 	// HUEBAR
-	UI_PIXELS_HUEBAR = new uint32_t[16 * 360];
-	UI_TEXTURE_HUEBAR = SDL_CreateTexture(RENDERER, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, 16, 360);
-	uint32_t _tcol = 0x00000000;
-	int16_t H;
-	uint8_t Rs, Gs, Bs;
-	for (int16_t i = 0; i < 360; i++)
+	UI_PIXELS_HUEBAR = new COLOR[16 * 360];
+	UI_TEXTURE_HUEBAR = SDL_CreateTexture(RENDERER, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, 16, 360);
+
+	for (int16_t H = 0; H < 360; H++)
 	{
-		H = i;// (int16_t)floor(((double)i / 256.0) * 360.0);
-		uint8_t X = (uint8_t)floor((1 - abs(fmod(H / 60.0, 2) - 1)) * 255);
-
-		if (H >= 0 && H < 60) {
-			Rs = 0xff;
-			Gs = X;
-			Bs = 0;
-		}
-		else if (H >= 60 && H < 120) {
-			Rs = X;
-			Gs = 0xff;
-			Bs = 0;
-		}
-		else if (H >= 120 && H < 180) {
-			Rs = 0;
-			Gs = 0xff;
-			Bs = X;
-		}
-		else if (H >= 180 && H < 240) {
-			Rs = 0;
-			Gs = X;
-			Bs = 0xff;
-		}
-		else if (H >= 240 && H < 300) {
-			Rs = X;
-			Gs = 0;
-			Bs = 0xff;
-		}
-		else {
-			Rs = 0xff;
-			Gs = 0;
-			Bs = X;
-		}
-
 		float _tr, _tg, _tb;
-		lab2rgb(100.0f - (float)(((float)i / 360.0f) * 100.0f), 74, -104, _tr, _tg, _tb);
+		lab2rgb(100.0f - (float)H / 360.0f * 100.0f, 74, -104, _tr, _tg, _tb);
 
-		Rs = (uint8_t)floor(_tr);
-		Gs = (uint8_t)floor(_tg);
-		Bs = (uint8_t)floor(_tb);
+		const uint8_t Rs = (uint8_t)floor(_tr);
+		const uint8_t Gs = (uint8_t)floor(_tg);
+		const uint8_t Bs = (uint8_t)floor(_tb);
 
-		_tcol = (uint32_t)((Rs<<24) | (Gs << 16) | (Bs << 8) | 0xff);
-		for (int16_t j = 0; j < 16; j++)
-		{
-			UI_PIXELS_HUEBAR[i * 16 + j] = _tcol;
-		}
+		const COLOR color {Rs, Gs, Bs, 0xff};
+		std::fill(&UI_PIXELS_HUEBAR[H * 16], &UI_PIXELS_HUEBAR[(H+1) * 16], color);
 	}
-	SDL_UpdateTexture(UI_TEXTURE_HUEBAR, nullptr, &UI_PIXELS_HUEBAR[0], (sizeof(uint32_t) * 16));
+	SDL_UpdateTexture(UI_TEXTURE_HUEBAR, nullptr, &UI_PIXELS_HUEBAR[0], sizeof(COLOR) * 16);
 	return RENDERER;
 }
 
@@ -520,7 +485,7 @@ inline void EVENT_LOOP() {
 
 	if (MOUSEBUTTON_LEFT)
 	{
-		set_pixel_line(CANVAS_MOUSE_PREVX, CANVAS_MOUSE_PREVY, CANVAS_MOUSE_X, CANVAS_MOUSE_Y, 0xffffffff);
+		set_pixel_line(CANVAS_MOUSE_PREVX, CANVAS_MOUSE_PREVY, CANVAS_MOUSE_X, CANVAS_MOUSE_Y, BRUSH_COLOR);
 		//std::cout << "TICK" << std::endl;
 	}
 

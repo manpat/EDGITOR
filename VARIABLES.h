@@ -24,6 +24,19 @@ int WINDOW_H;
 int DISPLAY_W;
 int DISPLAY_H;
 
+struct COLOR {
+	uint8_t r, g, b, a;
+
+	friend bool operator==(COLOR a, COLOR b) {
+		return a.r == b.r && a.g == b.g
+			&& a.b == b.b && a.a == b.a;
+	}
+
+	friend bool operator!=(COLOR a, COLOR b) {
+		return !(a == b);
+	}
+};
+
 // CANVAS
 bool CANVAS_UPDATE = false;
 float CANVAS_ZOOM = 1.0;
@@ -41,10 +54,9 @@ int16_t CANVAS_MOUSE_PREVX = 0;
 int16_t CANVAS_MOUSE_PREVY = 0;
 int16_t CANVAS_MOUSE_CELL_X = 0;
 int16_t CANVAS_MOUSE_CELL_Y = 0;
-int16_t CANVAS_PITCH = (sizeof(uint32_t) * CANVAS_W);
+int16_t CANVAS_PITCH = (sizeof(COLOR) * CANVAS_W);
 
 SDL_Texture* BG_GRID_TEXTURE;
-uint32_t* BG_GRID_PIXELS;
 int16_t CELL_W = 16;
 int16_t CELL_H = 16;
 int16_t BG_GRID_W = 0;
@@ -60,7 +72,7 @@ float CANVAS_H_ANIM = 0.0;
 
 // LAYER
 uint16_t CURRENT_LAYER = 0;
-uint32_t* CURRENT_LAYER_PTR = nullptr;
+COLOR* CURRENT_LAYER_PTR = nullptr;
 int16_t LAYER_UPDATE = 0;
 int16_t LAYER_UPDATE_X1 = INT16_MAX;
 int16_t LAYER_UPDATE_Y1 = INT16_MAX;
@@ -68,7 +80,7 @@ int16_t LAYER_UPDATE_X2 = INT16_MIN;
 int16_t LAYER_UPDATE_Y2 = INT16_MIN;
 struct LAYER_INFO {
 	SDL_Texture* texture;
-	std::unique_ptr<uint32_t[]> pixels;
+	std::unique_ptr<COLOR[]> pixels;
 	int16_t x;
 	int16_t y;
 	int16_t alpha;
@@ -85,9 +97,10 @@ int16_t BRUSH_UPDATE_X1 = INT16_MAX;
 int16_t BRUSH_UPDATE_Y1 = INT16_MAX;
 int16_t BRUSH_UPDATE_X2 = INT16_MIN;
 int16_t BRUSH_UPDATE_Y2 = INT16_MIN;
-uint32_t* BRUSH_PIXELS;
-uint32_t* BRUSH_CURSOR_PIXELS;
-uint32_t* BRUSH_CURSOR_PIXELS_CLEAR;
+std::unique_ptr<COLOR[]> BRUSH_PIXELS;
+COLOR BRUSH_COLOR {255, 255, 255, 255};
+COLOR* BRUSH_CURSOR_PIXELS;
+COLOR* BRUSH_CURSOR_PIXELS_CLEAR;
 SDL_Rect BRUSH_CURSOR_PIXELS_CLEAR_RECT;
 uint16_t BRUSH_CURSOR_PIXELS_CLEAR_POS;
 
@@ -106,11 +119,11 @@ uint16_t CURRENT_TOOL = 0;
 
 // UI
 SDL_Texture* UI_TEXTURE_HUEBAR;
-uint32_t* UI_PIXELS_HUEBAR;
+COLOR* UI_PIXELS_HUEBAR;
 
 struct UIBOX_INFO {
 	SDL_Texture* texture;
-	uint32_t* pixels;
+	COLOR* pixels;
 	int16_t x;
 	int16_t y;
 	int16_t alpha;
@@ -126,8 +139,8 @@ struct UNDO_DATA
 	uint16_t y = 0;
 	uint16_t w;
 	uint16_t h;
-	std::vector<uint32_t> undo_pixels;
-	std::vector<uint32_t> redo_pixels;
+	std::vector<COLOR> undo_pixels;
+	std::vector<COLOR> redo_pixels;
 
 	UNDO_DATA(uint16_t _w, uint16_t _h)
 		: w {_w}
@@ -137,7 +150,7 @@ struct UNDO_DATA
 	{
 	}
 
-	void set(uint16_t xx, uint16_t yy, uint32_t prev_col, uint32_t new_col)
+	void set(uint16_t xx, uint16_t yy, COLOR prev_col, COLOR new_col)
 	{
 		int index = xx + yy * this->w;
 		undo_pixels[index] = prev_col;
@@ -145,11 +158,10 @@ struct UNDO_DATA
 	}
 };
 
-std::vector<std::shared_ptr<UNDO_DATA>> UNDO_LIST;
+std::vector<UNDO_DATA> UNDO_LIST;
 uint16_t UNDO_POS = 0;
 uint16_t UNDO_UPDATE = 0;
 uint16_t UNDO_UPDATE_LAYER = 0;
 SDL_Rect UNDO_UPDATE_RECT = { 0, 0, 1, 1 };
-uint32_t UNDO_COL = 0xff0040c0;
-
+COLOR UNDO_COL {0xff, 0x00, 0x40, 0xc0};
 
