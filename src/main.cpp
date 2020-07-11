@@ -12,8 +12,14 @@
  //   MAIN LOOP   ///////////////////////////////////////////////// ///////  //////   /////    ////     ///      //       /
 //
 
+int fps_rate = 0;
+
 int main(int, char*[])
 {
+#if __APPLE__
+    SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengl");
+#endif
+    
 	// MAIN INIT
 	INIT_SDL();
 	auto WINDOW = INIT_WINDOW();
@@ -21,6 +27,15 @@ int main(int, char*[])
 
 	while (!QUIT) // MAIN LOOP
 	{
+        const char *error = SDL_GetError();
+        if (*error) {
+            //QUIT = 1;
+            std::cout << "SDL Error: " << error << std::endl;
+            SDL_ClearError();
+            //break;
+        }
+        
+        
 		const Uint64 fps_start = SDL_GetPerformanceCounter(); // fps counter
 
 		BRUSH_UPDATE = 0; // reset brush update
@@ -251,16 +266,21 @@ int main(int, char*[])
 
 		SDL_SetRenderDrawColor(RENDERER, 0, 0, 0, 0);
 		SDL_RenderPresent(RENDERER);
-
-		//SDL_Delay(1);
+        
+#if __APPLE__
+        SDL_Delay(1);
+#endif
+		//
 
 		// SET FPS
-		const Uint64 fps_end = SDL_GetPerformanceCounter();
-		const static Uint64 fps_freq = SDL_GetPerformanceFrequency();
-		const double fps_seconds = (fps_end - fps_start) / static_cast<double>(fps_freq);
-		FPS = reach_tween(FPS, 1 / (float)fps_seconds, 100.0);
-		std::cout << " FPS: " << (int)floor(FPS) << "          " << '\r';
-		std::cout << SDL_GetError();
+        const Uint64 fps_end = SDL_GetPerformanceCounter();
+        const static Uint64 fps_freq = SDL_GetPerformanceFrequency();
+        const double fps_seconds = (fps_end - fps_start) / static_cast<double>(fps_freq);
+        FPS = reach_tween(FPS, 1 / (float)fps_seconds, 100.0);
+        if (fps_rate <= 0) {
+            std::cout << " FPS: " << (int)floor(FPS) << '\n';
+            fps_rate = 60 * 10;
+        } else fps_rate--;
 	}
 
 	SDL_Delay(10);
