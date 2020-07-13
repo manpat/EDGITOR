@@ -192,16 +192,18 @@ int main(int, char*[])
 		// RENDER
 		// smooth lerping animation to make things SLIGHTLY smooth when panning and zooming
 		// the '4.0' can be any integer, and will be a changeable option in Settings
-		CANVAS_X_ANIM = reach_tween(CANVAS_X_ANIM, floor(CANVAS_X), 4.0);
-		CANVAS_Y_ANIM = reach_tween(CANVAS_Y_ANIM, floor(CANVAS_Y), 4.0);
-		CANVAS_W_ANIM = reach_tween(CANVAS_W_ANIM, floor((float)CANVAS_W * CANVAS_ZOOM), 4.0);
-		CANVAS_H_ANIM = reach_tween(CANVAS_H_ANIM, floor((float)CANVAS_H * CANVAS_ZOOM), 4.0);
+		CANVAS_X_ANIM = (reach_tween(CANVAS_X_ANIM, floor(CANVAS_X), 40.0));
+		CANVAS_Y_ANIM = (reach_tween(CANVAS_Y_ANIM, floor(CANVAS_Y), 40.0));
+		CANVAS_W_ANIM = (reach_tween(CANVAS_W_ANIM, floor((float)CANVAS_W * CANVAS_ZOOM), 40.0));
+		CANVAS_H_ANIM = (reach_tween(CANVAS_H_ANIM, floor((float)CANVAS_H * CANVAS_ZOOM), 40.0));
+		CELL_W_ANIM = (reach_tween(CELL_W_ANIM, floor((float)CELL_W * CANVAS_ZOOM), 40.0));
+		CELL_H_ANIM = (reach_tween(CELL_H_ANIM, floor((float)CELL_H * CANVAS_ZOOM), 40.0));
 		
 		SDL_FRect F_RECT {};
 
 		// transparent background grid
-		float bg_w = ((CANVAS_W_ANIM / (float)CELL_W) * (float)CELL_W);
-		float bg_h = ((CANVAS_H_ANIM / (float)CELL_H) * (float)CELL_H);
+		float bg_w = (ceil(CANVAS_W_ANIM / CELL_W_ANIM) * CELL_W_ANIM);
+		float bg_h = (ceil(CANVAS_H_ANIM / CELL_H_ANIM) * CELL_H_ANIM);
 		F_RECT = SDL_FRect {CANVAS_X_ANIM, CANVAS_Y_ANIM, bg_w, bg_h};
 		SDL_SetTextureBlendMode(BG_GRID_TEXTURE, SDL_BLENDMODE_BLEND);
 		SDL_RenderCopyF(RENDERER, BG_GRID_TEXTURE, nullptr, &F_RECT);
@@ -222,32 +224,73 @@ int main(int, char*[])
 		F_RECT = {CANVAS_X_ANIM, CANVAS_Y_ANIM, CANVAS_W_ANIM, CANVAS_H_ANIM};
 
 		// RENDER THE LAYERS
-		for (const auto& layer: LAYERS)
+		for (uint16_t i = 0; i < LAYERS.size(); i++)
 		{
+			const LAYER_INFO& layer = LAYERS[i];
 			SDL_SetTextureBlendMode(layer.texture, layer.blendmode);
 			SDL_RenderCopyF(RENDERER, layer.texture, nullptr, &F_RECT);
+			if (i == CURRENT_LAYER)
+			{
+				if (BRUSH_UPDATE)
+				{
+					SDL_SetTextureBlendMode(BRUSH_TEXTURE, SDL_BLENDMODE_BLEND);
+					SDL_RenderCopyF(RENDERER, BRUSH_TEXTURE, nullptr, &F_RECT);
+				}
+			}
 		}
 
 		// the grey box around the canvas
-		SDL_SetRenderDrawColor(RENDERER, 51, 51, 51, 255);
-		F_RECT = { CANVAS_X_ANIM - 2.0f, CANVAS_Y_ANIM - 2.0f, bg_w + 4.0f, bg_h + 4.0f };
+		SDL_SetRenderDrawColor(RENDERER, 64, 64, 64, 255);
+		F_RECT = { CANVAS_X_ANIM - 2.0f, CANVAS_Y_ANIM - 2.0f, CANVAS_W_ANIM + 4.0f, CANVAS_H_ANIM + 4.0f };
 		SDL_RenderDrawRectF(RENDERER, &F_RECT);
-		SDL_SetRenderDrawColor(RENDERER, 0, 0, 0, 255);
 
-		// RENDER BRUSH TEXTURE
-		if (BRUSH_UPDATE)
+		// RENDER THE UI BOXES
+		int16_t t_UIBOX_IN = UIBOX_IN;
+		UIBOX_IN = -1;
+		//int16_t _uiborder_over = -1;
+		const int16_t _uiboxes_size = UIBOXES.size() - 1;
+		//if (!MOUSEBUTTON_LEFT) UIBOX_CLICKED_IN = -1;
+		SDL_Rect RECT{};
+		int16_t _uibox_id = 0;
+		for (int16_t i = 0; i <= _uiboxes_size; i++)
 		{
-			F_RECT = { CANVAS_X_ANIM, CANVAS_Y_ANIM, bg_w, bg_h };
-			SDL_SetTextureBlendMode(BRUSH_TEXTURE, SDL_BLENDMODE_BLEND);
-			SDL_RenderCopyF(RENDERER, BRUSH_TEXTURE, nullptr, &F_RECT);
+			_uibox_id = _uiboxes_size - i;
+			UIBOX_INFO& uibox = UIBOXES[_uibox_id];
+
+			uibox.x = clamp(uibox.x, 0, WINDOW_W - uibox.w);
+			uibox.y = clamp(uibox.y, 0, WINDOW_H - uibox.h);
+
+			RECT = { uibox.x, uibox.y, uibox.w, uibox.h };
+			SDL_SetRenderDrawColor(RENDERER, 16, 16, 16, 255);
+			SDL_RenderFillRect(RENDERER, &RECT);
+			SDL_SetRenderDrawColor(RENDERER, 64, 64, 64, 255);
+			SDL_RenderDrawRect(RENDERER, &RECT);
+			if ((UIBOX_CLICKED_IN==-1 || UIBOX_CLICKED_IN==t_UIBOX_IN) && (point_in_rect(MOUSE_X, MOUSE_Y, uibox.x, uibox.y, uibox.w, uibox.h)
+				|| point_in_rect(MOUSE_PREVX, MOUSE_PREVY, uibox.x, uibox.y, uibox.w, uibox.h)))
+			{
+				UIBOX_IN = _uibox_id;
+				//
+				//  THIS WAS AN ATTEMPT AT DOING A BORDER SELECT, BUT THE LAYERING ISN'T RIGHT
+				//
+				/*if (_uiborder_over > UIBOX_IN) _uiborder_over = -1;
+				if (_uiborder_over==-1 && UIBOX_CLICKED_IN==-1 && !point_in_rect(MOUSE_X, MOUSE_Y, uibox.x + 5, uibox.y + 5, uibox.w - 10, uibox.h - 10))
+				{
+					_uiborder_over = UIBOX_IN;
+					SDL_SetRenderDrawColor(RENDERER, 128, 128, 128, 255);
+					RECT = { uibox.x + 1, uibox.y + 1, uibox.w - 2, uibox.h - 2 };
+					SDL_RenderDrawRect(RENDERER, &RECT);
+				}*/
+			}
 		}
 
+		SDL_SetRenderDrawColor(RENDERER, 0, 0, 0, 255);
+
 		// TEST HUE BAR
-		//I_RECT = { 10, 10, 32, 360 };
-		//SDL_RenderCopy(RENDERER, UI_TEXTURE_HUEBAR, nullptr, &I_RECT);
+		//const SDL_Rect temp_rect{10,10,16,360};
+		//SDL_RenderCopy(RENDERER, UI_TEXTURE_HUEBAR, nullptr, &temp_rect);
 
 		FC_Draw(font, RENDERER, 36, 10, "%i", UNDO_LIST.size());
-		FC_Draw(font, RENDERER, 36, 30, "%i\n%i\n", BRUSH_UPDATE, LAYER_UPDATE);
+		FC_Draw(font, RENDERER, 36, 30, "%i\n%i", UIBOX_IN, UIBOX_CLICKED_IN);
 
 		SDL_SetRenderDrawColor(RENDERER, 0, 0, 0, 0);
 		SDL_RenderPresent(RENDERER);
