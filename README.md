@@ -21,6 +21,8 @@ EDGITOR is now open source, and I'd love for this to grow via the community! Fee
 
 This project was made in VS2019, and I don't have a Cmake file prepared for it - sorry! So feel free to create a Cmake file for others~
 
+## [EDGITOR DISCORD](https://discord.gg/VtJwBhB)
+
 *- - - - - - -*
 
 [SDL_FontCache](https://github.com/grimfang4/SDL_FontCache) by grimfang4 
