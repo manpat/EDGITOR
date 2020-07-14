@@ -35,6 +35,14 @@
 *.userosscache
 *.sln.docstates
 
+# Project files
+*.sln
+*.vcxproj*
+*.cmake
+CMakeCache.txt
+Makefile
+CMakeFiles/
+
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/
