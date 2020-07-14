@@ -35,8 +35,13 @@ THE SOFTWARE.
 #define _SDL_FONTCACHE_H__
 
 
+#ifdef __APPLE__
 #include <SDL2/SDL.h>
 #include <SDL2_ttf/SDL_ttf.h>
+#else
+#include <SDL.h>
+#include <SDL_ttf.h>
+#endif
 
 #ifdef FC_USE_SDL_GPU
 #include "SDL_gpu.h"

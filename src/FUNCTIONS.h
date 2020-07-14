@@ -2,6 +2,7 @@
 #define FUNCTIONS_H
 
 #include <cmath>
+#include <string>
 
   //
  //   FUNCTIONS   ///////////////////////////////////////////////// ///////  //////   /////    ////     ///      //       /
@@ -337,9 +338,12 @@ inline SDL_Renderer* INIT_RENDERER(SDL_Window* WINDOW)
 	font = FC_CreateFont();
 	font_under = FC_CreateFont();
 	font_bold = FC_CreateFont();
-	FC_LoadFont(font, RENDERER, "IBMPlexMono-Regular.ttf", 16, FC_MakeColor(192, 192, 192, 255), TTF_STYLE_NORMAL);
-	FC_LoadFont(font_under, RENDERER, "IBMPlexMono-Regular.ttf", 16, FC_MakeColor(192, 192, 192, 255), TTF_STYLE_UNDERLINE);
-	FC_LoadFont(font_bold, RENDERER, "IBMPlexMono-Bold.ttf", 16, FC_MakeColor(255, 0, 64, 255), TTF_STYLE_BOLD);
+
+	std::string font_path		= std::string(RESOURCES_PATH) + "/IBMPlexMono-Regular.ttf";
+	std::string font_bold_path	= std::string(RESOURCES_PATH) + "/IBMPlexMono-Bold.ttf";
+	FC_LoadFont(font, RENDERER, font_path.c_str(), 16, FC_MakeColor(192, 192, 192, 255), TTF_STYLE_NORMAL);
+	FC_LoadFont(font_under, RENDERER, font_path.c_str(), 16, FC_MakeColor(192, 192, 192, 255), TTF_STYLE_UNDERLINE);
+	FC_LoadFont(font_bold, RENDERER, font_bold_path.c_str(), 16, FC_MakeColor(255, 0, 64, 255), TTF_STYLE_BOLD);
 
 	// BACKGROUND GRID TEXTURE
 	BG_GRID_W = ((int16_t)ceil((double)CANVAS_W / (double)CELL_W));

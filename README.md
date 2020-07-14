@@ -25,4 +25,17 @@ Now you can use Cmake! (macOS only, other platforms will be added soon)
 
 *- - - - - - -*
 
+# BUILD REQUIREMENTS
+## Windows
+- Visual Studio 2019
+- Run following command in cmd
+`cmake -B build -G "Visual Studio 16 2019"`
+- Open VS19 and set EDGITOR as StartUp Project
+
+## macOS
+- Xcode
+- Manually installed SDL and SDL_ttf frameworks
+- Run following command in Terminal
+`cmake -B build -G Xcode`
+
 [SDL_FontCache](https://github.com/grimfang4/SDL_FontCache) (with some fixes) by grimfang4 

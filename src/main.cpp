@@ -2,8 +2,15 @@
 #include <vector>
 #include <algorithm>
 #include <memory>
+
+#ifdef __APPLE__
 #include <SDL2/SDL.h>
 #include <SDL2_ttf/SDL_ttf.h>
+#else
+#include <SDL.h>
+#include <SDL_ttf.h>
+#endif
+
 #include "SDL_FontCache.h"
 #include "VARIABLES.h"
 #include "FUNCTIONS.h"
