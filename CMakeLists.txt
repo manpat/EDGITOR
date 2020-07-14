@@ -4,25 +4,33 @@ cmake_minimum_required(VERSION 3.15)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+include(FindPkgConfig)
+
 project(EDGITOR)
 
 set(SOURCE_DIR "${PROJECT_SOURCE_DIR}/src/")
 set(RESOURCES_PATH "${PROJECT_SOURCE_DIR}/resources/")
 
 file(GLOB SOURCE
-    ${SOURCE_DIR}/*.cpp
-    ${SOURCE_DIR}/*.h
+	${SOURCE_DIR}/*.cpp
+	${SOURCE_DIR}/*.h
 )
 
-IF(APPLE)
-    set(CMAKE_FIND_FRAMEWORK ONLY)
-    find_library(SDL2_LIBRARY SDL2)
-    find_library(SDL2_TTF_LIBRARY SDL2_ttf)
-    
-    add_executable(${PROJECT_NAME} ${SOURCE})
-    
-    target_link_libraries(${PROJECT_NAME} ${SDL2_LIBRARY} ${SDL2_TTF_LIBRARY})
-ELSEIF(WIN32)
+add_executable(${PROJECT_NAME} ${SOURCE})
+
+if(UNIX)
+	target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra)
+elseif(MSVC)
+	target_compile_options(${PROJECT_NAME} PRIVATE /W4 /permissive-)
+endif()
+
+if(APPLE)
+	set(CMAKE_FIND_FRAMEWORK ONLY)
+	find_library(SDL2_LIBRARY SDL2)
+	find_library(SDL2_TTF_LIBRARY SDL2_ttf)
+
+	target_link_libraries(${PROJECT_NAME} ${SDL2_LIBRARY} ${SDL2_TTF_LIBRARY})
+elseif(WIN32)
 	message("RESOURCE_PATH: " ${RESOURCE_PATH})
 
 	find_program(NUGET nuget)
@@ -41,9 +49,7 @@ ELSEIF(WIN32)
 			${NUGET} restore packages.config -SolutionDirectory ${CMAKE_BINARY_DIR}
 			WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 		)
-		
-		add_executable(${PROJECT_NAME} ${SOURCE})
-		
+
 		include_directories(${PROJECT_NAME} "${CMAKE_BINARY_DIR}/packages/sdl2.nuget.${SDL_VER}/build/native/include")
 		include_directories(${PROJECT_NAME} "${CMAKE_BINARY_DIR}/packages/sdl2_ttf.nuget.${SDL_ttf_VER}/build/native/include")
 		target_link_libraries(${PROJECT_NAME} "${SDL2_LIB_PATH}/SDL2.lib;${SDL2_LIB_PATH}/SDL2main.lib;${SDL2_ttf_LIB_PATH}/SDL2_ttf.lib")
@@ -57,8 +63,10 @@ ELSEIF(WIN32)
 		configure_file("${CMAKE_BINARY_DIR}/packages/sdl2_ttf.nuget.redist.${SDL_ttf_VER}/build/native/bin/x64/dynamic/zlib1.dll"
 			"${CMAKE_BINARY_DIR}/Debug/zlib1.dll" COPYONLY)
 	endif()
-ELSEIF(LINUX)
-
-ENDIF()
+elseif(PKG_CONFIG_FOUND)
+	pkg_check_modules(SDL2 REQUIRED sdl2 SDL2_ttf)
+	include_directories(${PROJECT_NAME} ${SDL2_INCLUDE_DIRS})
+	target_link_libraries(${PROJECT_NAME} ${SDL2_LIBRARIES})
+endif()
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE RESOURCES_PATH="${RESOURCES_PATH}")

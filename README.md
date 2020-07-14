@@ -39,6 +39,12 @@ Now you can use Cmake!
 - Install SDL and SDL_ttf frameworks manually
 - Run following command in Terminal `cmake -B build -G Xcode`
 
+### Linux
+- Make sure you have your compiler of choice, Cmake and pkg-config installed
+- Install SDL and SDL_ttf
+- Run `cmake -B build .`
+- `cd` in the `build` directory and run `make`
+
 - - - - - - -
 
 ## CREDITS
