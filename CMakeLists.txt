@@ -1,7 +1,7 @@
 # CMAKE file for EDGITOR by Alepacho
 
 cmake_minimum_required(VERSION 3.15)
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 project(EDGITOR)
@@ -57,8 +57,8 @@ ELSEIF(WIN32)
 		configure_file("${CMAKE_BINARY_DIR}/packages/sdl2_ttf.nuget.redist.${SDL_ttf_VER}/build/native/bin/x64/dynamic/zlib1.dll"
 			"${CMAKE_BINARY_DIR}/Debug/zlib1.dll" COPYONLY)
 	endif()
-
-	target_compile_definitions(${PROJECT_NAME} PRIVATE RESOURCES_PATH="${RESOURCES_PATH}")
 ELSEIF(LINUX)
 
 ENDIF()
+
+target_compile_definitions(${PROJECT_NAME} PRIVATE RESOURCES_PATH="${RESOURCES_PATH}")
