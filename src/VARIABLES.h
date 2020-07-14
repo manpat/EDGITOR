@@ -40,10 +40,10 @@ struct COLOR {
 // CANVAS
 bool CANVAS_UPDATE = false;
 float CANVAS_ZOOM = 1.0;
-float CANVAS_X = 32.0;
-float CANVAS_Y = 32.0;
-uint16_t CANVAS_W = 2000;
-uint16_t CANVAS_H = 1000;
+float CANVAS_X = 0.0;
+float CANVAS_Y = 0.0;
+uint16_t CANVAS_W = 512;
+uint16_t CANVAS_H = 256;
 int16_t CANVAS_MOUSE_X = 0;
 int16_t CANVAS_MOUSE_Y = 0;
 int16_t CANVAS_MOUSE_CLICKX = 0;
@@ -69,6 +69,8 @@ float CANVAS_X_ANIM = 0.0;
 float CANVAS_Y_ANIM = 0.0;
 float CANVAS_W_ANIM = 0.0;
 float CANVAS_H_ANIM = 0.0;
+float CELL_W_ANIM = 0.0;
+float CELL_H_ANIM = 0.0;
 
 // LAYER
 uint16_t CURRENT_LAYER = 0;
@@ -83,7 +85,7 @@ struct LAYER_INFO {
 	std::unique_ptr<COLOR[]> pixels;
 	int16_t x;
 	int16_t y;
-	int16_t alpha;
+	uint8_t alpha;
 	SDL_BlendMode blendmode;
 };
 std::vector<LAYER_INFO> LAYERS;
@@ -118,18 +120,21 @@ bool MOUSEBUTTON_PRESSED_RIGHT = false;
 uint16_t CURRENT_TOOL = 0;
 
 // UI
+int16_t UIBOX_IN = -1;
+int16_t UIBOX_CLICKED_IN = -1;
+int16_t UIBOX_PANX = 0;
+int16_t UIBOX_PANY = 0;
 SDL_Texture* UI_TEXTURE_HUEBAR;
 COLOR* UI_PIXELS_HUEBAR;
 
 struct UIBOX_INFO {
-	SDL_Texture* texture;
-	COLOR* pixels;
-	int16_t x;
-	int16_t y;
-	int16_t alpha;
-	SDL_BlendMode blendmode;
+	uint16_t x;
+	uint16_t y;
+	uint16_t w;
+	uint16_t h;
+	uint8_t alpha;
 };
-std::vector<UIBOX_INFO> UI_BOX;
+std::vector<UIBOX_INFO> UIBOXES;
 
 // UNDO
 struct UNDO_DATA
@@ -165,3 +170,40 @@ uint16_t UNDO_UPDATE_LAYER = 0;
 SDL_Rect UNDO_UPDATE_RECT = { 0, 0, 1, 1 };
 COLOR UNDO_COL {0xff, 0x00, 0x40, 0xc0};
 
+static const bool arrow[] = {
+	1,0,0,0,0,0,1,0,
+	0,1,0,0,0,1,0,0,
+	0,0,1,0,1,0,0,0,
+	0,0,0,1,0,0,0,0,
+	0,0,1,0,1,0,0,0,
+	0,1,0,0,0,1,0,0,
+	1,0,0,0,0,0,1,0,
+	0,0,0,0,0,0,0,0
+};
+
+static SDL_Cursor* init_system_cursor(const bool image[])
+{
+	Uint8 data[8*8];
+	Uint8 mask[8*8];
+	int n = -1;
+	for (int i = 0; i < 8; i++)
+	{
+		for (int j = 0; j < 8; j++)
+		{
+			if (j % 8) {
+				data[n] <<= 1;
+				mask[n] <<= 1;
+			}
+			else {
+				++n;
+				data[n] = mask[i] = 0;
+			}
+			if (arrow[i * 8 + j])
+			{
+				data[n] |= 0x00;
+				mask[n] |= 0x01;
+			}
+		}
+	}
+	return SDL_CreateCursor(data, mask, 8, 8, 3, 3);
+}

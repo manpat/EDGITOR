@@ -1,9 +1,15 @@
 <img src="https://github.com/ENDESGA/EDGITOR/blob/master/git/title.png" />
 [pron. EDGE-itor]
 
-*- - - - - - -*
+- - - - - - -
 
-### minimal C++ pixelart editor
+<p align="center">
+  <img alt="Discord" src="https://img.shields.io/discord/732380484956586035?color=FF0040&label=chat&logo=discord&logoColor=FFFFFF">
+  <img alt="GitHub All Releases" src="https://img.shields.io/github/downloads/ENDESGA/EDGITOR/total?color=FF0040">
+  <img alt="GitHub" src="https://img.shields.io/github/license/ENDESGA/EDGITOR?color=FF0040">
+</p>
+
+## minimal C++ pixelart editor
 EDGITOR was designed to be extremely concise and clean from the ground up. It uses SDL2 as the core of its rendering system, and is designed to be as efficient as possible. EDGITOR can theoretically support colossal canvases (stress tests got close to 20Kx20K), but that isn't a focused feature since this is a pixelart editor. That being said, this could branch off to support AA and Photoshop-like features to bridge a gap between traditional painting and pixelart.
 
 ## FEATURE GOALS:
@@ -15,27 +21,25 @@ EDGITOR was designed to be extremely concise and clean from the ground up. It us
 - Limitless layers, undos, canvas size.
 - Clean and minimal UI.
 
-*- - - - - - -*
-## COMMUNITY DRIVEN
+### COMMUNITY DRIVEN
 EDGITOR is now open source, and I'd love for this to grow via the community! Feel free to send pull requests, and add features to this so it can grow faster like never before!
 
-~~This project was made in VS2019, and I don't have a Cmake file prepared for it - sorry! So feel free to create a Cmake file for others~~
+Now you can use Cmake!
 
-Now you can use Cmake! (macOS only, other platforms will be added soon)
-
-*- - - - - - -*
-
-# BUILD REQUIREMENTS
-## Windows
-- Visual Studio 2019
-- Run following command in cmd
-`cmake -B build -G "Visual Studio 16 2019"`
+## BUILD INSTRUCTIONS
+### Windows
+- Install Visual Studio 2019
+- [Download Nuget.exe Here](https://dist.nuget.org/win-x86-commandline/latest/nuget.exe), and place it in `C:\Program Files\CMake\bin`
+- Open Command Prompt, and go to EDGITOR's folder: `cd *EDGITOR_FOLDER_LOCATION*`
+- Then execute this command `cmake -B build -G "Visual Studio 16 2019"`
 - Open VS19 and set EDGITOR as StartUp Project
 
-## macOS
-- Xcode
-- Manually installed SDL and SDL_ttf frameworks
-- Run following command in Terminal
-`cmake -B build -G Xcode`
+### macOS
+- Install Xcode
+- Install SDL and SDL_ttf frameworks manually
+- Run following command in Terminal `cmake -B build -G Xcode`
 
+- - - - - - -
+
+## CREDITS
 [SDL_FontCache](https://github.com/grimfang4/SDL_FontCache) (with some fixes) by grimfang4 

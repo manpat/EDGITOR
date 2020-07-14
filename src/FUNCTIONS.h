@@ -27,6 +27,11 @@ int16_t sign(int16_t x) {
 	return (x > 0) - (x < 0);
 }
 
+inline bool point_in_rect(int16_t px, int16_t py, int16_t rx, int16_t ry, int16_t rw, int16_t rh)
+{
+	return (px >= rx && py >= ry && px <= (rx + rw) && py <= (ry + rh));
+}
+
 void HSVtoRGB(int16_t H, double S, double V, int16_t output[3]) {
 	double C = S * V;
 	double X = C * (1 - abs(fmod(H / 60.0, 2) - 1));
@@ -120,6 +125,13 @@ inline COLOR blend_colors(COLOR src_color, COLOR dst_color) {
 	};
 }
 
+template <typename T>
+inline void move_to_end(std::vector<T>& v, size_t index)
+{
+	auto it = v.begin() + index;
+	std::rotate(it, it + 1, v.end());
+}
+
   //
  //   CANVAS FUNCTIONS   ///////////////////////////////////////////////// ///////  //////   /////    ////     ///      //       /
 //
@@ -138,6 +150,18 @@ inline void layer_new(SDL_Renderer* _renderer, int16_t _x, int16_t _y, int16_t _
 	CANVAS_UPDATE = 1;
 	CURRENT_LAYER = 0;
 	CURRENT_LAYER_PTR = LAYERS[CURRENT_LAYER].pixels.get();
+}
+
+inline void uibox_new(uint16_t _x, uint16_t _y, uint16_t _w, uint16_t _h)
+{
+	UIBOX_INFO new_uibox;
+
+	new_uibox.x = _x;
+	new_uibox.y = _y;
+	new_uibox.w = _w;
+	new_uibox.h = _h;
+
+	UIBOXES.push_back(std::move(new_uibox));
 }
 
 inline bool in_canvas(const uint16_t x, const uint16_t y)
@@ -323,6 +347,16 @@ inline SDL_Renderer* INIT_RENDERER(SDL_Window* WINDOW)
 	BRUSH_TEXTURE = SDL_CreateTexture(RENDERER, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, CANVAS_W, CANVAS_H);
 	//SDL_UpdateTexture(CANVAS_TEXTURE, nullptr, &CANVAS_PIXELS[0], (sizeof(uint32_t) * CANVAS_W));
 	
+	// CENTER CANVAS
+	CANVAS_X = (WINDOW_W * 0.5f) - (CANVAS_W * 0.5f);
+	CANVAS_Y = (WINDOW_H * 0.5f) - (CANVAS_H * 0.5f);
+	CANVAS_X_ANIM = CANVAS_X;
+	CANVAS_Y_ANIM = CANVAS_Y;
+	CANVAS_W_ANIM = CANVAS_W;
+	CANVAS_H_ANIM = CANVAS_H;
+	CELL_W_ANIM = CELL_W;
+	CELL_H_ANIM = CELL_H;
+
 	// DEFAULT LAYER
 	layer_new(RENDERER, 0, 0, 255, SDL_BLENDMODE_BLEND);
 	
@@ -383,6 +417,14 @@ inline SDL_Renderer* INIT_RENDERER(SDL_Window* WINDOW)
 		std::fill(&UI_PIXELS_HUEBAR[H * 16], &UI_PIXELS_HUEBAR[(H+1) * 16], color);
 	}
 	SDL_UpdateTexture(UI_TEXTURE_HUEBAR, nullptr, &UI_PIXELS_HUEBAR[0], sizeof(COLOR) * 16);
+
+	// BOXES
+	uibox_new(10, 20, 100, 200);
+	uibox_new(110, 50, 300, 120);
+	uibox_new(210, 150, 400, 220);
+
+	SDL_SetCursor(init_system_cursor(arrow));
+
 	return RENDERER;
 }
 
@@ -513,8 +555,40 @@ inline void EVENT_LOOP() {
 
 	if (MOUSEBUTTON_LEFT)
 	{
-		set_pixel_line(CANVAS_MOUSE_PREVX, CANVAS_MOUSE_PREVY, CANVAS_MOUSE_X, CANVAS_MOUSE_Y, BRUSH_COLOR);
-		//std::cout << "TICK" << std::endl;
+		if (UIBOX_IN >= 0)
+		{
+			if (MOUSEBUTTON_PRESSED_LEFT)
+			{
+				move_to_end(UIBOXES, UIBOX_IN); // move window to end
+				std::rotate(UIBOXES.rbegin(), UIBOXES.rbegin() + 1, UIBOXES.rend()); // then rotate once more to move to start
+				// There's probably a better way of doing this
+				UIBOX_IN = 0;// UIBOXES.size() - 1;
+				// This was originally putting the window at the end of the list,
+				// but I made it so it moves it to the start
+
+				UIBOX_INFO& uibox_click = UIBOXES[UIBOX_IN];
+				// grab/pan variables
+				UIBOX_CLICKED_IN = UIBOX_IN;
+				UIBOX_PANX = (int16_t)(MOUSE_X - uibox_click.x);
+				UIBOX_PANY = (int16_t)(MOUSE_Y - uibox_click.y);
+			}
+			UIBOX_INFO& uibox = UIBOXES[UIBOX_IN];
+			if (UIBOX_CLICKED_IN == UIBOX_IN)
+			{
+				// grabbing & moving window
+				uibox.x = (MOUSE_X - UIBOX_PANX);
+				uibox.y = (MOUSE_Y - UIBOX_PANY);
+			}
+		}
+		
+		if (UIBOX_CLICKED_IN == -1)
+		{
+			set_pixel_line(CANVAS_MOUSE_PREVX, CANVAS_MOUSE_PREVY, CANVAS_MOUSE_X, CANVAS_MOUSE_Y, BRUSH_COLOR);
+		}
+	}
+	else
+	{
+		UIBOX_CLICKED_IN = -1;
 	}
 
 	if (MOUSEBUTTON_PRESSED_RIGHT)
