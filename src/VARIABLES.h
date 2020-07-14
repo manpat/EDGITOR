@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
   //
  //   VARIABLES   ///////////////////////////////////////////////// ///////  //////   /////    ///     //      /
@@ -7,6 +7,10 @@
 FC_Font* font;
 FC_Font* font_under;
 FC_Font* font_bold;
+
+TTF_Font* FONT;
+uint16_t FONT_CHRW;
+uint16_t FONT_CHRH;
 
 bool QUIT = false;
 float FPS = 0;
@@ -127,7 +131,18 @@ int16_t UIBOX_PANY = 0;
 SDL_Texture* UI_TEXTURE_HUEBAR;
 COLOR* UI_PIXELS_HUEBAR;
 
+struct UIBOX_CHARINFO {
+	const char* chr;
+	bool update;
+	COLOR col;
+};
+
 struct UIBOX_INFO {
+	bool update = 1;
+	std::vector<UIBOX_CHARINFO> charinfo;
+	SDL_Texture* texture;
+	uint16_t tex_w;
+	uint16_t tex_h;
 	uint16_t x;
 	uint16_t y;
 	uint16_t w;
@@ -207,3 +222,10 @@ static SDL_Cursor* init_system_cursor(const bool image[])
 	}
 	return SDL_CreateCursor(data, mask, 8, 8, 3, 3);
 }
+
+const char* CHAR_BOXTL = u8"╔";
+const char* CHAR_BOXTR = u8"╗";
+const char* CHAR_BOXBL = u8"╚";
+const char* CHAR_BOXBR = u8"╝";
+const char* CHAR_BOXH = u8"═";
+const char* CHAR_BOXV = u8"║";

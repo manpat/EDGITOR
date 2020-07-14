@@ -285,8 +285,35 @@ int main(int, char*[])
 			RECT = { uibox.x, uibox.y, uibox.w, uibox.h };
 			SDL_SetRenderDrawColor(RENDERER, 16, 16, 16, 255);
 			SDL_RenderFillRect(RENDERER, &RECT);
-			SDL_SetRenderDrawColor(RENDERER, 64, 64, 64, 255);
-			SDL_RenderDrawRect(RENDERER, &RECT);
+			//SDL_SetRenderDrawColor(RENDERER, 64, 64, 64, 255);
+			//SDL_RenderDrawRect(RENDERER, &RECT);
+
+			//uibox.chars[18] = CHAR_BOXH;
+
+			if (uibox.update)
+			{
+				std::string text;
+
+				int _uibox_w = (int)floor((float)uibox.w / (float)FONT_CHRW);
+				int _uibox_h = (int)floor((float)uibox.h / (float)FONT_CHRH);
+
+				for (int j = 0; j < _uibox_w * _uibox_h; j++)
+				{
+					text += uibox.charinfo[j].chr;
+					if (!((j + 1) % _uibox_w)) text += '\n';
+				}
+
+				SDL_Surface* sur = TTF_RenderUTF8_Blended_Wrapped(FONT, text.c_str(), SDL_Color{ 255, 255, 255, 255 }, uibox.w);
+				uibox.texture = SDL_CreateTextureFromSurface(RENDERER, sur);
+				uibox.tex_w = sur->w;
+				uibox.tex_h = sur->h;
+				SDL_FreeSurface(sur);
+				uibox.update = false;
+			}
+
+			SDL_Rect rect{ uibox.x, uibox.y, uibox.tex_w, uibox.tex_h };
+			SDL_RenderCopy(RENDERER, uibox.texture, NULL, &rect);
+
 			if ((UIBOX_CLICKED_IN==-1 || UIBOX_CLICKED_IN==t_UIBOX_IN) && (point_in_rect(MOUSE_X, MOUSE_Y, uibox.x, uibox.y, uibox.w, uibox.h)
 				|| point_in_rect(MOUSE_PREVX, MOUSE_PREVY, uibox.x, uibox.y, uibox.w, uibox.h)))
 			{
@@ -326,20 +353,22 @@ int main(int, char*[])
         const Uint64 fps_end = SDL_GetPerformanceCounter();
         const static Uint64 fps_freq = SDL_GetPerformanceFrequency();
         const double fps_seconds = (fps_end - fps_start) / static_cast<double>(fps_freq);
-        FPS = reach_tween(FPS, 1 / (float)fps_seconds, 100.0);
+        FPS = reach_tween(FPS, 1 / (float)fps_seconds, 2.0);
         if (fps_rate <= 0) {
-            std::cout << " FPS: " << (int)floor(FPS) << '\n';
-            fps_rate = 60 * 10;
+            std::cout << " FPS: " << (int)floor(FPS) << "       " << '\r';
+            fps_rate = 60 * 4;
         } else fps_rate--;
 	}
 
 	SDL_Delay(10);
 
+	TTF_CloseFont(FONT);
 	FC_FreeFont(font);
 	FC_FreeFont(font_bold);
 	SDL_DestroyRenderer(RENDERER);
 	SDL_DestroyWindow(WINDOW);
 	SDL_Quit();
+	TTF_Quit();
 
 	return 0;
 }
