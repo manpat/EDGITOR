@@ -29,8 +29,7 @@ Now you can use Cmake!
 ## Windows
 - Visual Studio 2019
 - [Download Nuget.exe Here](https://dist.nuget.org/win-x86-commandline/latest/nuget.exe), and place it in `C:\Program Files\CMake\bin`
-- Run following command in cmd
-`cmake -B build -G "Visual Studio 16 2019"`
+- Run following commands in cmd `cd C:\WHEREVER_THE_EDGITOR_FOLDER_IS`, and then `cmake -B build -G "Visual Studio 16 2019"`
 - Open VS19 and set EDGITOR as StartUp Project
 
 ## macOS
