@@ -19,10 +19,25 @@ EDGITOR was designed to be extremely concise and clean from the ground up. It us
 ## COMMUNITY DRIVEN
 EDGITOR is now open source, and I'd love for this to grow via the community! Feel free to send pull requests, and add features to this so it can grow faster like never before!
 
-This project was made in VS2019, and I don't have a Cmake file prepared for it - sorry! So feel free to create a Cmake file for others~
+~~This project was made in VS2019, and I don't have a Cmake file prepared for it - sorry! So feel free to create a Cmake file for others~~
+
+Now you can use Cmake! (macOS only, other platforms will be added soon)
 
 ## [EDGITOR DISCORD](https://discord.gg/VtJwBhB)
 
 *- - - - - - -*
 
-[SDL_FontCache](https://github.com/grimfang4/SDL_FontCache) by grimfang4 
+# BUILD REQUIREMENTS
+## Windows
+- Visual Studio 2019
+- Run following command in cmd
+`cmake -B build -G "Visual Studio 16 2019"`
+- Open VS19 and set EDGITOR as StartUp Project
+
+## macOS
+- Xcode
+- Manually installed SDL and SDL_ttf frameworks
+- Run following command in Terminal
+`cmake -B build -G Xcode`
+
+[SDL_FontCache](https://github.com/grimfang4/SDL_FontCache) (with some fixes) by grimfang4 
