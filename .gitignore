@@ -27,6 +27,8 @@
 # Executables
 *.out
 *.app
+*.exe
+EDGITOR
 
 # User-specific files
 *.rsuser
@@ -35,11 +37,20 @@
 *.userosscache
 *.sln.docstates
 
+# Project files
+*.sln
+*.vcxproj*
+*.cmake
+CMakeCache.txt
+Makefile
+CMakeFiles/
+
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/
 [Rr]elease/
 [Rr]eleases/
+build/
 
 # Visual Studio 2015/2017 cache/options directory
 .vs/
@@ -151,6 +162,3 @@ UpgradeLog*.XML
 UpgradeLog*.htm
 ServiceFabricBackup/
 *.rptproj.bak
-
-# build folder
-build/

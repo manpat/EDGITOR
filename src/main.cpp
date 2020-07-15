@@ -31,6 +31,7 @@ int main(int, char*[])
 	INIT_SDL();
 	auto WINDOW = INIT_WINDOW();
 	auto RENDERER = INIT_RENDERER(WINDOW);
+	auto FONTMAP = INIT_FONT(RENDERER);
 
 	while (!QUIT) // MAIN LOOP
 	{
@@ -285,8 +286,62 @@ int main(int, char*[])
 			RECT = { uibox.x, uibox.y, uibox.w, uibox.h };
 			SDL_SetRenderDrawColor(RENDERER, 16, 16, 16, 255);
 			SDL_RenderFillRect(RENDERER, &RECT);
-			SDL_SetRenderDrawColor(RENDERER, 64, 64, 64, 255);
-			SDL_RenderDrawRect(RENDERER, &RECT);
+			//SDL_SetRenderDrawColor(RENDERER, 64, 64, 64, 255);
+			//SDL_RenderDrawRect(RENDERER, &RECT);
+
+			//uibox.chars[18] = CHAR_BOXH;
+			SDL_Rect rect{};
+
+			int _uibox_w = (int)floor((float)uibox.w / (float)FONT_CHRW);
+			int _uibox_h = (int)floor((float)uibox.h / (float)FONT_CHRH);
+
+			int _mpx, _mpy;
+			_mpx = (int)floor((float)(MOUSE_X - uibox.x) / (float)FONT_CHRW);
+			_mpy = (int)floor((float)(MOUSE_Y - uibox.y) / (float)FONT_CHRH);
+
+			if (point_in_rect(MOUSE_X, MOUSE_Y, uibox.x + 1, uibox.y + 1, uibox.w - 2, uibox.h - 2))
+			{
+				uibox.charinfo[_mpy * _uibox_w + _mpx].chr = 0xdb;
+				uibox.charinfo[_mpy * _uibox_w + _mpx].update = true;
+				uibox.update = true;
+			}
+
+			if (uibox.update)
+			{
+				std::string text;
+
+				if (uibox.texture == nullptr)
+				{
+					uibox.texture = SDL_CreateTexture(RENDERER, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET, uibox.w, uibox.h);
+				}
+
+				SDL_SetTextureBlendMode(uibox.texture, SDL_BLENDMODE_NONE);
+				SDL_SetRenderTarget(RENDERER, uibox.texture);
+				SDL_SetRenderDrawColor(RENDERER, 255, 255, 255, 255);
+				
+				SDL_Rect chr_rect{};
+				UIBOX_CHARINFO _charinfo;
+				for (int j = 0; j < _uibox_w * _uibox_h; j++)
+				{
+					if (!uibox.charinfo[j].update) continue;
+
+					_charinfo = uibox.charinfo[j];
+					rect = { (j % _uibox_w) * FONT_CHRW, (j / _uibox_w) * FONT_CHRH, FONT_CHRW, FONT_CHRH };
+					chr_rect = { _charinfo.chr * FONT_CHRW, 0, FONT_CHRW, FONT_CHRH };
+					SDL_SetTextureColorMod(FONTMAP, _charinfo.col.r, _charinfo.col.g, _charinfo.col.b);
+					SDL_RenderCopy(RENDERER, FONTMAP, &chr_rect, &rect);
+					_charinfo.update = false;
+				}
+
+				SDL_SetRenderTarget(RENDERER, NULL);
+
+				uibox.update = false;
+			}
+
+			rect = { uibox.x, uibox.y, uibox.w, uibox.h };
+			SDL_RenderCopy(RENDERER, uibox.texture, NULL, &rect);
+			//SDL_RenderCopy(RENDERER, FONTMAP, NULL, &rect);
+
 			if ((UIBOX_CLICKED_IN==-1 || UIBOX_CLICKED_IN==t_UIBOX_IN) && (point_in_rect(MOUSE_X, MOUSE_Y, uibox.x, uibox.y, uibox.w, uibox.h)
 				|| point_in_rect(MOUSE_PREVX, MOUSE_PREVY, uibox.x, uibox.y, uibox.w, uibox.h)))
 			{
@@ -326,20 +381,22 @@ int main(int, char*[])
         const Uint64 fps_end = SDL_GetPerformanceCounter();
         const static Uint64 fps_freq = SDL_GetPerformanceFrequency();
         const double fps_seconds = (fps_end - fps_start) / static_cast<double>(fps_freq);
-        FPS = reach_tween(FPS, 1 / (float)fps_seconds, 100.0);
+        FPS = reach_tween(FPS, 1 / (float)fps_seconds, 2.0);
         if (fps_rate <= 0) {
-            std::cout << " FPS: " << (int)floor(FPS) << '\n';
-            fps_rate = 60 * 10;
+            std::cout << " FPS: " << (int)floor(FPS) << "       " << '\r';
+            fps_rate = 60 * 4;
         } else fps_rate--;
 	}
 
 	SDL_Delay(10);
 
+	TTF_CloseFont(FONT);
 	FC_FreeFont(font);
 	FC_FreeFont(font_bold);
 	SDL_DestroyRenderer(RENDERER);
 	SDL_DestroyWindow(WINDOW);
 	SDL_Quit();
+	TTF_Quit();
 
 	return 0;
 }
