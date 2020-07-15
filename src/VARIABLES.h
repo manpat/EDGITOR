@@ -132,7 +132,7 @@ SDL_Texture* UI_TEXTURE_HUEBAR;
 COLOR* UI_PIXELS_HUEBAR;
 
 struct UIBOX_CHARINFO {
-	const char* chr;
+	uint8_t chr;
 	bool update;
 	COLOR col;
 };
@@ -223,9 +223,9 @@ static SDL_Cursor* init_system_cursor(const bool image[])
 	return SDL_CreateCursor(data, mask, 8, 8, 3, 3);
 }
 
-const char* CHAR_BOXTL = u8"╔";
-const char* CHAR_BOXTR = u8"╗";
-const char* CHAR_BOXBL = u8"╚";
-const char* CHAR_BOXBR = u8"╝";
-const char* CHAR_BOXH = u8"═";
-const char* CHAR_BOXV = u8"║";
+const uint8_t CHAR_BOXTL = 0xc9;// u8"╔";
+const uint8_t CHAR_BOXTR = 0xbb;// u8"╗";
+const uint8_t CHAR_BOXBL = 0xc8;//u8"╚";
+const uint8_t CHAR_BOXBR = 0xbc;//u8"╝";
+const uint8_t CHAR_BOXH = 0xcd;//u8"═";
+const uint8_t CHAR_BOXV = 0xba;//u8"║";

@@ -170,9 +170,9 @@ inline void uibox_new(uint16_t _x, uint16_t _y, uint16_t _w, uint16_t _h)
 	{
 		//new_uibox.charinfo.chr.push_back(u8" ");
 		UIBOX_CHARINFO _chr;
-		COLOR _tcol{ 255, 64, 128, 64 };
+		COLOR _tcol{ 255, 255, 255, 255 };
 		_chr.col = _tcol;
-		_chr.chr = u8" ";
+		_chr.chr = ' ';
 		_chr.update = true;
 		new_uibox.charinfo.push_back(_chr);
 	}
@@ -190,10 +190,13 @@ inline void uibox_new(uint16_t _x, uint16_t _y, uint16_t _w, uint16_t _h)
 		}
 	}
 
-	new_uibox.charinfo[1].chr = (const char*)"T";
-	new_uibox.charinfo[2].chr = (const char*)"E";
-	new_uibox.charinfo[3].chr = (const char*)"S";
-	new_uibox.charinfo[4].chr = (const char*)"T";
+	new_uibox.charinfo[1].chr = 'T';
+	new_uibox.charinfo[1].col = COLOR{255,0,255,255};
+	new_uibox.charinfo[2].chr = 'E';
+	new_uibox.charinfo[3].chr = 'S';
+	new_uibox.charinfo[4].chr = 'T';
+
+	new_uibox.texture = nullptr;// SDL_CreateTexture(RENDERER);
 
 	UIBOXES.push_back(std::move(new_uibox));
 }
@@ -468,6 +471,40 @@ inline SDL_Renderer* INIT_RENDERER(SDL_Window* WINDOW)
 	SDL_SetCursor(init_system_cursor(arrow));
 
 	return RENDERER;
+}
+
+inline SDL_Texture* INIT_FONT(SDL_Renderer* renderer)
+{
+	//static const std::vector<const char*> FONT_CHARS;
+
+	/*for (int i = 0; i < 256; i++)
+	{
+		SDL_Surface* sur = TTF_RenderUTF8_Solid(FONT, CHAR_BOXTL, SDL_Color{ 255, 255, 255, 255 });
+	}*/
+
+	const auto char_map =
+	" ☺☻♥♦♣♠•◘○◙♂♀♪♫☼"
+	"►◄↕‼¶§▬↨↑↓→←∟↔▲▼"
+	" !\"#$%&'()*+,-./"
+	"0123456789:;<=>?"
+	"@ABCDEFGHIJKLMNO"
+	"PQRSTUVWXYZ[\\]^_"
+	"`abcdefghijklmno"
+	"pqrstuvwxyz{|}~ "
+	"ÇüéâäàåçêëèïîìÄÅ"
+	"ÉæÆôöòûùÿÖÜ¢£¥₧ƒ"
+	"áíóúñÑªº¿⌐¬½¼¡«»"
+	"░▒▓│┤╡╢╖╕╣║╗╝╜╛┐"
+	"└┴┬├─┼╞╟╚╔╩╦╠═╬╧"
+	"╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀"
+	"αßΓπΣσµτΦΘΩδ∞φε∩"
+	"≡±≥≤⌠⌡÷≈°∙·√ⁿ²■ ";
+
+	SDL_Surface* sur = TTF_RenderUTF8_Solid(FONT, char_map, SDL_Color{ 255, 255, 255, 255 });
+	SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, sur);
+	SDL_FreeSurface(sur);
+
+	return texture;
 }
 
 inline void EVENT_LOOP() {
