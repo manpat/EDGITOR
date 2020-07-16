@@ -133,23 +133,31 @@ COLOR* UI_PIXELS_HUEBAR;
 
 struct UIBOX_CHARINFO {
 	uint8_t chr;
-	bool update;
+	uint16_t pos;
 	COLOR col;
 };
 
 struct UIBOX_INFO {
-	bool update = 1;
+	bool grabbable = true;
+	bool update = true;
+	bool in_topbar = false;
 	std::vector<UIBOX_CHARINFO> charinfo;
+	std::deque<uint16_t> update_stack;
 	SDL_Texture* texture;
 	uint16_t tex_w;
 	uint16_t tex_h;
+	uint16_t chr_w;
+	uint16_t chr_h;
 	uint16_t x;
 	uint16_t y;
 	uint16_t w;
 	uint16_t h;
 	uint8_t alpha;
+	uint16_t update_tick = 100;
 };
 std::vector<UIBOX_INFO> UIBOXES;
+
+UIBOX_INFO* UIBOX_LEFTBAR;
 
 // UNDO
 struct UNDO_DATA
@@ -184,6 +192,13 @@ uint16_t UNDO_UPDATE = 0;
 uint16_t UNDO_UPDATE_LAYER = 0;
 SDL_Rect UNDO_UPDATE_RECT = { 0, 0, 1, 1 };
 COLOR UNDO_COL {0xff, 0x00, 0x40, 0xc0};
+
+// PRESET COLORS
+COLOR COL_WHITE{ 0xff, 0xff, 0xff, 0xff };
+COLOR COL_LTGRAY{ 0xc0, 0xc0, 0xc0, 0xff };
+COLOR COL_GRAY{ 0x80, 0x80, 0x80, 0xff };
+COLOR COL_DKGRAY{ 0x40, 0x40, 0x40, 0xff };
+COLOR COL_BLACK{ 0x00, 0x00, 0x00, 0xff };
 
 static const bool arrow[] = {
 	1,0,0,0,0,0,1,0,
@@ -224,8 +239,36 @@ static SDL_Cursor* init_system_cursor(const bool image[])
 }
 
 const uint8_t CHAR_BOXTL = 0xc9;// u8"╔";
+#define STR_BOXTL "\xc9"
 const uint8_t CHAR_BOXTR = 0xbb;// u8"╗";
+#define STR_BOXTR "\xbb"
 const uint8_t CHAR_BOXBL = 0xc8;//u8"╚";
+#define STR_BOXBL "\xc8"
 const uint8_t CHAR_BOXBR = 0xbc;//u8"╝";
+#define STR_BOXBR "\xbc"
 const uint8_t CHAR_BOXH = 0xcd;//u8"═";
+#define STR_BOXH "\xcd"
 const uint8_t CHAR_BOXV = 0xba;//u8"║";
+#define STR_BOXV "\xba"
+
+/*
+
+	*	0	1	2	3	4	5	6	7	8	9	a	b	c	d	e	f
+	0	nul	stx	sot	etx	eot	enq	ack	bel	bs	ht	lf	vt	ff	cr	so	si
+	1	dle	dc1	dc2	dc3	dc4	nak	syn	etb	can	em	sub	esc	fs	gs	rs	us
+	2	sp	!	"	#	$	%	&	'	(	)	*	+	,	-	.	/
+	3	0	1	2	3	4	5	6	7	8	9	:	;	<	=	>	?
+	4	@	A	B	C	D	E	F	G	H	I	J	K	L	M	N	O
+	5	P	Q	R	S	T	U	V	W	X	Y	Z	[	\	]	^	_
+	6	`	a	b	c	d	e	f	g	h	i	j	k	l	m	n	o
+	7	p	q	r	s	t	u	v	w	x	y	z	{	|	}	~	del
+	8	Ç	ü	é	â	ä	à	å	ç	ê	ë	è	ï	î	ì	Ä	Å
+	9	É	æ	Æ	ô	ö	ò	û	ù	ÿ	Ö	Ü	¢	£	¥	₧	ƒ
+	a	á	í	ó	ú	ñ	Ñ	ª	º	¿	⌐	¬	½	¼	¡	«	»
+	b	░	▒	▓	│	┤	╡	╢	╖	╕	╣	║	╗	╝	╜	╛	┐
+	c	└	┴	┬	├	─	┼	╞	╟	╚	╔	╩	╦	╠	═	╬	╧
+	d	╨	╤	╥	╙	╘	╒	╓	╫	╪	┘	┌	█	▄	▌	▐	▀
+	e	α	ß	Γ	π	Σ	σ	µ	τ	Φ	Θ	Ω	δ	∞	φ	ε	∩
+	f	≡	±	≥	≤	⌠	⌡	÷	≈	°	∙	·	√	ⁿ	²	■	nbsp
+
+	*/

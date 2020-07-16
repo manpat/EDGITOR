@@ -152,53 +152,87 @@ inline void layer_new(SDL_Renderer* _renderer, int16_t _x, int16_t _y, int16_t _
 	CURRENT_LAYER_PTR = LAYERS[CURRENT_LAYER].pixels.get();
 }
 
-inline void uibox_new(uint16_t _x, uint16_t _y, uint16_t _w, uint16_t _h)
+inline void uibox_addchars(UIBOX_INFO& uibox, std::string _charlist, uint16_t x, uint16_t y, COLOR col)
+{
+	UIBOX_CHARINFO* _charinfo;
+	uint16_t pos;
+	const char* _CHARS = _charlist.c_str();
+	for (uint16_t j = 0; j < _charlist.size(); j++)
+	{
+		pos = j + (y * uibox.chr_w + x);
+		_charinfo = &uibox.charinfo[pos];
+		(*_charinfo).chr = _CHARS[j];
+		(*_charinfo).col = col;
+		uibox.update_stack.push_back(pos);
+	}
+	uibox.update = true;
+}
+
+inline UIBOX_INFO* uibox_new(uint16_t _x, uint16_t _y, uint16_t _w, uint16_t _h, bool grabbable, const char* title)
 {
 	UIBOX_INFO new_uibox;
 
+	new_uibox.grabbable = grabbable;
 	new_uibox.update = true;
 	new_uibox.x = _x;
 	new_uibox.y = _y;
 
-	int _uibox_w = (int)floor((float)_w / (float)FONT_CHRW);
-	int _uibox_h = (int)floor((float)_h / (float)FONT_CHRH);
+	//int _uibox_w = (int)floor((float)_w / (float)FONT_CHRW);
+	//int _uibox_h = (int)floor((float)_h / (float)FONT_CHRH);
 
-	new_uibox.w = (_uibox_w * FONT_CHRW);
-	new_uibox.h = (_uibox_h * FONT_CHRH);
+	new_uibox.chr_w = (int)floor((float)_w / (float)FONT_CHRW);
+	new_uibox.chr_h = (int)floor((float)_h / (float)FONT_CHRH);
 
-	for (int j = 0; j < _uibox_w * _uibox_h; j++)
+	new_uibox.w = (new_uibox.chr_w * FONT_CHRW);
+	new_uibox.h = (new_uibox.chr_h * FONT_CHRH);
+
+	for (int j = 0; j < new_uibox.chr_w * new_uibox.chr_h; j++)
 	{
 		//new_uibox.charinfo.chr.push_back(u8" ");
 		UIBOX_CHARINFO _chr;
 		COLOR _tcol{ 255, 255, 255, 255 };
 		_chr.col = _tcol;
 		_chr.chr = ' ';
-		_chr.update = true;
 		new_uibox.charinfo.push_back(_chr);
+		//new_uibox.update_stack.push_back(j);
+		new_uibox.update_stack.insert(new_uibox.update_stack.begin() + (rand() % (new_uibox.update_stack.size() + 1)), j);
 	}
 
-	for (int j = 0; j < _uibox_h; j++)
+	for (int j = 0; j < new_uibox.chr_h; j++)
 	{
-		for (int i = 0; i < _uibox_w; i++)
+		for (int i = 0; i < new_uibox.chr_w; i++)
 		{
-			if ((j > 0 && j < _uibox_h-1) && (i > 0 && i < _uibox_w-1))
+			if ((j > 0 && j < new_uibox.chr_h -1) && (i > 0 && i < new_uibox.chr_w -1))
 			{
 				continue;
 			}
-			new_uibox.charinfo[j * _uibox_w + i].chr = (j == 0) ? ((i == 0) ? CHAR_BOXTL : ((i == _uibox_w-1) ? CHAR_BOXTR : CHAR_BOXH)) :
-				((j == _uibox_h-1) ? ((i == 0) ? CHAR_BOXBL : ((i == _uibox_w-1) ? CHAR_BOXBR : CHAR_BOXH)) : CHAR_BOXV);
+			new_uibox.charinfo[j * new_uibox.chr_w + i].chr = (j == 0) ? ((i == 0) ? CHAR_BOXTL : ((i == new_uibox.chr_w -1) ? CHAR_BOXTR : CHAR_BOXH)) :
+				((j == new_uibox.chr_h -1) ? ((i == 0) ? CHAR_BOXBL : ((i == new_uibox.chr_w -1) ? CHAR_BOXBR : CHAR_BOXH)) : CHAR_BOXV);
+			new_uibox.charinfo[j * new_uibox.chr_w + i].col = COL_GRAY;
 		}
 	}
 
-	new_uibox.charinfo[1].chr = 'T';
-	new_uibox.charinfo[1].col = COLOR{255,0,255,255};
-	new_uibox.charinfo[2].chr = 'E';
-	new_uibox.charinfo[3].chr = 'S';
-	new_uibox.charinfo[4].chr = 'T';
+	/*new_uibox.charinfo[1].chr = '[';
+	new_uibox.charinfo[2].chr = ' ';
+	new_uibox.charinfo[3].chr = 'T';
+	new_uibox.charinfo[4].chr = 'E';
+	new_uibox.charinfo[5].chr = 'S';
+	new_uibox.charinfo[6].chr = 'T';
+	new_uibox.charinfo[7].chr = ' ';
+	new_uibox.charinfo[8].chr = ']';*/
+
+	//std::string text;
+	//text = "HELLO" STR_BOXV;// std::string("HELLO") + std::string(1, CHAR_BOXBL);
+
+	//uibox_addchars(new_uibox, text, 1, 0);
+	uibox_addchars(new_uibox, title, 1, 0, COL_WHITE);
 
 	new_uibox.texture = nullptr;// SDL_CreateTexture(RENDERER);
 
 	UIBOXES.push_back(std::move(new_uibox));
+	//UIBOXES.push_back(new_uibox);
+
+	return &UIBOXES.back();
 }
 
 inline bool in_canvas(const uint16_t x, const uint16_t y)
@@ -464,9 +498,13 @@ inline SDL_Renderer* INIT_RENDERER(SDL_Window* WINDOW)
 	SDL_UpdateTexture(UI_TEXTURE_HUEBAR, nullptr, &UI_PIXELS_HUEBAR[0], sizeof(COLOR) * 16);
 
 	// BOXES
-	uibox_new(10, 20, 400, 300);
-	//uibox_new(110, 50, 300, 120);
-	//uibox_new(210, 150, 200, 220);
+	uibox_new(0, 9999, 400, 300, 1, "COLOUR");
+
+	UIBOX_LEFTBAR = uibox_new(0, 0, 128, 512, 0, "TOOLS");
+	uibox_addchars(*UIBOX_LEFTBAR, "BRUSH", 2, 2, COL_WHITE);
+	uibox_addchars(*UIBOX_LEFTBAR, "ERASER", 2, 3, COL_WHITE);
+	uibox_addchars(*UIBOX_LEFTBAR, "FILL", 2, 4, COL_WHITE);
+	uibox_addchars(*UIBOX_LEFTBAR, "LINE", 2, 5, COL_WHITE);
 
 	SDL_SetCursor(init_system_cursor(arrow));
 
@@ -648,11 +686,14 @@ inline void EVENT_LOOP() {
 				UIBOX_INFO& uibox_click = UIBOXES[UIBOX_IN];
 				// grab/pan variables
 				UIBOX_CLICKED_IN = UIBOX_IN;
-				UIBOX_PANX = (int16_t)(MOUSE_X - uibox_click.x);
-				UIBOX_PANY = (int16_t)(MOUSE_Y - uibox_click.y);
+				if (uibox_click.grabbable)
+				{
+					UIBOX_PANX = (int16_t)(MOUSE_X - uibox_click.x);
+					UIBOX_PANY = (int16_t)(MOUSE_Y - uibox_click.y);
+				}
 			}
 			UIBOX_INFO& uibox = UIBOXES[UIBOX_IN];
-			if (UIBOX_CLICKED_IN == UIBOX_IN)
+			if (uibox.grabbable && UIBOX_CLICKED_IN == UIBOX_IN)
 			{
 				// grabbing & moving window
 				uibox.x = (MOUSE_X - UIBOX_PANX);

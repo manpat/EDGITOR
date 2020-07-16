@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <stack>
 #include <algorithm>
 #include <memory>
 
@@ -32,6 +33,7 @@ int main(int, char*[])
 	auto WINDOW = INIT_WINDOW();
 	auto RENDERER = INIT_RENDERER(WINDOW);
 	auto FONTMAP = INIT_FONT(RENDERER);
+	SDL_SetTextureBlendMode(FONTMAP, SDL_BLENDMODE_NONE);
 
 	while (!QUIT) // MAIN LOOP
 	{
@@ -214,13 +216,14 @@ int main(int, char*[])
 
 		// RENDER
 		// smooth lerping animation to make things SLIGHTLY smooth when panning and zooming
-		// the '4.0' can be any integer, and will be a changeable option in Settings
-		CANVAS_X_ANIM = (reach_tween(CANVAS_X_ANIM, floor(CANVAS_X), 40.0));
-		CANVAS_Y_ANIM = (reach_tween(CANVAS_Y_ANIM, floor(CANVAS_Y), 40.0));
-		CANVAS_W_ANIM = (reach_tween(CANVAS_W_ANIM, floor((float)CANVAS_W * CANVAS_ZOOM), 40.0));
-		CANVAS_H_ANIM = (reach_tween(CANVAS_H_ANIM, floor((float)CANVAS_H * CANVAS_ZOOM), 40.0));
-		CELL_W_ANIM = (reach_tween(CELL_W_ANIM, floor((float)CELL_W * CANVAS_ZOOM), 40.0));
-		CELL_H_ANIM = (reach_tween(CELL_H_ANIM, floor((float)CELL_H * CANVAS_ZOOM), 40.0));
+		// the '4.0' can be any number, and will be a changeable option in Settings
+		float anim_speed = 4.0f;
+		CANVAS_X_ANIM = (reach_tween(CANVAS_X_ANIM, floor(CANVAS_X), anim_speed));
+		CANVAS_Y_ANIM = (reach_tween(CANVAS_Y_ANIM, floor(CANVAS_Y), anim_speed));
+		CANVAS_W_ANIM = (reach_tween(CANVAS_W_ANIM, floor((float)CANVAS_W * CANVAS_ZOOM), anim_speed));
+		CANVAS_H_ANIM = (reach_tween(CANVAS_H_ANIM, floor((float)CANVAS_H * CANVAS_ZOOM), anim_speed));
+		CELL_W_ANIM = (reach_tween(CELL_W_ANIM, floor((float)CELL_W * CANVAS_ZOOM), anim_speed));
+		CELL_H_ANIM = (reach_tween(CELL_H_ANIM, floor((float)CELL_H * CANVAS_ZOOM), anim_speed));
 		
 		SDL_FRect F_RECT {};
 
@@ -228,7 +231,7 @@ int main(int, char*[])
 		float bg_w = (ceil(CANVAS_W_ANIM / CELL_W_ANIM) * CELL_W_ANIM);
 		float bg_h = (ceil(CANVAS_H_ANIM / CELL_H_ANIM) * CELL_H_ANIM);
 		F_RECT = SDL_FRect {CANVAS_X_ANIM, CANVAS_Y_ANIM, bg_w, bg_h};
-		SDL_SetTextureBlendMode(BG_GRID_TEXTURE, SDL_BLENDMODE_BLEND);
+		SDL_SetTextureBlendMode(BG_GRID_TEXTURE, SDL_BLENDMODE_NONE);
 		SDL_RenderCopyF(RENDERER, BG_GRID_TEXTURE, nullptr, &F_RECT);
 
 		// these 2 rects cover the overhang the background grid has beyond the canvas
@@ -291,25 +294,54 @@ int main(int, char*[])
 
 			//uibox.chars[18] = CHAR_BOXH;
 			SDL_Rect rect{};
+			UIBOX_CHARINFO* _charinfo;
 
-			int _uibox_w = (int)floor((float)uibox.w / (float)FONT_CHRW);
-			int _uibox_h = (int)floor((float)uibox.h / (float)FONT_CHRH);
+			int _uibox_w = uibox.chr_w;
+			int _uibox_h = uibox.chr_h;
 
 			int _mpx, _mpy;
 			_mpx = (int)floor((float)(MOUSE_X - uibox.x) / (float)FONT_CHRW);
 			_mpy = (int)floor((float)(MOUSE_Y - uibox.y) / (float)FONT_CHRH);
 
-			if (point_in_rect(MOUSE_X, MOUSE_Y, uibox.x + 1, uibox.y + 1, uibox.w - 2, uibox.h - 2))
+			//const char* charlist = u8"HELLO WORLD";
+			//uibox_addchars(uibox, "HELLO WORLD" STR_BOXV, 4, 4);
+
+			if (point_in_rect(MOUSE_X, MOUSE_Y, uibox.x + 1, uibox.y + 1, uibox.w - 2, FONT_CHRH - 2))
 			{
-				uibox.charinfo[_mpy * _uibox_w + _mpx].chr = 0xdb;
-				uibox.charinfo[_mpy * _uibox_w + _mpx].update = true;
+				if (!uibox.in_topbar)
+				{
+					for (uint16_t j = 0; j < _uibox_w; j++)
+					{
+						_charinfo = &uibox.charinfo[j];
+						(*_charinfo).col = COLOR{ 255,0,255,255 };
+						//uibox.update_stack.push_back(j);
+						uibox.update_stack.insert(uibox.update_stack.begin() + (rand() % (uibox.update_stack.size() + 1)), j);
+					}
+					uibox.in_topbar = true;
+					uibox.update = true;
+				}
+				/*_charinfo = &uibox.charinfo[_mpy * _uibox_w + _mpx];
+				(*_charinfo).col = COLOR{ 255,255,0,255 };
+				(*_charinfo).chr = 'Z';
+				uibox.update_stack.push_back(_mpy * _uibox_w + _mpx);
+				uibox.update = true;*/
+			}
+			else
+			if (uibox.in_topbar)
+			{
+				for (int j = 0; j < _uibox_w; j++)
+				{
+					_charinfo = &uibox.charinfo[j];
+					(*_charinfo).col = COLOR{ 255,255,255,255 };
+					//uibox.update_stack.push_back(j);
+					uibox.update_stack.insert(uibox.update_stack.begin() + (rand() % (uibox.update_stack.size() + 1)), j);
+				}
+				uibox.in_topbar = false;
 				uibox.update = true;
 			}
 
 			if (uibox.update)
 			{
-				std::string text;
-
 				if (uibox.texture == nullptr)
 				{
 					uibox.texture = SDL_CreateTexture(RENDERER, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET, uibox.w, uibox.h);
@@ -320,22 +352,29 @@ int main(int, char*[])
 				SDL_SetRenderDrawColor(RENDERER, 255, 255, 255, 255);
 				
 				SDL_Rect chr_rect{};
-				UIBOX_CHARINFO _charinfo;
-				for (int j = 0; j < _uibox_w * _uibox_h; j++)
-				{
-					if (!uibox.charinfo[j].update) continue;
 
-					_charinfo = uibox.charinfo[j];
-					rect = { (j % _uibox_w) * FONT_CHRW, (j / _uibox_w) * FONT_CHRH, FONT_CHRW, FONT_CHRH };
-					chr_rect = { _charinfo.chr * FONT_CHRW, 0, FONT_CHRW, FONT_CHRH };
-					SDL_SetTextureColorMod(FONTMAP, _charinfo.col.r, _charinfo.col.g, _charinfo.col.b);
-					SDL_RenderCopy(RENDERER, FONTMAP, &chr_rect, &rect);
-					_charinfo.update = false;
+				uint16_t j;
+				//while (uibox.update_stack.size())
+				if (uibox.update_stack.size())
+				{
+					if (uibox.update_tick<=0)
+					{
+						j = uibox.update_stack.front();
+						uibox.update_stack.pop_front();
+						_charinfo = &uibox.charinfo[j];
+						rect = { (j % _uibox_w) * FONT_CHRW, (j / _uibox_w) * FONT_CHRH, FONT_CHRW, FONT_CHRH };
+						chr_rect = { (*_charinfo).chr * FONT_CHRW, 0, FONT_CHRW, FONT_CHRH };
+						SDL_SetTextureColorMod(FONTMAP, (*_charinfo).col.r, (*_charinfo).col.g, (*_charinfo).col.b);
+						SDL_RenderCopy(RENDERER, FONTMAP, &chr_rect, &rect);
+						uibox.update_tick = 10;
+					}
+					else uibox.update_tick--;
 				}
+				else uibox.update = false;// uibox.update_tick--;
 
 				SDL_SetRenderTarget(RENDERER, NULL);
 
-				uibox.update = false;
+				//uibox.update = true;
 			}
 
 			rect = { uibox.x, uibox.y, uibox.w, uibox.h };
@@ -366,8 +405,8 @@ int main(int, char*[])
 		//const SDL_Rect temp_rect{10,10,16,360};
 		//SDL_RenderCopy(RENDERER, UI_TEXTURE_HUEBAR, nullptr, &temp_rect);
 
-		FC_Draw(font, RENDERER, 36, 10, "%i", UNDO_LIST.size());
-		FC_Draw(font, RENDERER, 36, 30, "%i\n%i", UIBOX_IN, UIBOX_CLICKED_IN);
+		//FC_Draw(font, RENDERER, 36, 10, "%i", UNDO_LIST.size());
+		//FC_Draw(font, RENDERER, 36, 30, "%i\n%i", UIBOX_IN, UIBOX_CLICKED_IN);
 
 		SDL_SetRenderDrawColor(RENDERER, 0, 0, 0, 0);
 		SDL_RenderPresent(RENDERER);
@@ -381,7 +420,7 @@ int main(int, char*[])
         const Uint64 fps_end = SDL_GetPerformanceCounter();
         const static Uint64 fps_freq = SDL_GetPerformanceFrequency();
         const double fps_seconds = (fps_end - fps_start) / static_cast<double>(fps_freq);
-        FPS = reach_tween(FPS, 1 / (float)fps_seconds, 2.0);
+        FPS = reach_tween(FPS, 1 / (float)fps_seconds, 100.0);
         if (fps_rate <= 0) {
             std::cout << " FPS: " << (int)floor(FPS) << "       " << '\r';
             fps_rate = 60 * 4;
