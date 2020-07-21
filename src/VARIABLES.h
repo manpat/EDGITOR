@@ -15,6 +15,10 @@ uint16_t FONT_CHRH;
 bool QUIT = false;
 float FPS = 0;
 
+static char KEY_TEXT[256];
+int* KEY_TEXT_HOLD = nullptr;
+int KEY_TEXT_INT;
+
 int16_t MOUSE_X;
 int16_t MOUSE_Y;
 int16_t MOUSE_PREVX;
@@ -99,16 +103,43 @@ SDL_Texture* BRUSH_CURSOR_TEXTURE;
 SDL_Texture* BRUSH_TEXTURE;
 bool BRUSH_UPDATE = 0;
 
+int16_t BRUSH_X = 0;
+int16_t BRUSH_Y = 0;
+uint16_t BRUSH_W = 0;
 int16_t BRUSH_UPDATE_X1 = INT16_MAX;
 int16_t BRUSH_UPDATE_Y1 = INT16_MAX;
 int16_t BRUSH_UPDATE_X2 = INT16_MIN;
 int16_t BRUSH_UPDATE_Y2 = INT16_MIN;
 std::unique_ptr<COLOR[]> BRUSH_PIXELS;
-COLOR BRUSH_COLOR {255, 64, 128, 64};
+COLOR BRUSH_COLOR {255, 255, 255, 128};
+COLOR UNDO_COLOR{255, 0, 64, 192};
 COLOR* BRUSH_CURSOR_PIXELS;
 COLOR* BRUSH_CURSOR_PIXELS_CLEAR;
 SDL_Rect BRUSH_CURSOR_PIXELS_CLEAR_RECT;
 uint16_t BRUSH_CURSOR_PIXELS_CLEAR_POS;
+
+struct BRUSH_DATA
+{
+	int x = 0;
+	int y = 0;
+	int w = 0;
+	std::vector<uint8_t> alpha;
+
+	BRUSH_DATA(int _w) : alpha(_w* _w)
+	{
+		this->w = _w;
+		this->x = (-_w / 2);
+		this->y = (-_w / 2);
+	}
+
+	void set(int p, uint8_t a)
+	{
+		alpha[p] = a;
+	}
+};
+
+std::vector<std::unique_ptr<BRUSH_DATA>> BRUSH_LIST;
+uint16_t BRUSH_LIST_POS = 0;
 
 //SDL_Texture* CANVAS_TEXTURE;// = SDL_CreateTexture(RENDERER, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, CANVAS_W, CANVAS_H);
 //uint32_t* CANVAS_PIXELS;// = new uint32_t[CANVAS_W * CANVAS_H];
@@ -125,23 +156,50 @@ uint16_t CURRENT_TOOL = 0;
 
 // UI
 int16_t UIBOX_IN = -1;
+int16_t UIBOX_PREVIN = -1;
 int16_t UIBOX_CLICKED_IN = -1;
 int16_t UIBOX_PANX = 0;
 int16_t UIBOX_PANY = 0;
 SDL_Texture* UI_TEXTURE_HUEBAR;
 COLOR* UI_PIXELS_HUEBAR;
 
+int16_t ELEMENT_IN = -1;
+int16_t ELEMENT_CLICKED_IN = -1;
+
+bool TEST_BOOL = false;
+
 struct UIBOX_CHARINFO {
 	uint8_t chr;
 	uint16_t pos;
 	COLOR col;
+	COLOR bg_col = { 0,0,0,1 };
+};
+
+struct UIBOX_ELEMENT {
+	std::string text;
+	std::string over_text;
+	bool over = false;
+	bool sel = false;
+	uint8_t type = 0; // 0 = button, >0 anything else
+	bool* input_bool = nullptr;
+	uint16_t* input_int = nullptr;
+	uint16_t input_int_var = 0;
+	bool is_pos = false;
+	uint16_t px = 0;
+	uint16_t py = 0;
 };
 
 struct UIBOX_INFO {
+	bool update_creation = true;
 	bool grabbable = true;
 	bool update = true;
+	bool element_update = true;
 	bool in_topbar = false;
+	bool in_topbar_clicked = false;
+	bool shrink = false;
+	bool in_shrink = false;
 	std::vector<UIBOX_CHARINFO> charinfo;
+	std::vector<UIBOX_ELEMENT> element;
 	std::deque<uint16_t> update_stack;
 	SDL_Texture* texture;
 	uint16_t tex_w;
@@ -153,11 +211,14 @@ struct UIBOX_INFO {
 	uint16_t w;
 	uint16_t h;
 	uint8_t alpha;
-	uint16_t update_tick = 100;
+	uint16_t update_tick = 0;
 };
 std::vector<UIBOX_INFO> UIBOXES;
 
-UIBOX_INFO* UIBOX_LEFTBAR;
+UIBOX_INFO* UIBOX_TOOLS;
+UIBOX_INFO* UIBOX_COLOR;
+UIBOX_INFO* UIBOX_BRUSH;
+UIBOX_INFO* UIBOX_CANVAS;
 
 // UNDO
 struct UNDO_DATA
@@ -238,6 +299,12 @@ static SDL_Cursor* init_system_cursor(const bool image[])
 	return SDL_CreateCursor(data, mask, 8, 8, 3, 3);
 }
 
+const uint8_t CHAR_NBSP = 0xff; // no-break space
+#define STR_NBSP "\xff"
+
+const uint8_t CHAR_BLOCK = 0xdb; // █
+#define STR_BLOCK "\xdb"
+
 const uint8_t CHAR_BOXTL = 0xc9;// u8"╔";
 #define STR_BOXTL "\xc9"
 const uint8_t CHAR_BOXTR = 0xbb;// u8"╗";
@@ -251,11 +318,22 @@ const uint8_t CHAR_BOXH = 0xcd;//u8"═";
 const uint8_t CHAR_BOXV = 0xba;//u8"║";
 #define STR_BOXV "\xba"
 
+const uint8_t CHAR_ARWU = 0x18;
+#define STR_ARWU "\x18"
+const uint8_t CHAR_ARWD = 0x19;
+#define STR_ARWD "\x19"
+const uint8_t CHAR_ARWL = 0x1b;
+#define STR_ARWL "\x1b"
+const uint8_t CHAR_ARWR = 0x1a;
+#define STR_ARWR "\x1a"
+
+bool DEBUG_BOOL = false;
+
 /*
 
-	*	0	1	2	3	4	5	6	7	8	9	a	b	c	d	e	f
-	0	nul	stx	sot	etx	eot	enq	ack	bel	bs	ht	lf	vt	ff	cr	so	si
-	1	dle	dc1	dc2	dc3	dc4	nak	syn	etb	can	em	sub	esc	fs	gs	rs	us
+	*	_0	_1	_2	_3	_4	_5	_6	_7	_8	_9	_a	_b	_c	_d	_e	_f
+	0		☺	☻	♥	♦	♣	♠	•	◘	○	◙	♂	♀	♪	♫	☼
+	1	►	◄	↕	‼	¶	§	▬	↨	↑	↓	→	←	∟	↔	▲	▼
 	2	sp	!	"	#	$	%	&	'	(	)	*	+	,	-	.	/
 	3	0	1	2	3	4	5	6	7	8	9	:	;	<	=	>	?
 	4	@	A	B	C	D	E	F	G	H	I	J	K	L	M	N	O
