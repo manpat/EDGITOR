@@ -29,7 +29,7 @@ int16_t sign(int16_t x) {
 
 inline bool point_in_rect(int16_t px, int16_t py, int16_t rx, int16_t ry, int16_t rw, int16_t rh)
 {
-	return (px > rx && py > ry && px < (rx + rw) && py < (ry + rh));
+	return (px >= rx && py >= ry && px < (rx + rw) && py < (ry + rh));
 }
 
 void HSVtoRGB(int16_t H, double S, double V, int16_t output[3]) {
@@ -599,7 +599,7 @@ inline SDL_Renderer* INIT_RENDERER(SDL_Window* WINDOW)
 	UIBOX_COLOR = uibox_new(0, 9999, 256, 256, 1, "COLOUR");
 	UIBOX_BRUSH = uibox_new(9999, 9999, 256, 256, 1, "BRUSH");
 
-	for (int i = 0; i < BRUSH_W * BRUSH_W; i++) uibox_addinteract(*UIBOX_BRUSH, "><", STR_BLOCK STR_BLOCK, 0, (bool*)&(BRUSH_LIST[BRUSH_LIST_POS]->alpha[i]), nullptr, 0, true, 2+((i % BRUSH_W) * 2), 2+(i / BRUSH_W));
+	for (int i = 0; i < BRUSH_W * BRUSH_W; i++) uibox_addinteract(*UIBOX_BRUSH, ",'", STR_NBSP STR_NBSP, 0, (bool*)&(BRUSH_LIST[BRUSH_LIST_POS]->alpha[i]), nullptr, 0, true, 2+((i % BRUSH_W) * 2), 2+(i / BRUSH_W));
 
 	UIBOX_TOOLS = uibox_new(0, 0, 128, 512, 0, "TOOLS");
 	uibox_addinteract(*UIBOX_TOOLS, "BRUSH", "> BRUSH", 0, nullptr, &CURRENT_TOOL, 0, false, 0, 0);

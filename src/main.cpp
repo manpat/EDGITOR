@@ -381,17 +381,17 @@ int main(int, char*[])
 						_element = &uibox->element[e];
 						if ((uibox->element_update && ((_element->input_int == nullptr && (bool)(*_element->input_bool)) || (_element->input_int != nullptr && *_element->input_int == _element->input_int_var))) ||
 							((!_element->is_pos && point_in_rect(MOUSE_X, MOUSE_Y, uibox->x + (FONT_CHRW * 2), uibox->y + ((e + 2) * FONT_CHRH), uibox->w - (FONT_CHRW * 4), FONT_CHRH)) ||
-							point_in_rect(MOUSE_X, MOUSE_Y, uibox->x + (FONT_CHRW * _element->px), uibox->y + (FONT_CHRH * _element->py), FONT_CHRW * _element->text.size(), FONT_CHRH)))
+							_element->is_pos && point_in_rect(MOUSE_X, MOUSE_Y, uibox->x + (FONT_CHRW * _element->px), uibox->y + (FONT_CHRH * _element->py), FONT_CHRW * _element->text.size(), FONT_CHRH)))
 						{
 							if(!uibox->element_update) ELEMENT_IN = e;
-							if (_element->over) continue; // if mouse is already over, don't update
+							if (_element->over && !uibox->element_update) continue; // if mouse is already over, don't update
 
 							for (uint16_t ej = 0; ej < _uibox_w; ej++)
 							{
 								if (((!_element->is_pos) && ej >= (_uibox_w - 4)) || ((_element->is_pos) && ej >= _element->text.size())) break;
 								uint16_t _tj = (!_element->is_pos)?(ej + 2 + ((e + 2) * _uibox_w)):(_element->px + (_element->py * _uibox_w) + ej);
 								_charinfo = &uibox->charinfo[_tj];
-								_charinfo->col = (!_element->is_pos)?COL_BLACK: COLOR{ 255,0,64,255 };
+								_charinfo->col = COL_BLACK;// (!_element->is_pos) ? COL_BLACK : (!(bool)(*_element->input_bool) ? COL_BLACK : COLOR{ 255,0,64,255 });
 								_charinfo->bg_col = COLOR{ 255,0,64,255 };
 								if ((_element->input_int == nullptr && (bool)(*_element->input_bool)) || (_element->input_int != nullptr && *_element->input_int == _element->input_int_var))
 								{
@@ -406,7 +406,7 @@ int main(int, char*[])
 						else
 						if (_element->over || uibox->element_update)
 						{
-							if ((_element->input_int == nullptr && !(bool)(*_element->input_bool)) || (_element->input_int != nullptr && *_element->input_int != _element->input_int_var))
+							if (((_element->input_int == nullptr && !(bool)(*_element->input_bool)) || (_element->input_int != nullptr && *_element->input_int != _element->input_int_var)) || uibox->element_update)
 							{
 								for (uint16_t ej = 0; ej < _uibox_w; ej++)
 								{
@@ -421,8 +421,8 @@ int main(int, char*[])
 									}
 									uibox->update_stack.insert(uibox->update_stack.begin() + (rand() % (uibox->update_stack.size() + 1)), _tj);
 								}
+								uibox->update = true;
 							}
-							uibox->update = true;
 							_element->over = false;
 						}
 					}
@@ -470,7 +470,7 @@ int main(int, char*[])
 							chr_rect = { _charinfo->chr * FONT_CHRW, 0, FONT_CHRW, FONT_CHRH };
 							SDL_SetTextureColorMod(FONTMAP, _charinfo->col.r, _charinfo->col.g, _charinfo->col.b);
 							SDL_RenderCopy(RENDERER, FONTMAP, &chr_rect, &rect);
-							uibox->update_tick = 2; // Can be any number. Bigger number = slower manifest animation
+							uibox->update_tick = 4; // Can be any number. Bigger number = slower manifest animation
 						}
 						else uibox->update_tick--;
 					}
