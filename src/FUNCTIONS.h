@@ -1,9 +1,6 @@
 #ifndef FUNCTIONS_H
 #define FUNCTIONS_H
 
-#include <cmath>
-#include <string>
-
   //
  //   FUNCTIONS   ///////////////////////////////////////////////// ///////  //////   /////    ////     ///      //       /
 //
@@ -295,7 +292,7 @@ void set_pixel_brush(int x, int y, COLOR c)
 			_tx = ((x + BRUSH_X) + i);
 			_ty = ((y + BRUSH_Y) + j);
 			//if (!in_canvas(_tx, _ty)) continue;
-			_a = (BRUSH_LIST[BRUSH_LIST_POS]->alpha[j * 7 + i]);
+			_a = (BRUSH_LIST[BRUSH_LIST_POS]->alpha[j * BRUSH_W + i]);
 			if (!_a) continue;
 			//if (BRUSH_PIXELS[_tx, _ty] != 0x00000000) continue;
 			if (_a) set_pixel(_tx, _ty, c);
@@ -547,23 +544,17 @@ inline SDL_Renderer* INIT_RENDERER(SDL_Window* WINDOW)
 	// BRUSH
 
 	// ADD DEFAULT BRUSH
-	static uint8_t BRUSH_POINTGRID[49] =
-	{
-	 1, 1, 1, 1, 1, 1, 1,
-	 1, 0, 0, 0, 0, 0, 1,
-	 1, 0, 0, 0, 0, 0, 1,
-	 1, 0, 0, 1, 0, 0, 1,
-	 1, 0, 0, 0, 0, 0, 1,
-	 1, 0, 0, 0, 0, 0, 1,
-	 1, 1, 1, 1, 1, 1, 1 };
-	brush_new(BRUSH_POINTGRID, 7);
+	const int _t_bs = 13;
+	BRUSH_W = _t_bs;
+	static uint8_t BRUSH_POINTGRID[_t_bs * _t_bs] = {};
+	brush_new(BRUSH_POINTGRID, _t_bs);
 	brush_set(BRUSH_LIST_POS);
 
-	BRUSH_CURSOR_PIXELS = new COLOR[7 * 7];
-	BRUSH_CURSOR_PIXELS_CLEAR = new COLOR[7 * 7];
+	BRUSH_CURSOR_PIXELS = new COLOR[_t_bs * _t_bs];
+	BRUSH_CURSOR_PIXELS_CLEAR = new COLOR[_t_bs * _t_bs];
 	BRUSH_CURSOR_PIXELS_CLEAR_RECT = { 0, 0, 1, 1 };
 
-	for (int i = 0; i < 49; i++)
+	for (int i = 0; i < (_t_bs * _t_bs); i++)
 	{
 		if (BRUSH_POINTGRID[i])
 		{
@@ -599,7 +590,7 @@ inline SDL_Renderer* INIT_RENDERER(SDL_Window* WINDOW)
 	UIBOX_COLOR = uibox_new(0, 9999, 256, 256, 1, "COLOUR");
 	UIBOX_BRUSH = uibox_new(9999, 9999, 256, 256, 1, "BRUSH");
 
-	for (int i = 0; i < BRUSH_W * BRUSH_W; i++) uibox_addinteract(*UIBOX_BRUSH, ",'", STR_NBSP STR_NBSP, 0, (bool*)&(BRUSH_LIST[BRUSH_LIST_POS]->alpha[i]), nullptr, 0, true, 2+((i % BRUSH_W) * 2), 2+(i / BRUSH_W));
+	for (int i = 0; i < BRUSH_W * BRUSH_W; i++) uibox_addinteract(*UIBOX_BRUSH, "..", STR_NBSP STR_NBSP, 0, (bool*)&(BRUSH_LIST[BRUSH_LIST_POS]->alpha[i]), nullptr, 0, true, 3 + ((i % BRUSH_W) * 2), 2 + (i / BRUSH_W));
 
 	UIBOX_TOOLS = uibox_new(0, 0, 128, 512, 0, "TOOLS");
 	uibox_addinteract(*UIBOX_TOOLS, "BRUSH", "> BRUSH", 0, nullptr, &CURRENT_TOOL, 0, false, 0, 0);

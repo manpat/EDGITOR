@@ -4,6 +4,9 @@
  //   VARIABLES   ///////////////////////////////////////////////// ///////  //////   /////    ///     //      /
 //
 
+SDL_Renderer* RENDERER;
+SDL_Texture* FONTMAP;
+
 FC_Font* font;
 FC_Font* font_under;
 FC_Font* font_bold;
