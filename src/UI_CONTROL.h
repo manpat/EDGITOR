@@ -62,28 +62,15 @@ struct UIBOX_INFO {
 
 void SYSTEM_UIBOX_UPDATE();
 
+// returns if the mouse input was claimed by a uibox
+bool SYSTEM_UIBOX_HANDLE_MOUSE_DOWN(bool is_click, int mouse_x, int mouse_y);
+void SYSTEM_UIBOX_HANDLE_MOUSE_UP();
+
 UIBOX_INFO* uibox_new(uint16_t _x, uint16_t _y, uint16_t _w, uint16_t _h, bool can_grab, std::string title);
 void uibox_setchar(UIBOX_CHAR* ci, UIBOX_INFO* ui, uint16_t char_pos, uint8_t _CHR, COLOR _COL, COLOR _BG_COL, bool update);
 void uibox_setstring(UIBOX_INFO* uibox, std::string _charlist, uint16_t x, uint16_t y, COLOR col, bool update);
 void uibox_addinteract(UIBOX_INFO* uibox, std::string text, std::string over_text, uint8_t type, bool* bool_ptr, uint16_t* int_ptr, uint16_t int_var, bool is_pos, uint16_t px, uint16_t py);
 
 
-extern int16_t UIBOX_IN;
-extern int16_t UIBOX_PREVIN;
-extern int16_t UIBOX_CLICKED_IN;
-extern int16_t UIBOX_PANX;
-extern int16_t UIBOX_PANY;
 extern SDL_Texture* UI_TEXTURE_HUEBAR;
 extern COLOR* UI_PIXELS_HUEBAR;
-
-extern int16_t ELEMENT_IN;
-extern int16_t ELEMENT_CLICKED_IN;
-
-extern bool TEST_BOOL;
-
-extern std::vector<std::unique_ptr<UIBOX_INFO>> UIBOXES;
-
-extern UIBOX_INFO* UIBOX_TOOLS;
-extern UIBOX_INFO* UIBOX_COLOR;
-extern UIBOX_INFO* UIBOX_BRUSH;
-extern UIBOX_INFO* UIBOX_CANVAS;

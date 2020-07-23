@@ -9,6 +9,13 @@
 #include "VARIABLES.h"
 #include "FUNCTIONS.h"
 
+
+
+UIBOX_INFO* UIBOX_TOOLS;
+UIBOX_INFO* UIBOX_COLOR;
+UIBOX_INFO* UIBOX_BRUSH;
+UIBOX_INFO* UIBOX_CANVAS;
+
   //
  //   INITIALISATION   ///////////////////////////////////////////////// ///////  //////   /////    ////     ///      //       /
 //
@@ -375,122 +382,16 @@ void SYSTEM_INPUT_UPDATE()
 
 	if (MOUSEBUTTON_LEFT)
 	{
-		if (UIBOX_IN >= 0)
-		{
-			if (MOUSEBUTTON_PRESSED_LEFT)
-			{
-				if (ELEMENT_IN >= 0)
-				{
-					UIBOX_INFO* uibox = UIBOXES[UIBOX_IN].get();
-					UIBOX_ELEMENT* uibox_element = &uibox->element[ELEMENT_IN];
-					switch (uibox_element->type)
-					{
-					case 0:
-						if (uibox_element->input_bool != nullptr)
-						{
-							*uibox_element->input_bool = (!(bool)(*uibox_element->input_bool));
-						}
-						if (uibox_element->input_int != nullptr)
-						{
-							*uibox_element->input_int = uibox_element->input_int_var;
-						}
-						break;
-					}
-					uibox->element_update = true;
-				}
-
-				move_to_end(UIBOXES, UIBOX_IN); // move window to end
-				std::rotate(UIBOXES.rbegin(), UIBOXES.rbegin() + 1, UIBOXES.rend()); // then rotate once more to move to start
-				// There's probably a better way of doing this
-				UIBOX_IN = 0;// UIBOXES.size() - 1;
-				// This was originally putting the window at the end of the list,
-				// but I made it so it moves it to the start
-
-				UIBOX_INFO* uibox_click = UIBOXES[UIBOX_IN].get();
-
-				// grab/pan variables
-				UIBOX_CLICKED_IN = UIBOX_IN;
-				uibox_click->grab = (uibox_click->in_grab);
-				if (uibox_click->can_grab && uibox_click->grab && uibox_click->in_grab)
-				{
-					UIBOX_PANX = (int16_t)(MOUSE_X - uibox_click->x);
-					UIBOX_PANY = (int16_t)(MOUSE_Y - uibox_click->y);
-				}
-
-				// shrink
-				if (!uibox_click->in_grab && !uibox_click->grab && uibox_click->in_shrink)
-				{
-					UIBOX_CHAR* _charinfo;
-					uibox_click->shrink = !uibox_click->shrink;
-					uibox_click->h = (uibox_click->shrink) ? FONT_CHRH : (uibox_click->chr_h * FONT_CHRH);
-
-					if (uibox_click->shrink)
-					{
-						/*float deltaX = (WINDOW_W / 2) - (uibox_click->x + (uibox_click->w / 2));
-						float deltaY = (WINDOW_H / 2) - uibox_click->y;
-						float angle = atan2(deltaY, deltaX);
-						float _win_hyp = sqrtf(((WINDOW_W / 2) * (WINDOW_W / 2)) + ((WINDOW_H / 2) * (WINDOW_H / 2)));
-
-						uibox_click->x -= (uint16_t)((9999 * cos(angle)) + (uibox_click->w / 2));
-						uibox_click->y -= (uint16_t)(9999 * sin(angle));*/
-
-						uibox_click->h = (uibox_click->shrink) ? FONT_CHRH : (uibox_click->chr_h * FONT_CHRH);
-						_charinfo = &uibox_click->charinfo[0];
-						_charinfo->chr = CHAR_BOXH;
-						_charinfo->bg_col = COLOR{ 0,0,0,1 };
-						uibox_click->update_stack.insert(uibox_click->update_stack.begin() + (rand() % (uibox_click->update_stack.size() + 1)), 0);
-
-						_charinfo = &uibox_click->charinfo[uibox_click->chr_w-1];
-						_charinfo->chr = CHAR_BOXH;
-						_charinfo->bg_col = COLOR{ 0,0,0,1 };
-						uibox_click->update_stack.insert(uibox_click->update_stack.begin() + (rand() % (uibox_click->update_stack.size() + 1)), uibox_click->chr_w - 1);
-
-						_charinfo = &uibox_click->charinfo[uibox_click->chr_w - 3];
-						_charinfo->chr = CHAR_ARWL;
-						_charinfo->bg_col = COLOR{ 255,0,64,1 };
-						uibox_click->update_stack.insert(uibox_click->update_stack.begin() + (rand() % (uibox_click->update_stack.size() + 1)), uibox_click->chr_w - 3);
-					}
-					else
-					{
-						uibox_click->h = (uibox_click->shrink) ? FONT_CHRH : (uibox_click->chr_h * FONT_CHRH);
-						_charinfo = &uibox_click->charinfo[0];
-						_charinfo->chr = CHAR_BOXTL;
-						_charinfo->bg_col = COLOR{ 0,0,0,1 };
-						uibox_click->update_stack.insert(uibox_click->update_stack.begin() + (rand() % (uibox_click->update_stack.size() + 1)), 0);
-
-						_charinfo = &uibox_click->charinfo[uibox_click->chr_w - 1];
-						_charinfo->chr = CHAR_BOXTR;
-						_charinfo->bg_col = COLOR{ 0,0,0,1 };
-						uibox_click->update_stack.insert(uibox_click->update_stack.begin() + (rand() % (uibox_click->update_stack.size() + 1)), uibox_click->chr_w - 1);
-
-						_charinfo = &uibox_click->charinfo[uibox_click->chr_w - 3];
-						_charinfo->chr = CHAR_ARWD;
-						_charinfo->bg_col = COLOR{ 255,0,64,1 };
-						uibox_click->update_stack.insert(uibox_click->update_stack.begin() + (rand() % (uibox_click->update_stack.size() + 1)), uibox_click->chr_w - 3);
-					}
-					uibox_click->update = true;
-					if (!uibox_click->shrink) uibox_click->element_update = true;
-					uibox_click->creation_update = true;
-				}
-			}
-			UIBOX_INFO* uibox = UIBOXES[UIBOX_IN].get();
-			if (uibox->can_grab && uibox->grab && UIBOX_CLICKED_IN == UIBOX_IN)
-			{
-				// grabbing & moving window
-				uibox->x = (MOUSE_X - UIBOX_PANX);
-				uibox->y = (MOUSE_Y - UIBOX_PANY);
-			}
-		}
+		const bool uibox_claimed_input = SYSTEM_UIBOX_HANDLE_MOUSE_DOWN(MOUSEBUTTON_PRESSED_LEFT, MOUSE_X, MOUSE_Y);
 		
-		if (ELEMENT_CLICKED_IN == -1 && UIBOX_CLICKED_IN == -1)
+		if (!uibox_claimed_input)
 		{
 			set_pixel_line(CANVAS_MOUSE_PREVX, CANVAS_MOUSE_PREVY, CANVAS_MOUSE_X, CANVAS_MOUSE_Y, CURRENT_TOOL ? UNDO_COLOR : BRUSH_COLOR);
 		}
 	}
 	else
 	{
-		UIBOX_CLICKED_IN = -1;
-		ELEMENT_CLICKED_IN = -1;
+		SYSTEM_UIBOX_HANDLE_MOUSE_UP();
 	}
 
 	if (MOUSEBUTTON_PRESSED_RIGHT)
