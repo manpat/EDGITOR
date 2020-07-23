@@ -14,7 +14,6 @@
 #include <SDL_ttf.h>
 #endif
 
-#include "SDL_FontCache.h"
 #include "SYSTEM.h"
 #include "VARIABLES.h"
 #include "FUNCTIONS.h"
@@ -71,7 +70,7 @@ int main(int, char*[])
 
 		///////////////////////////////////////////////// ///////  //////   /////    ////     ///      //       /
 
-		UPDATE_INPUT();
+		SYSTEM_INPUT_UPDATE();
 
 		SYSTEM_BRUSH_UPDATE();
 		SYSTEM_LAYER_UPDATE();
@@ -138,7 +137,7 @@ int main(int, char*[])
 		F_RECT = { CANVAS_X_ANIM - 2.0f, CANVAS_Y_ANIM - 2.0f, CANVAS_W_ANIM + 4.0f, CANVAS_H_ANIM + 4.0f };
 		SDL_RenderDrawRectF(RENDERER, &F_RECT);
 
-		SYSTEM_UIBOX_CONTROL();
+		SYSTEM_UIBOX_UPDATE();
 
 		SDL_SetRenderDrawColor(RENDERER, 0, 0, 0, 255);
 
@@ -171,13 +170,7 @@ int main(int, char*[])
 
 	SDL_Delay(10);
 
-	TTF_CloseFont(FONT);
-	FC_FreeFont(font);
-	FC_FreeFont(font_bold);
-	SDL_DestroyRenderer(RENDERER);
-	SDL_DestroyWindow(WINDOW);
-	SDL_Quit();
-	TTF_Quit();
+	SYSTEM_SHUTDOWN(WINDOW);
 
 	return 0;
 }

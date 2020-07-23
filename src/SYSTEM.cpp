@@ -5,7 +5,7 @@
 #include <SDL.h>
 #endif
 
-#include "SDL_FontCache.h"
+#include "UI_CONTROL.h"
 #include "VARIABLES.h"
 #include "FUNCTIONS.h"
 
@@ -68,19 +68,8 @@ SDL_Renderer* INIT_RENDERER(SDL_Window* WINDOW)
 	_u1.h = 0;
 	UNDO_LIST.push_back(std::move(_u1));
 
-	// LOAD FONTS
-	font = FC_CreateFont();
-	font_under = FC_CreateFont();
-	font_bold = FC_CreateFont();
-
-	std::string font_path		= std::string(RESOURCES_PATH) + "/IBMPlexMono-Regular.ttf";
-	std::string font_bold_path	= std::string(RESOURCES_PATH) + "/IBMPlexMono-Bold.ttf";
-	std::string FONT_path	= std::string(RESOURCES_PATH) + "/FONT.ttf";
-	FC_LoadFont(font, RENDERER, font_path.c_str(), 16, FC_MakeColor(192, 192, 192, 255), TTF_STYLE_NORMAL);
-	FC_LoadFont(font_under, RENDERER, font_path.c_str(), 16, FC_MakeColor(192, 192, 192, 255), TTF_STYLE_UNDERLINE);
-	FC_LoadFont(font_bold, RENDERER, font_bold_path.c_str(), 16, FC_MakeColor(255, 0, 64, 255), TTF_STYLE_BOLD);
-
 	// TERMINAL FONT
+	std::string FONT_path	= std::string(RESOURCES_PATH) + "/FONT.ttf";
 	FONT = TTF_OpenFont(FONT_path.c_str(), 16);
 	int _tfw, _tfh;
 	TTF_SizeText(FONT, "A", &_tfw, &_tfh);
@@ -203,12 +192,22 @@ SDL_Texture* INIT_FONT(SDL_Renderer* renderer)
 	return texture;
 }
 
+void SYSTEM_SHUTDOWN(SDL_Window* WINDOW)
+{
+	TTF_CloseFont(FONT);
+	SDL_DestroyRenderer(RENDERER);
+	SDL_DestroyWindow(WINDOW);
+	SDL_Quit();
+	TTF_Quit();
+}
+
 
   //
  //   INPUT HANDLING   ///////////////////////////////////////////////// ///////  //////   /////    ////     ///      //       /
 //
 
-void UPDATE_INPUT() {
+void SYSTEM_INPUT_UPDATE()
+{
 	MOUSEBUTTON_PRESSED_LEFT = false;
 	MOUSEBUTTON_PRESSED_MIDDLE = false;
 	MOUSEBUTTON_PRESSED_RIGHT = false;

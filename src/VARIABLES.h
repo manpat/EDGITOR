@@ -9,7 +9,6 @@
 struct SDL_Renderer;
 struct SDL_Texture;
 struct SDL_Cursor;
-struct FC_Font;
 struct SDL_Rect;
 
 // manpat: really not a fan of this - this should be cmakes job :(
@@ -21,6 +20,8 @@ struct SDL_Rect;
 #include <SDL_ttf.h>
 #endif
 
+#include "COLOR.h"
+
   //
  //   VARIABLES   ///////////////////////////////////////////////// ///////  //////   /////    ///     //      /
 //
@@ -28,10 +29,6 @@ struct SDL_Rect;
 
 extern SDL_Renderer* RENDERER;
 extern SDL_Texture* FONTMAP;
-
-extern FC_Font* font;
-extern FC_Font* font_under;
-extern FC_Font* font_bold;
 
 extern TTF_Font* FONT;
 extern uint16_t FONT_CHRW;
@@ -56,19 +53,6 @@ extern int WINDOW_H;
 
 extern int DISPLAY_W;
 extern int DISPLAY_H;
-
-struct COLOR {
-	uint8_t r, g, b, a;
-
-	friend bool operator==(COLOR a, COLOR b) {
-		return a.r == b.r && a.g == b.g
-			&& a.b == b.b && a.a == b.a;
-	}
-
-	friend bool operator!=(COLOR a, COLOR b) {
-		return !(a == b);
-	}
-};
 
 // CANVAS
 extern bool CANVAS_UPDATE;
@@ -180,76 +164,6 @@ extern bool MOUSEBUTTON_PRESSED_RIGHT;
 
 // TOOL
 extern uint16_t CURRENT_TOOL;
-
-// UI
-extern int16_t UIBOX_IN;
-extern int16_t UIBOX_PREVIN;
-extern int16_t UIBOX_CLICKED_IN;
-extern int16_t UIBOX_PANX;
-extern int16_t UIBOX_PANY;
-extern SDL_Texture* UI_TEXTURE_HUEBAR;
-extern COLOR* UI_PIXELS_HUEBAR;
-
-extern int16_t ELEMENT_IN;
-extern int16_t ELEMENT_CLICKED_IN;
-
-extern bool TEST_BOOL;
-
-struct UIBOX_CHAR {
-	uint8_t chr;
-	COLOR col;
-	COLOR bg_col = { 0,0,0,1 };
-};
-
-struct UIBOX_ELEMENT {
-	std::string text;
-	std::string over_text;
-	bool over = false;
-	bool sel = false;
-	uint8_t type = 0; // 0 = button, >0 anything else
-	bool* input_bool = nullptr;
-	uint16_t* input_int = nullptr;
-	uint16_t input_int_var = 0;
-	bool is_pos = false;
-	uint16_t px = 0;
-	uint16_t py = 0;
-};
-
-struct UIBOX_INFO {
-	bool creation_update = true;
-	bool update = true;
-	bool element_update = true;
-
-	bool can_grab = true;
-	bool in_grab = false;
-	bool grab = false;
-
-	bool can_shrink = true;
-	bool in_shrink = false;
-	bool shrink = false;
-
-	std::vector<UIBOX_CHAR> charinfo;
-	std::vector<UIBOX_ELEMENT> element;
-	std::deque<uint16_t> update_stack;
-	SDL_Texture* texture;
-	uint16_t tex_w;
-	uint16_t tex_h;
-	uint16_t chr_w;
-	uint16_t chr_h;
-	uint16_t x;
-	uint16_t y;
-	uint16_t w;
-	uint16_t h;
-	uint8_t alpha;
-	uint16_t update_tick = 0;
-};
-
-extern std::vector<UIBOX_INFO> UIBOXES;
-
-extern UIBOX_INFO* UIBOX_TOOLS;
-extern UIBOX_INFO* UIBOX_COLOR;
-extern UIBOX_INFO* UIBOX_BRUSH;
-extern UIBOX_INFO* UIBOX_CANVAS;
 
 // UNDO
 struct UNDO_DATA

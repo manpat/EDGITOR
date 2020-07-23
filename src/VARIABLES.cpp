@@ -1,4 +1,5 @@
 #include "VARIABLES.h"
+#include "COLOR.h"
 
 // manpat: really not a fan of this - this should be cmakes job :(
 #ifdef __APPLE__
@@ -9,16 +10,13 @@
 #include <SDL_ttf.h>
 #endif
 
+
   //
  //   VARIABLES   ///////////////////////////////////////////////// ///////  //////   /////    ///     //      /
 //
 
 SDL_Renderer* RENDERER;
 SDL_Texture* FONTMAP;
-
-FC_Font* font;
-FC_Font* font_under;
-FC_Font* font_bold;
 
 TTF_Font* FONT;
 uint16_t FONT_CHRW;
@@ -125,27 +123,6 @@ bool MOUSEBUTTON_PRESSED_RIGHT = false;
 
 // TOOL
 uint16_t CURRENT_TOOL = 0;
-
-// UI
-int16_t UIBOX_IN = -1;
-int16_t UIBOX_PREVIN = -1;
-int16_t UIBOX_CLICKED_IN = -1;
-int16_t UIBOX_PANX = 0;
-int16_t UIBOX_PANY = 0;
-SDL_Texture* UI_TEXTURE_HUEBAR;
-COLOR* UI_PIXELS_HUEBAR;
-
-int16_t ELEMENT_IN = -1;
-int16_t ELEMENT_CLICKED_IN = -1;
-
-bool TEST_BOOL = false;
-
-std::vector<UIBOX_INFO> UIBOXES;
-
-UIBOX_INFO* UIBOX_TOOLS;
-UIBOX_INFO* UIBOX_COLOR;
-UIBOX_INFO* UIBOX_BRUSH;
-UIBOX_INFO* UIBOX_CANVAS;
 
 COLOR COL_ACCENT{ 0xff, 0x00, 0x40, 0xc0 };
 COLOR COL_BGUPDATE{ 0x00, 0x00, 0x00, 0x01 };

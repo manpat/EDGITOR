@@ -7,11 +7,31 @@
 #include <SDL.h>
 #endif
 
-#include "SDL_FontCache.h"
 #include "VARIABLES.h"
 #include "FUNCTIONS.h"
 
-void SYSTEM_UIBOX_CONTROL()
+int16_t UIBOX_IN = -1;
+int16_t UIBOX_PREVIN = -1;
+int16_t UIBOX_CLICKED_IN = -1;
+int16_t UIBOX_PANX = 0;
+int16_t UIBOX_PANY = 0;
+SDL_Texture* UI_TEXTURE_HUEBAR;
+COLOR* UI_PIXELS_HUEBAR;
+
+int16_t ELEMENT_IN = -1;
+int16_t ELEMENT_CLICKED_IN = -1;
+
+bool TEST_BOOL = false;
+
+std::vector<UIBOX_INFO> UIBOXES;
+
+UIBOX_INFO* UIBOX_TOOLS;
+UIBOX_INFO* UIBOX_COLOR;
+UIBOX_INFO* UIBOX_BRUSH;
+UIBOX_INFO* UIBOX_CANVAS;
+
+
+void SYSTEM_UIBOX_UPDATE()
 {
 	// RENDER THE UI BOXES
 	int16_t t_UIBOX_IN = UIBOX_IN;
@@ -206,4 +226,111 @@ void SYSTEM_UIBOX_CONTROL()
 	}
 
 	UIBOX_PREVIN = UIBOX_IN;
+}
+
+
+
+
+void uibox_setchar(UIBOX_CHAR* ci, UIBOX_INFO* ui, uint16_t char_pos, uint8_t _CHR, COLOR _COL, COLOR _BG_COL, bool update)
+{
+	ci->chr = _CHR;
+	ci->col = _COL;
+	ci->bg_col = _BG_COL;
+	if (!update) return;
+	ui->update_stack.insert(ui->update_stack.begin() + (rand() % (ui->update_stack.size() + 1)), char_pos);
+	ui->update = true;
+}
+
+void uibox_setstring(UIBOX_INFO* uibox, std::string _charlist, uint16_t x, uint16_t y, COLOR col, bool update)
+{
+	UIBOX_CHAR* _charinfo;
+	uint16_t pos;
+	const char* _CHARS = _charlist.c_str();
+	for (uint16_t j = 0; j < _charlist.size(); j++)
+	{
+		pos = j + (y * uibox->chr_w + x);
+		_charinfo = &uibox->charinfo[pos];
+		uibox_setchar(_charinfo, uibox, pos, _CHARS[j], col, _charinfo->bg_col, update);
+	}
+}
+
+void uibox_addinteract(UIBOX_INFO* uibox, std::string text, std::string over_text, uint8_t type, bool* bool_ptr, uint16_t* int_ptr, uint16_t int_var, bool is_pos, uint16_t px, uint16_t py)
+{
+	UIBOX_ELEMENT newuibox_interact;
+	newuibox_interact.text = text;
+	newuibox_interact.over_text = over_text;
+	newuibox_interact.type = type;
+	newuibox_interact.input_bool = bool_ptr;
+	newuibox_interact.input_int = int_ptr;
+	newuibox_interact.input_int_var = int_var;
+	newuibox_interact.is_pos = is_pos;
+	newuibox_interact.px = px;
+	newuibox_interact.py = py;
+	uibox->element.push_back(std::move(newuibox_interact));
+	if (!is_pos) uibox_setstring(uibox, text, 2, 2 + (uibox->element.size() - 1), COL_WHITE, 0); else uibox_setstring(uibox, text, px, py, COL_WHITE, 0);
+}
+
+UIBOX_INFO* uibox_new(uint16_t _x, uint16_t _y, uint16_t _w, uint16_t _h, bool can_grab, std::string title)
+{
+	UIBOX_INFO new_uibox;
+	UIBOX_INFO* uibox_ptr = &new_uibox;
+
+	uibox_ptr->can_grab = can_grab;
+	uibox_ptr->update = true;
+	uibox_ptr->x = _x;
+	uibox_ptr->y = _y;
+
+	// GET CHARS THAT FIT WINDOW
+	uibox_ptr->chr_w = (int)floor(((float)_w / (float)FONT_CHRW) + 0.5f);
+	uibox_ptr->chr_h = (int)floor(((float)_h / (float)FONT_CHRH) + 0.5f);
+
+	// MAKE WINDOW THE NEW ROUNDED CHAR SIZE
+	uibox_ptr->w = (uibox_ptr->chr_w * FONT_CHRW);
+	uibox_ptr->h = (uibox_ptr->chr_h * FONT_CHRH);
+
+	// FILL WINDOW WITH EMPTY CHARS
+	for (int j = 0; j < uibox_ptr->chr_w * uibox_ptr->chr_h; j++)
+	{
+		UIBOX_CHAR _chr;
+		COLOR _tcol{ 255, 255, 255, 255 };
+		_chr.col = _tcol;
+		_chr.chr = ' ';
+		uibox_ptr->charinfo.push_back(_chr);
+		uibox_ptr->update_stack.insert(uibox_ptr->update_stack.begin() + (rand() % (uibox_ptr->update_stack.size() + 1)), j);
+	}
+
+	// ADD BORDER
+	for (int j = 0; j < uibox_ptr->chr_h; j++)
+	{
+		for (int i = 0; i < uibox_ptr->chr_w; i++)
+		{
+			if ((j > 0 && j < uibox_ptr->chr_h -1) && (i > 0 && i < uibox_ptr->chr_w -1))
+			{
+				continue;
+			}
+			uibox_ptr->charinfo[j * uibox_ptr->chr_w + i].chr = (j == 0) ? ((i == 0) ? CHAR_BOXTL : ((i == uibox_ptr->chr_w -1) ? CHAR_BOXTR : CHAR_BOXH)) :
+				((j == uibox_ptr->chr_h -1) ? ((i == 0) ? CHAR_BOXBL : ((i == uibox_ptr->chr_w -1) ? CHAR_BOXBR : CHAR_BOXH)) : CHAR_BOXV);
+		}
+	}
+
+	/*uibox_ptr.charinfo[1].chr = '[';
+	uibox_ptr.charinfo[2].chr = ' ';
+	uibox_ptr.charinfo[3].chr = 'T';
+	uibox_ptr.charinfo[4].chr = 'E';
+	uibox_ptr.charinfo[5].chr = 'S';
+	uibox_ptr.charinfo[6].chr = 'T';
+	uibox_ptr.charinfo[7].chr = ' ';
+	uibox_ptr.charinfo[8].chr = ']';*/
+
+	// TITLE
+	uibox_setstring(uibox_ptr, STR_NBSP + title + STR_NBSP, 1, 0, COL_WHITE, 0);
+
+	// SHRINK BUTTON
+	uibox_setstring(uibox_ptr, STR_NBSP STR_ARWD STR_NBSP, uibox_ptr->chr_w - 4, 0, COL_WHITE, 0);
+
+	uibox_ptr->texture = nullptr;
+
+	UIBOXES.push_back(std::move(*uibox_ptr));
+
+	return &UIBOXES.back();
 }
