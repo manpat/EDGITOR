@@ -145,7 +145,9 @@ SDL_Renderer* INIT_RENDERER(SDL_Window* WINDOW)
 	UIBOX_COLOR = uibox_new(0, 9999, 256, 256, 1, "COLOUR");
 	UIBOX_BRUSH = uibox_new(9999, 9999, 256, 256, 1, "BRUSH");
 
-	for (int i = 0; i < BRUSH_W * BRUSH_W; i++) uibox_addinteract(UIBOX_BRUSH, "::", STR_NBSP STR_NBSP, 0, (bool*)&(BRUSH_LIST[BRUSH_LIST_POS]->alpha[i]), nullptr, 0, true, 3 + ((i % BRUSH_W) * 2), 2 + (i / BRUSH_W));
+	for (int i = 0; i < BRUSH_W * BRUSH_W; i++) {
+		uibox_addinteract(UIBOX_BRUSH, "::", STR_NBSP STR_NBSP, 0, (bool*)&(BRUSH_LIST[BRUSH_LIST_POS]->alpha[i]), nullptr, 0, true, 3 + ((i % BRUSH_W) * 2), 2 + (i / BRUSH_W));
+	}
 
 	UIBOX_TOOLS = uibox_new(0, 0, 128, 512, 0, "TOOLS");
 	uibox_addinteract(UIBOX_TOOLS, "BRUSH", "> BRUSH", 0, nullptr, &CURRENT_TOOL, 0, false, 0, 0);
@@ -378,7 +380,7 @@ void SYSTEM_INPUT_UPDATE()
 			{
 				if (ELEMENT_IN >= 0)
 				{
-					UIBOX_INFO* uibox = &UIBOXES[UIBOX_IN];
+					UIBOX_INFO* uibox = UIBOXES[UIBOX_IN].get();
 					UIBOX_ELEMENT* uibox_element = &uibox->element[ELEMENT_IN];
 					switch (uibox_element->type)
 					{
@@ -403,7 +405,7 @@ void SYSTEM_INPUT_UPDATE()
 				// This was originally putting the window at the end of the list,
 				// but I made it so it moves it to the start
 
-				UIBOX_INFO* uibox_click = &UIBOXES[UIBOX_IN];
+				UIBOX_INFO* uibox_click = UIBOXES[UIBOX_IN].get();
 
 				// grab/pan variables
 				UIBOX_CLICKED_IN = UIBOX_IN;
@@ -470,7 +472,7 @@ void SYSTEM_INPUT_UPDATE()
 					uibox_click->creation_update = true;
 				}
 			}
-			UIBOX_INFO* uibox = &UIBOXES[UIBOX_IN];
+			UIBOX_INFO* uibox = UIBOXES[UIBOX_IN].get();
 			if (uibox->can_grab && uibox->grab && UIBOX_CLICKED_IN == UIBOX_IN)
 			{
 				// grabbing & moving window

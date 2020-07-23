@@ -23,7 +23,7 @@ int16_t ELEMENT_CLICKED_IN = -1;
 
 bool TEST_BOOL = false;
 
-std::vector<UIBOX_INFO> UIBOXES;
+std::vector<std::unique_ptr<UIBOX_INFO>> UIBOXES;
 
 UIBOX_INFO* UIBOX_TOOLS;
 UIBOX_INFO* UIBOX_COLOR;
@@ -45,7 +45,7 @@ void SYSTEM_UIBOX_UPDATE()
 	for (int16_t i = 0; i <= _uiboxes_size; i++)
 	{
 		_uibox_id = _uiboxes_size - i;
-		UIBOX_INFO* uibox = &UIBOXES[_uibox_id];
+		UIBOX_INFO* uibox = UIBOXES[_uibox_id].get();
 
 		uibox->x = clamp(uibox->x, 0, WINDOW_W - uibox->w);
 		uibox->y = clamp(uibox->y, 0, WINDOW_H - uibox->h);
@@ -231,6 +231,70 @@ void SYSTEM_UIBOX_UPDATE()
 
 
 
+UIBOX_INFO* uibox_new(uint16_t _x, uint16_t _y, uint16_t _w, uint16_t _h, bool can_grab, std::string title)
+{
+	auto new_uibox = std::make_unique<UIBOX_INFO>();
+
+	new_uibox->can_grab = can_grab;
+	new_uibox->update = true;
+	new_uibox->x = _x;
+	new_uibox->y = _y;
+
+	// GET CHARS THAT FIT WINDOW
+	new_uibox->chr_w = (int)floor(((float)_w / (float)FONT_CHRW) + 0.5f);
+	new_uibox->chr_h = (int)floor(((float)_h / (float)FONT_CHRH) + 0.5f);
+
+	// MAKE WINDOW THE NEW ROUNDED CHAR SIZE
+	new_uibox->w = (new_uibox->chr_w * FONT_CHRW);
+	new_uibox->h = (new_uibox->chr_h * FONT_CHRH);
+
+	// FILL WINDOW WITH EMPTY CHARS
+	for (int j = 0; j < new_uibox->chr_w * new_uibox->chr_h; j++)
+	{
+		UIBOX_CHAR _chr;
+		COLOR _tcol{ 255, 255, 255, 255 };
+		_chr.col = _tcol;
+		_chr.chr = ' ';
+		new_uibox->charinfo.push_back(_chr);
+		new_uibox->update_stack.insert(new_uibox->update_stack.begin() + (rand() % (new_uibox->update_stack.size() + 1)), j);
+	}
+
+	// ADD BORDER
+	for (int j = 0; j < new_uibox->chr_h; j++)
+	{
+		for (int i = 0; i < new_uibox->chr_w; i++)
+		{
+			if ((j > 0 && j < new_uibox->chr_h -1) && (i > 0 && i < new_uibox->chr_w -1))
+			{
+				continue;
+			}
+			new_uibox->charinfo[j * new_uibox->chr_w + i].chr = (j == 0) ? ((i == 0) ? CHAR_BOXTL : ((i == new_uibox->chr_w -1) ? CHAR_BOXTR : CHAR_BOXH)) :
+				((j == new_uibox->chr_h -1) ? ((i == 0) ? CHAR_BOXBL : ((i == new_uibox->chr_w -1) ? CHAR_BOXBR : CHAR_BOXH)) : CHAR_BOXV);
+		}
+	}
+
+	/*new_uibox->charinfo[1].chr = '[';
+	new_uibox->charinfo[2].chr = ' ';
+	new_uibox->charinfo[3].chr = 'T';
+	new_uibox->charinfo[4].chr = 'E';
+	new_uibox->charinfo[5].chr = 'S';
+	new_uibox->charinfo[6].chr = 'T';
+	new_uibox->charinfo[7].chr = ' ';
+	new_uibox->charinfo[8].chr = ']';*/
+
+	// TITLE
+	uibox_setstring(new_uibox.get(), STR_NBSP + title + STR_NBSP, 1, 0, COL_WHITE, 0);
+
+	// SHRINK BUTTON
+	uibox_setstring(new_uibox.get(), STR_NBSP STR_ARWD STR_NBSP, new_uibox->chr_w - 4, 0, COL_WHITE, 0);
+
+	new_uibox->texture = nullptr;
+
+	UIBOXES.push_back(std::move(new_uibox));
+
+	return UIBOXES.back().get();
+}
+
 void uibox_setchar(UIBOX_CHAR* ci, UIBOX_INFO* ui, uint16_t char_pos, uint8_t _CHR, COLOR _COL, COLOR _BG_COL, bool update)
 {
 	ci->chr = _CHR;
@@ -243,14 +307,12 @@ void uibox_setchar(UIBOX_CHAR* ci, UIBOX_INFO* ui, uint16_t char_pos, uint8_t _C
 
 void uibox_setstring(UIBOX_INFO* uibox, std::string _charlist, uint16_t x, uint16_t y, COLOR col, bool update)
 {
-	UIBOX_CHAR* _charinfo;
-	uint16_t pos;
-	const char* _CHARS = _charlist.c_str();
+	const char* _chars = _charlist.c_str();
 	for (uint16_t j = 0; j < _charlist.size(); j++)
 	{
-		pos = j + (y * uibox->chr_w + x);
-		_charinfo = &uibox->charinfo[pos];
-		uibox_setchar(_charinfo, uibox, pos, _CHARS[j], col, _charinfo->bg_col, update);
+		const auto pos = j + (y * uibox->chr_w + x);
+		auto _charinfo = &uibox->charinfo[pos];
+		uibox_setchar(_charinfo, uibox, pos, _chars[j], col, _charinfo->bg_col, update);
 	}
 }
 
@@ -268,69 +330,4 @@ void uibox_addinteract(UIBOX_INFO* uibox, std::string text, std::string over_tex
 	newuibox_interact.py = py;
 	uibox->element.push_back(std::move(newuibox_interact));
 	if (!is_pos) uibox_setstring(uibox, text, 2, 2 + (uibox->element.size() - 1), COL_WHITE, 0); else uibox_setstring(uibox, text, px, py, COL_WHITE, 0);
-}
-
-UIBOX_INFO* uibox_new(uint16_t _x, uint16_t _y, uint16_t _w, uint16_t _h, bool can_grab, std::string title)
-{
-	UIBOX_INFO new_uibox;
-	UIBOX_INFO* uibox_ptr = &new_uibox;
-
-	uibox_ptr->can_grab = can_grab;
-	uibox_ptr->update = true;
-	uibox_ptr->x = _x;
-	uibox_ptr->y = _y;
-
-	// GET CHARS THAT FIT WINDOW
-	uibox_ptr->chr_w = (int)floor(((float)_w / (float)FONT_CHRW) + 0.5f);
-	uibox_ptr->chr_h = (int)floor(((float)_h / (float)FONT_CHRH) + 0.5f);
-
-	// MAKE WINDOW THE NEW ROUNDED CHAR SIZE
-	uibox_ptr->w = (uibox_ptr->chr_w * FONT_CHRW);
-	uibox_ptr->h = (uibox_ptr->chr_h * FONT_CHRH);
-
-	// FILL WINDOW WITH EMPTY CHARS
-	for (int j = 0; j < uibox_ptr->chr_w * uibox_ptr->chr_h; j++)
-	{
-		UIBOX_CHAR _chr;
-		COLOR _tcol{ 255, 255, 255, 255 };
-		_chr.col = _tcol;
-		_chr.chr = ' ';
-		uibox_ptr->charinfo.push_back(_chr);
-		uibox_ptr->update_stack.insert(uibox_ptr->update_stack.begin() + (rand() % (uibox_ptr->update_stack.size() + 1)), j);
-	}
-
-	// ADD BORDER
-	for (int j = 0; j < uibox_ptr->chr_h; j++)
-	{
-		for (int i = 0; i < uibox_ptr->chr_w; i++)
-		{
-			if ((j > 0 && j < uibox_ptr->chr_h -1) && (i > 0 && i < uibox_ptr->chr_w -1))
-			{
-				continue;
-			}
-			uibox_ptr->charinfo[j * uibox_ptr->chr_w + i].chr = (j == 0) ? ((i == 0) ? CHAR_BOXTL : ((i == uibox_ptr->chr_w -1) ? CHAR_BOXTR : CHAR_BOXH)) :
-				((j == uibox_ptr->chr_h -1) ? ((i == 0) ? CHAR_BOXBL : ((i == uibox_ptr->chr_w -1) ? CHAR_BOXBR : CHAR_BOXH)) : CHAR_BOXV);
-		}
-	}
-
-	/*uibox_ptr.charinfo[1].chr = '[';
-	uibox_ptr.charinfo[2].chr = ' ';
-	uibox_ptr.charinfo[3].chr = 'T';
-	uibox_ptr.charinfo[4].chr = 'E';
-	uibox_ptr.charinfo[5].chr = 'S';
-	uibox_ptr.charinfo[6].chr = 'T';
-	uibox_ptr.charinfo[7].chr = ' ';
-	uibox_ptr.charinfo[8].chr = ']';*/
-
-	// TITLE
-	uibox_setstring(uibox_ptr, STR_NBSP + title + STR_NBSP, 1, 0, COL_WHITE, 0);
-
-	// SHRINK BUTTON
-	uibox_setstring(uibox_ptr, STR_NBSP STR_ARWD STR_NBSP, uibox_ptr->chr_w - 4, 0, COL_WHITE, 0);
-
-	uibox_ptr->texture = nullptr;
-
-	UIBOXES.push_back(std::move(*uibox_ptr));
-
-	return &UIBOXES.back();
 }
