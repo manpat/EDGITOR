@@ -21,6 +21,7 @@ void INIT_SDL()
 	SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengl");
 
 	SDL_Init(SDL_INIT_EVENTS | SDL_INIT_VIDEO);
+	TTF_Init();
 }
 
 SDL_Window* INIT_WINDOW()
