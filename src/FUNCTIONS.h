@@ -1,9 +1,6 @@
 #ifndef FUNCTIONS_H
 #define FUNCTIONS_H
 
-#include <cmath>
-#include <string>
-
   //
  //   FUNCTIONS   ///////////////////////////////////////////////// ///////  //////   /////    ////     ///      //       /
 //
@@ -29,7 +26,7 @@ int16_t sign(int16_t x) {
 
 inline bool point_in_rect(int16_t px, int16_t py, int16_t rx, int16_t ry, int16_t rw, int16_t rh)
 {
-	return (px >= rx && py >= ry && px <= (rx + rw) && py <= (ry + rh));
+	return (px >= rx && py >= ry && px < (rx + rw) && py < (ry + rh));
 }
 
 void HSVtoRGB(int16_t H, double S, double V, int16_t output[3]) {
@@ -152,53 +149,108 @@ inline void layer_new(SDL_Renderer* _renderer, int16_t _x, int16_t _y, int16_t _
 	CURRENT_LAYER_PTR = LAYERS[CURRENT_LAYER].pixels.get();
 }
 
-inline void uibox_new(uint16_t _x, uint16_t _y, uint16_t _w, uint16_t _h)
+inline void uibox_setchar(UIBOX_CHAR* ci, UIBOX_INFO* ui, uint16_t char_pos, uint8_t _CHR, COLOR _COL, COLOR _BG_COL, bool update)
+{
+	ci->chr = _CHR;
+	ci->col = _COL;
+	ci->bg_col = _BG_COL;
+	if (!update) return;
+	ui->update_stack.insert(ui->update_stack.begin() + (rand() % (ui->update_stack.size() + 1)), char_pos);
+	ui->update = true;
+}
+
+inline void uibox_setstring(UIBOX_INFO* uibox, std::string _charlist, uint16_t x, uint16_t y, COLOR col, bool update)
+{
+	UIBOX_CHAR* _charinfo;
+	uint16_t pos;
+	const char* _CHARS = _charlist.c_str();
+	for (uint16_t j = 0; j < _charlist.size(); j++)
+	{
+		pos = j + (y * uibox->chr_w + x);
+		_charinfo = &uibox->charinfo[pos];
+		uibox_setchar(_charinfo, uibox, pos, _CHARS[j], col, _charinfo->bg_col, update);
+	}
+}
+
+inline void uibox_addinteract(UIBOX_INFO* uibox, std::string text, std::string over_text, uint8_t type, bool* bool_ptr, uint16_t* int_ptr, uint16_t int_var, bool is_pos, uint16_t px, uint16_t py)
+{
+	UIBOX_ELEMENT newuibox_interact;
+	newuibox_interact.text = text;
+	newuibox_interact.over_text = over_text;
+	newuibox_interact.type = type;
+	newuibox_interact.input_bool = bool_ptr;
+	newuibox_interact.input_int = int_ptr;
+	newuibox_interact.input_int_var = int_var;
+	newuibox_interact.is_pos = is_pos;
+	newuibox_interact.px = px;
+	newuibox_interact.py = py;
+	uibox->element.push_back(std::move(newuibox_interact));
+	if (!is_pos) uibox_setstring(uibox, text, 2, 2 + (uibox->element.size() - 1), COL_WHITE, 0); else uibox_setstring(uibox, text, px, py, COL_WHITE, 0);
+}
+
+inline UIBOX_INFO* uibox_new(uint16_t _x, uint16_t _y, uint16_t _w, uint16_t _h, bool can_grab, std::string title)
 {
 	UIBOX_INFO new_uibox;
+	UIBOX_INFO* uibox_ptr = &new_uibox;
 
-	new_uibox.update = true;
-	new_uibox.x = _x;
-	new_uibox.y = _y;
+	uibox_ptr->can_grab = can_grab;
+	uibox_ptr->update = true;
+	uibox_ptr->x = _x;
+	uibox_ptr->y = _y;
 
-	int _uibox_w = (int)floor((float)_w / (float)FONT_CHRW);
-	int _uibox_h = (int)floor((float)_h / (float)FONT_CHRH);
+	// GET CHARS THAT FIT WINDOW
+	uibox_ptr->chr_w = (int)floor(((float)_w / (float)FONT_CHRW) + 0.5f);
+	uibox_ptr->chr_h = (int)floor(((float)_h / (float)FONT_CHRH) + 0.5f);
 
-	new_uibox.w = (_uibox_w * FONT_CHRW);
-	new_uibox.h = (_uibox_h * FONT_CHRH);
+	// MAKE WINDOW THE NEW ROUNDED CHAR SIZE
+	uibox_ptr->w = (uibox_ptr->chr_w * FONT_CHRW);
+	uibox_ptr->h = (uibox_ptr->chr_h * FONT_CHRH);
 
-	for (int j = 0; j < _uibox_w * _uibox_h; j++)
+	// FILL WINDOW WITH EMPTY CHARS
+	for (int j = 0; j < uibox_ptr->chr_w * uibox_ptr->chr_h; j++)
 	{
-		//new_uibox.charinfo.chr.push_back(u8" ");
-		UIBOX_CHARINFO _chr;
+		UIBOX_CHAR _chr;
 		COLOR _tcol{ 255, 255, 255, 255 };
 		_chr.col = _tcol;
 		_chr.chr = ' ';
-		_chr.update = true;
-		new_uibox.charinfo.push_back(_chr);
+		uibox_ptr->charinfo.push_back(_chr);
+		uibox_ptr->update_stack.insert(uibox_ptr->update_stack.begin() + (rand() % (uibox_ptr->update_stack.size() + 1)), j);
 	}
 
-	for (int j = 0; j < _uibox_h; j++)
+	// ADD BORDER
+	for (int j = 0; j < uibox_ptr->chr_h; j++)
 	{
-		for (int i = 0; i < _uibox_w; i++)
+		for (int i = 0; i < uibox_ptr->chr_w; i++)
 		{
-			if ((j > 0 && j < _uibox_h-1) && (i > 0 && i < _uibox_w-1))
+			if ((j > 0 && j < uibox_ptr->chr_h -1) && (i > 0 && i < uibox_ptr->chr_w -1))
 			{
 				continue;
 			}
-			new_uibox.charinfo[j * _uibox_w + i].chr = (j == 0) ? ((i == 0) ? CHAR_BOXTL : ((i == _uibox_w-1) ? CHAR_BOXTR : CHAR_BOXH)) :
-				((j == _uibox_h-1) ? ((i == 0) ? CHAR_BOXBL : ((i == _uibox_w-1) ? CHAR_BOXBR : CHAR_BOXH)) : CHAR_BOXV);
+			uibox_ptr->charinfo[j * uibox_ptr->chr_w + i].chr = (j == 0) ? ((i == 0) ? CHAR_BOXTL : ((i == uibox_ptr->chr_w -1) ? CHAR_BOXTR : CHAR_BOXH)) :
+				((j == uibox_ptr->chr_h -1) ? ((i == 0) ? CHAR_BOXBL : ((i == uibox_ptr->chr_w -1) ? CHAR_BOXBR : CHAR_BOXH)) : CHAR_BOXV);
 		}
 	}
 
-	new_uibox.charinfo[1].chr = 'T';
-	new_uibox.charinfo[1].col = COLOR{255,0,255,255};
-	new_uibox.charinfo[2].chr = 'E';
-	new_uibox.charinfo[3].chr = 'S';
-	new_uibox.charinfo[4].chr = 'T';
+	/*uibox_ptr.charinfo[1].chr = '[';
+	uibox_ptr.charinfo[2].chr = ' ';
+	uibox_ptr.charinfo[3].chr = 'T';
+	uibox_ptr.charinfo[4].chr = 'E';
+	uibox_ptr.charinfo[5].chr = 'S';
+	uibox_ptr.charinfo[6].chr = 'T';
+	uibox_ptr.charinfo[7].chr = ' ';
+	uibox_ptr.charinfo[8].chr = ']';*/
 
-	new_uibox.texture = nullptr;// SDL_CreateTexture(RENDERER);
+	// TITLE
+	uibox_setstring(uibox_ptr, STR_NBSP + title + STR_NBSP, 1, 0, COL_WHITE, 0);
 
-	UIBOXES.push_back(std::move(new_uibox));
+	// SHRINK BUTTON
+	uibox_setstring(uibox_ptr, STR_NBSP STR_ARWD STR_NBSP, uibox_ptr->chr_w - 4, 0, COL_WHITE, 0);
+
+	uibox_ptr->texture = nullptr;
+
+	UIBOXES.push_back(std::move(*uibox_ptr));
+
+	return &UIBOXES.back();
 }
 
 inline bool in_canvas(const uint16_t x, const uint16_t y)
@@ -222,6 +274,23 @@ inline void set_pixel(const int16_t x, const int16_t y, const COLOR c)
 	BRUSH_UPDATE_Y2 = std::max(BRUSH_UPDATE_Y2, int16_t(y + 1));
 }
 
+void set_pixel_brush(int x, int y, COLOR c)
+{
+	float _a;
+	int _tx, _ty;
+	for (int i = 0; i < BRUSH_W; i++)
+		for (int j = 0; j < BRUSH_W; j++)
+		{
+			_tx = ((x + BRUSH_X) + i);
+			_ty = ((y + BRUSH_Y) + j);
+			//if (!in_canvas(_tx, _ty)) continue;
+			_a = (BRUSH_LIST[BRUSH_LIST_POS]->alpha[j * BRUSH_W + i]);
+			if (!_a) continue;
+			//if (BRUSH_PIXELS[_tx, _ty] != 0x00000000) continue;
+			if (_a) set_pixel(_tx, _ty, c);
+		}
+}
+
 inline void set_pixel_layer(const int16_t x, const int16_t y, const COLOR c, uint16_t l)
 {
 	if (out_canvas(x, y)) return;
@@ -239,7 +308,7 @@ void set_pixel_line(int16_t x0, int16_t y0, const int16_t x1, const int16_t y1, 
 	int16_t dy = -abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
 	int16_t err = dx + dy, e2;
 	for (;;) {
-		set_pixel(x0, y0, c); // set_pixel_brush
+		set_pixel_brush(x0, y0, c); // set_pixel_brush
 		if (x0 == x1 && y0 == y1) break;
 		e2 = err << 1;
 		if (e2 >= dy) { err += dy; x0 += sx; }
@@ -346,6 +415,26 @@ void function_undo(int n)
 	CANVAS_UPDATE = true;
 }
 
+inline void brush_new(uint8_t* a, uint16_t w)
+{
+	std::unique_ptr<BRUSH_DATA> _u(new BRUSH_DATA(w));
+	
+	for (int _i = 0; _i < 49; _i++)
+	{
+		_u->set(_i, a[_i]);
+	}
+	BRUSH_LIST.push_back(std::move(_u));
+}
+
+inline void brush_set(uint16_t sel)
+{
+	uint16_t w = BRUSH_LIST[sel]->w;
+	BRUSH_X = -w / 2;
+	BRUSH_Y = -w / 2;
+	BRUSH_W = w;
+}
+
+
   //
  //   SYSTEM FUNCTIONS   ///////////////////////////////////////////////// ///////  //////   /////    ////     ///      //       /
 //
@@ -428,14 +517,14 @@ inline SDL_Renderer* INIT_RENDERER(SDL_Window* WINDOW)
 	BG_GRID_W = ((int16_t)ceil((double)CANVAS_W / (double)CELL_W));
 	BG_GRID_H = ((int16_t)ceil((double)CANVAS_H / (double)CELL_H));
 	auto BG_GRID_PIXELS = std::make_unique<COLOR[]>(BG_GRID_W * BG_GRID_H);
-	BG_GRID_TEXTURE = SDL_CreateTexture(RENDERER, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, BG_GRID_W, BG_GRID_H);
+	BG_GRID_TEXTURE = SDL_CreateTexture(RENDERER, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STATIC, BG_GRID_W, BG_GRID_H);
 	for (int i = 0; i < BG_GRID_H; i++)
 	{
 		for (int j = 0; j < BG_GRID_W; j++)
 		{
 			const COLOR cell_colors[] {
-				COLOR {0x1a, 0x1a, 0x1a, 0xff},
-				COLOR {0x21, 0x21, 0x21, 0xff},
+				COLOR {0x0c, 0x0c, 0x0c, 0xff},
+				COLOR {0x10, 0x10, 0x10, 0xff},
 			};
 
 			BG_GRID_PIXELS[i * BG_GRID_W + j] = cell_colors[(i+j) % 2];
@@ -443,6 +532,32 @@ inline SDL_Renderer* INIT_RENDERER(SDL_Window* WINDOW)
 	}
 	SDL_SetTextureBlendMode(BG_GRID_TEXTURE, SDL_BLENDMODE_NONE);
 	SDL_UpdateTexture(BG_GRID_TEXTURE, nullptr, BG_GRID_PIXELS.get(), BG_GRID_W * sizeof(COLOR));
+
+	// BRUSH
+
+	// ADD DEFAULT BRUSH
+	const int _t_bs = 13;
+	BRUSH_W = _t_bs;
+	static uint8_t BRUSH_POINTGRID[_t_bs * _t_bs] = {};
+	brush_new(BRUSH_POINTGRID, _t_bs);
+	brush_set(BRUSH_LIST_POS);
+
+	BRUSH_CURSOR_PIXELS = new COLOR[_t_bs * _t_bs];
+	BRUSH_CURSOR_PIXELS_CLEAR = new COLOR[_t_bs * _t_bs];
+	BRUSH_CURSOR_PIXELS_CLEAR_RECT = { 0, 0, 1, 1 };
+
+	for (int i = 0; i < (_t_bs * _t_bs); i++)
+	{
+		if (BRUSH_POINTGRID[i])
+		{
+			BRUSH_CURSOR_PIXELS[i] = BRUSH_COLOR;
+		}
+		else
+		{
+			BRUSH_CURSOR_PIXELS[i] = COLOR{ 0,0,0,0 };
+		}
+		BRUSH_CURSOR_PIXELS_CLEAR[i] = COLOR{ 0,0,0,0 };
+	}
 
 	// UI
 	// HUEBAR
@@ -464,9 +579,16 @@ inline SDL_Renderer* INIT_RENDERER(SDL_Window* WINDOW)
 	SDL_UpdateTexture(UI_TEXTURE_HUEBAR, nullptr, &UI_PIXELS_HUEBAR[0], sizeof(COLOR) * 16);
 
 	// BOXES
-	uibox_new(10, 20, 400, 300);
-	//uibox_new(110, 50, 300, 120);
-	//uibox_new(210, 150, 200, 220);
+	UIBOX_COLOR = uibox_new(0, 9999, 256, 256, 1, "COLOUR");
+	UIBOX_BRUSH = uibox_new(9999, 9999, 256, 256, 1, "BRUSH");
+
+	for (int i = 0; i < BRUSH_W * BRUSH_W; i++) uibox_addinteract(UIBOX_BRUSH, "::", STR_NBSP STR_NBSP, 0, (bool*)&(BRUSH_LIST[BRUSH_LIST_POS]->alpha[i]), nullptr, 0, true, 3 + ((i % BRUSH_W) * 2), 2 + (i / BRUSH_W));
+
+	UIBOX_TOOLS = uibox_new(0, 0, 128, 512, 0, "TOOLS");
+	uibox_addinteract(UIBOX_TOOLS, "BRUSH", "> BRUSH", 0, nullptr, &CURRENT_TOOL, 0, false, 0, 0);
+	uibox_addinteract(UIBOX_TOOLS, "ERASER", "> ERASER", 0, nullptr, &CURRENT_TOOL, 1, false, 0, 0);
+	uibox_addinteract(UIBOX_TOOLS, "FILL", "> FILL", 0, nullptr, &CURRENT_TOOL, 2, false, 0, 0);
+
 
 	SDL_SetCursor(init_system_cursor(arrow));
 
@@ -543,6 +665,14 @@ inline void EVENT_LOOP() {
 
 		switch (event.type)
 		{
+		case SDL_TEXTINPUT:
+			if (SDL_strlen(event.text.text) == 0 || event.text.text[0] == '\n') break;
+			// add input to text
+			if (SDL_strlen(KEY_TEXT) + SDL_strlen(event.text.text) < sizeof(KEY_TEXT))
+				SDL_strlcat(KEY_TEXT, event.text.text, sizeof(KEY_TEXT));
+			KEY_TEXT_INT = atoi(KEY_TEXT);
+			break;
+
 		case SDL_MOUSEBUTTONUP:
 			if (event.button.button == SDL_BUTTON_LEFT)
 			{
@@ -616,6 +746,36 @@ inline void EVENT_LOOP() {
 				default: break;
 				}
 			}
+			else
+			if (keysym.sym == SDLK_BACKSPACE)
+			{
+				int textlen = SDL_strlen(KEY_TEXT);
+				do {
+					if (!textlen)
+					{
+						break;
+					}
+					if ((KEY_TEXT[textlen - 1] & 0x80) == 0x00)
+					{
+						/* One byte */
+						KEY_TEXT[textlen - 1] = 0x00;
+						break;
+					}
+					if ((KEY_TEXT[textlen - 1] & 0xC0) == 0x80)
+					{
+						/* Byte from the multibyte sequence */
+						KEY_TEXT[textlen - 1] = 0x00;
+						textlen--;
+					}
+					if ((KEY_TEXT[textlen - 1] & 0xC0) == 0xC0)
+					{
+						/* First byte of multibyte sequence */
+						KEY_TEXT[textlen - 1] = 0x00;
+						break;
+					}
+				} while (1);
+				KEY_TEXT_INT = atoi(KEY_TEXT);
+			}
 			break;
 		}
 		}
@@ -638,6 +798,26 @@ inline void EVENT_LOOP() {
 		{
 			if (MOUSEBUTTON_PRESSED_LEFT)
 			{
+				if (ELEMENT_IN >= 0)
+				{
+					UIBOX_INFO* uibox = &UIBOXES[UIBOX_IN];
+					UIBOX_ELEMENT* uibox_element = &uibox->element[ELEMENT_IN];
+					switch (uibox_element->type)
+					{
+					case 0:
+						if (uibox_element->input_bool != nullptr)
+						{
+							*uibox_element->input_bool = (!(bool)(*uibox_element->input_bool));
+						}
+						if (uibox_element->input_int != nullptr)
+						{
+							*uibox_element->input_int = uibox_element->input_int_var;
+						}
+						break;
+					}
+					uibox->element_update = true;
+				}
+
 				move_to_end(UIBOXES, UIBOX_IN); // move window to end
 				std::rotate(UIBOXES.rbegin(), UIBOXES.rbegin() + 1, UIBOXES.rend()); // then rotate once more to move to start
 				// There's probably a better way of doing this
@@ -645,29 +825,93 @@ inline void EVENT_LOOP() {
 				// This was originally putting the window at the end of the list,
 				// but I made it so it moves it to the start
 
-				UIBOX_INFO& uibox_click = UIBOXES[UIBOX_IN];
+				UIBOX_INFO* uibox_click = &UIBOXES[UIBOX_IN];
+
 				// grab/pan variables
 				UIBOX_CLICKED_IN = UIBOX_IN;
-				UIBOX_PANX = (int16_t)(MOUSE_X - uibox_click.x);
-				UIBOX_PANY = (int16_t)(MOUSE_Y - uibox_click.y);
+				uibox_click->grab = (uibox_click->in_grab);
+				if (uibox_click->can_grab && uibox_click->grab && uibox_click->in_grab)
+				{
+					UIBOX_PANX = (int16_t)(MOUSE_X - uibox_click->x);
+					UIBOX_PANY = (int16_t)(MOUSE_Y - uibox_click->y);
+				}
+
+				// shrink
+				if (!uibox_click->in_grab && !uibox_click->grab && uibox_click->in_shrink)
+				{
+					UIBOX_CHAR* _charinfo;
+					uibox_click->shrink = !uibox_click->shrink;
+					uibox_click->h = (uibox_click->shrink) ? FONT_CHRH : (uibox_click->chr_h * FONT_CHRH);
+
+					int diff_x = (uibox_click->x - (WINDOW_W / 2)), diff_y = (uibox_click->y - (WINDOW_H / 2));
+
+					if (uibox_click->shrink)
+					{
+						/*float deltaX = (WINDOW_W / 2) - (uibox_click->x + (uibox_click->w / 2));
+						float deltaY = (WINDOW_H / 2) - uibox_click->y;
+						float angle = atan2(deltaY, deltaX);
+						float _win_hyp = sqrtf(((WINDOW_W / 2) * (WINDOW_W / 2)) + ((WINDOW_H / 2) * (WINDOW_H / 2)));
+
+						uibox_click->x -= (uint16_t)((9999 * cos(angle)) + (uibox_click->w / 2));
+						uibox_click->y -= (uint16_t)(9999 * sin(angle));*/
+
+						uibox_click->h = (uibox_click->shrink) ? FONT_CHRH : (uibox_click->chr_h * FONT_CHRH);
+						_charinfo = &uibox_click->charinfo[0];
+						_charinfo->chr = CHAR_BOXH;
+						_charinfo->bg_col = COLOR{ 0,0,0,1 };
+						uibox_click->update_stack.insert(uibox_click->update_stack.begin() + (rand() % (uibox_click->update_stack.size() + 1)), 0);
+
+						_charinfo = &uibox_click->charinfo[uibox_click->chr_w-1];
+						_charinfo->chr = CHAR_BOXH;
+						_charinfo->bg_col = COLOR{ 0,0,0,1 };
+						uibox_click->update_stack.insert(uibox_click->update_stack.begin() + (rand() % (uibox_click->update_stack.size() + 1)), uibox_click->chr_w - 1);
+
+						_charinfo = &uibox_click->charinfo[uibox_click->chr_w - 3];
+						_charinfo->chr = CHAR_ARWL;
+						_charinfo->bg_col = COLOR{ 255,0,64,1 };
+						uibox_click->update_stack.insert(uibox_click->update_stack.begin() + (rand() % (uibox_click->update_stack.size() + 1)), uibox_click->chr_w - 3);
+					}
+					else
+					{
+						uibox_click->h = (uibox_click->shrink) ? FONT_CHRH : (uibox_click->chr_h * FONT_CHRH);
+						_charinfo = &uibox_click->charinfo[0];
+						_charinfo->chr = CHAR_BOXTL;
+						_charinfo->bg_col = COLOR{ 0,0,0,1 };
+						uibox_click->update_stack.insert(uibox_click->update_stack.begin() + (rand() % (uibox_click->update_stack.size() + 1)), 0);
+
+						_charinfo = &uibox_click->charinfo[uibox_click->chr_w - 1];
+						_charinfo->chr = CHAR_BOXTR;
+						_charinfo->bg_col = COLOR{ 0,0,0,1 };
+						uibox_click->update_stack.insert(uibox_click->update_stack.begin() + (rand() % (uibox_click->update_stack.size() + 1)), uibox_click->chr_w - 1);
+
+						_charinfo = &uibox_click->charinfo[uibox_click->chr_w - 3];
+						_charinfo->chr = CHAR_ARWD;
+						_charinfo->bg_col = COLOR{ 255,0,64,1 };
+						uibox_click->update_stack.insert(uibox_click->update_stack.begin() + (rand() % (uibox_click->update_stack.size() + 1)), uibox_click->chr_w - 3);
+					}
+					uibox_click->update = true;
+					if (!uibox_click->shrink) uibox_click->element_update = true;
+					uibox_click->creation_update = true;
+				}
 			}
-			UIBOX_INFO& uibox = UIBOXES[UIBOX_IN];
-			if (UIBOX_CLICKED_IN == UIBOX_IN)
+			UIBOX_INFO* uibox = &UIBOXES[UIBOX_IN];
+			if (uibox->can_grab && uibox->grab && UIBOX_CLICKED_IN == UIBOX_IN)
 			{
 				// grabbing & moving window
-				uibox.x = (MOUSE_X - UIBOX_PANX);
-				uibox.y = (MOUSE_Y - UIBOX_PANY);
+				uibox->x = (MOUSE_X - UIBOX_PANX);
+				uibox->y = (MOUSE_Y - UIBOX_PANY);
 			}
 		}
 		
-		if (UIBOX_CLICKED_IN == -1)
+		if (ELEMENT_CLICKED_IN == -1 && UIBOX_CLICKED_IN == -1)
 		{
-			set_pixel_line(CANVAS_MOUSE_PREVX, CANVAS_MOUSE_PREVY, CANVAS_MOUSE_X, CANVAS_MOUSE_Y, BRUSH_COLOR);
+			set_pixel_line(CANVAS_MOUSE_PREVX, CANVAS_MOUSE_PREVY, CANVAS_MOUSE_X, CANVAS_MOUSE_Y, CURRENT_TOOL ? UNDO_COLOR : BRUSH_COLOR);
 		}
 	}
 	else
 	{
 		UIBOX_CLICKED_IN = -1;
+		ELEMENT_CLICKED_IN = -1;
 	}
 
 	if (MOUSEBUTTON_PRESSED_RIGHT)
