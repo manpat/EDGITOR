@@ -15,10 +15,10 @@
 #endif
 
 #include "SDL_FontCache.h"
+#include "SYSTEM.h"
 #include "VARIABLES.h"
 #include "FUNCTIONS.h"
 #include "UI_CONTROL.h"
-#include "UPDATE_CONTROL.h"
 
   //
  //   MAIN LOOP   ///////////////////////////////////////////////// ///////  //////   /////    ////     ///      //       /
@@ -71,7 +71,7 @@ int main(int, char*[])
 
 		///////////////////////////////////////////////// ///////  //////   /////    ////     ///      //       /
 
-		EVENT_LOOP();
+		UPDATE_INPUT();
 
 		SYSTEM_BRUSH_UPDATE();
 		SYSTEM_LAYER_UPDATE();

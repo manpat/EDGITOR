@@ -82,12 +82,12 @@ void SYSTEM_UIBOX_CONTROL()
 			if ((uibox->element_update || UIBOX_IN == UIBOX_PREVIN) && !uibox->shrink)
 			{
 				UIBOX_ELEMENT* _element;
-				for (int e = 0; e < uibox->element.size(); e++)
+				for (int e = 0; e < (int)uibox->element.size(); e++)
 				{
 					_element = &uibox->element[e];
 					if ((uibox->element_update && ((_element->input_int == nullptr && (bool)(*_element->input_bool)) || (_element->input_int != nullptr && *_element->input_int == _element->input_int_var))) ||
 						((!_element->is_pos && point_in_rect(MOUSE_X, MOUSE_Y, uibox->x + (FONT_CHRW * 2), uibox->y + ((e + 2) * FONT_CHRH), uibox->w - (FONT_CHRW * 4), FONT_CHRH)) ||
-							_element->is_pos && point_in_rect(MOUSE_X, MOUSE_Y, uibox->x + (FONT_CHRW * _element->px), uibox->y + (FONT_CHRH * _element->py), FONT_CHRW * _element->text.size(), FONT_CHRH)))
+							(_element->is_pos && point_in_rect(MOUSE_X, MOUSE_Y, uibox->x + (FONT_CHRW * _element->px), uibox->y + (FONT_CHRH * _element->py), FONT_CHRW * _element->text.size(), FONT_CHRH))))
 					{
 						if (!uibox->element_update) ELEMENT_IN = e;
 						if (_element->over && !uibox->element_update) continue; // if mouse is already over, don't update
@@ -110,9 +110,10 @@ void SYSTEM_UIBOX_CONTROL()
 						_element->over = true;
 					}
 					else
+					{
 						if (_element->over || uibox->element_update)
 						{
-							if (((_element->input_int == nullptr && !(bool)(*_element->input_bool)) || (_element->input_int != nullptr && *_element->input_int != _element->input_int_var)) || uibox->element_update)
+							if (((_element->input_int == nullptr && !(*_element->input_bool)) || (_element->input_int != nullptr && *_element->input_int != _element->input_int_var)) || uibox->element_update)
 							{
 								for (uint16_t ej = 0; ej < _uibox_w; ej++)
 								{
@@ -131,6 +132,7 @@ void SYSTEM_UIBOX_CONTROL()
 							}
 							_element->over = false;
 						}
+					}
 				}
 				uibox->element_update = false;
 			}

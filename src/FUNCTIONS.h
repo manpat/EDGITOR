@@ -437,11 +437,5 @@ inline void brush_set(uint16_t sel)
 	BRUSH_W = w;
 }
 
-// SYSTEM
-void INIT_SDL();
-SDL_Window* INIT_WINDOW();
-SDL_Renderer* INIT_RENDERER(SDL_Window* WINDOW);
-SDL_Texture* INIT_FONT(SDL_Renderer* renderer);
-void EVENT_LOOP();
 
 #endif // FUNCTIONS_H
