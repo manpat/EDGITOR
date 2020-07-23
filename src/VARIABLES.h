@@ -171,9 +171,8 @@ int16_t ELEMENT_CLICKED_IN = -1;
 
 bool TEST_BOOL = false;
 
-struct UIBOX_CHARINFO {
+struct UIBOX_CHAR {
 	uint8_t chr;
-	uint16_t pos;
 	COLOR col;
 	COLOR bg_col = { 0,0,0,1 };
 };
@@ -193,15 +192,19 @@ struct UIBOX_ELEMENT {
 };
 
 struct UIBOX_INFO {
-	bool update_creation = true;
-	bool grabbable = true;
+	bool creation_update = true;
 	bool update = true;
 	bool element_update = true;
-	bool in_topbar = false;
-	bool in_topbar_clicked = false;
-	bool shrink = false;
+
+	bool can_grab = true;
+	bool in_grab = false;
+	bool grab = false;
+
+	bool can_shrink = true;
 	bool in_shrink = false;
-	std::vector<UIBOX_CHARINFO> charinfo;
+	bool shrink = false;
+
+	std::vector<UIBOX_CHAR> charinfo;
 	std::vector<UIBOX_ELEMENT> element;
 	std::deque<uint16_t> update_stack;
 	SDL_Texture* texture;
@@ -250,12 +253,15 @@ struct UNDO_DATA
 	}
 };
 
+COLOR COL_ACCENT{ 0xff, 0x00, 0x40, 0xc0 };
+COLOR COL_BGUPDATE{ 0x00, 0x00, 0x00, 0x01 };
+
 std::vector<UNDO_DATA> UNDO_LIST;
 uint16_t UNDO_POS = 0;
 uint16_t UNDO_UPDATE = 0;
 uint16_t UNDO_UPDATE_LAYER = 0;
 SDL_Rect UNDO_UPDATE_RECT = { 0, 0, 1, 1 };
-COLOR UNDO_COL {0xff, 0x00, 0x40, 0xc0};
+COLOR UNDO_COL = COL_ACCENT;
 
 // PRESET COLORS
 COLOR COL_WHITE{ 0xff, 0xff, 0xff, 0xff };

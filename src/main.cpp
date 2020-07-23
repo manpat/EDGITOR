@@ -146,8 +146,8 @@ int main(int, char*[])
 		//const SDL_Rect temp_rect{10,10,16,360};
 		//SDL_RenderCopy(RENDERER, UI_TEXTURE_HUEBAR, nullptr, &temp_rect);
 
-		if (BRUSH_LIST[BRUSH_LIST_POS]->alpha[0]) FC_Draw(font, RENDERER, 200, 10, "ON");
-		//FC_Draw(font, RENDERER, 36, 30, "%i\n%i", UIBOX_IN, UIBOX_CLICKED_IN);
+		//if (BRUSH_LIST[BRUSH_LIST_POS]->alpha[0]) FC_Draw(font, RENDERER, 200, 10, "ON");
+		//FC_Draw(font, RENDERER, 236, 30, "%i\n%i", UIBOX_IN, UIBOX_CLICKED_IN);
 		
 		SDL_SetRenderDrawColor(RENDERER, 0, 0, 0, 0);
 		SDL_RenderPresent(RENDERER);
