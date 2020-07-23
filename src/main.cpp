@@ -18,6 +18,8 @@
 #include "VARIABLES.h"
 #include "FUNCTIONS.h"
 #include "UI_CONTROL.h"
+#include "CANVAS.h"
+#include "BRUSH.h"
 
   //
  //   MAIN LOOP   ///////////////////////////////////////////////// ///////  //////   /////    ////     ///      //       /
@@ -120,7 +122,7 @@ int main(int, char*[])
 		for (uint16_t i = 0; i < LAYERS.size(); i++)
 		{
 			const LAYER_INFO& layer = LAYERS[i];
-			SDL_SetTextureBlendMode(layer.texture, layer.blendmode);
+			SDL_SetTextureBlendMode(layer.texture, (SDL_BlendMode) layer.blendmode);
 			SDL_RenderCopyF(RENDERER, layer.texture, nullptr, &F_RECT);
 			if (i == CURRENT_LAYER)
 			{

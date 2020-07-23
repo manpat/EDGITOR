@@ -8,8 +8,9 @@
 #include "UI_CONTROL.h"
 #include "VARIABLES.h"
 #include "FUNCTIONS.h"
-
-
+#include "CANVAS.h"
+#include "BRUSH.h"
+#include "UNDO.h"
 
 UIBOX_INFO* UIBOX_TOOLS;
 UIBOX_INFO* UIBOX_COLOR;
@@ -583,3 +584,5 @@ void SYSTEM_CANVAS_UPDATE()
 		UNDO_UPDATE_LAYER = 0;
 	}
 }
+
+
