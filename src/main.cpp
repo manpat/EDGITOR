@@ -14,11 +14,12 @@
 #include <SDL_ttf.h>
 #endif
 
-#include "SDL_FontCache.h"
+#include "SYSTEM.h"
 #include "VARIABLES.h"
 #include "FUNCTIONS.h"
 #include "UI_CONTROL.h"
-#include "UPDATE_CONTROL.h"
+#include "CANVAS.h"
+#include "BRUSH.h"
 
   //
  //   MAIN LOOP   ///////////////////////////////////////////////// ///////  //////   /////    ////     ///      //       /
@@ -71,7 +72,7 @@ int main(int, char*[])
 
 		///////////////////////////////////////////////// ///////  //////   /////    ////     ///      //       /
 
-		EVENT_LOOP();
+		SYSTEM_INPUT_UPDATE();
 
 		SYSTEM_BRUSH_UPDATE();
 		SYSTEM_LAYER_UPDATE();
@@ -121,7 +122,7 @@ int main(int, char*[])
 		for (uint16_t i = 0; i < LAYERS.size(); i++)
 		{
 			const LAYER_INFO& layer = LAYERS[i];
-			SDL_SetTextureBlendMode(layer.texture, layer.blendmode);
+			SDL_SetTextureBlendMode(layer.texture, (SDL_BlendMode) layer.blendmode);
 			SDL_RenderCopyF(RENDERER, layer.texture, nullptr, &F_RECT);
 			if (i == CURRENT_LAYER)
 			{
@@ -138,7 +139,7 @@ int main(int, char*[])
 		F_RECT = { CANVAS_X_ANIM - 2.0f, CANVAS_Y_ANIM - 2.0f, CANVAS_W_ANIM + 4.0f, CANVAS_H_ANIM + 4.0f };
 		SDL_RenderDrawRectF(RENDERER, &F_RECT);
 
-		SYSTEM_UIBOX_CONTROL();
+		SYSTEM_UIBOX_UPDATE();
 
 		SDL_SetRenderDrawColor(RENDERER, 0, 0, 0, 255);
 
@@ -147,7 +148,6 @@ int main(int, char*[])
 		//SDL_RenderCopy(RENDERER, UI_TEXTURE_HUEBAR, nullptr, &temp_rect);
 
 		//if (BRUSH_LIST[BRUSH_LIST_POS]->alpha[0]) FC_Draw(font, RENDERER, 200, 10, "ON");
-		//FC_Draw(font, RENDERER, 236, 30, "%i\n%i", UIBOX_IN, UIBOX_CLICKED_IN);
 		
 		SDL_SetRenderDrawColor(RENDERER, 0, 0, 0, 0);
 		SDL_RenderPresent(RENDERER);
@@ -171,13 +171,7 @@ int main(int, char*[])
 
 	SDL_Delay(10);
 
-	TTF_CloseFont(FONT);
-	FC_FreeFont(font);
-	FC_FreeFont(font_bold);
-	SDL_DestroyRenderer(RENDERER);
-	SDL_DestroyWindow(WINDOW);
-	SDL_Quit();
-	TTF_Quit();
+	SYSTEM_SHUTDOWN(WINDOW);
 
 	return 0;
 }

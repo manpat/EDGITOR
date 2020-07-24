@@ -45,7 +45,3 @@ Now you can use Cmake!
 - Run `cmake -B build .`
 - `cd` in the `build` directory and run `make`
 
-- - - - - - -
-
-## CREDITS
-[SDL_FontCache](https://github.com/grimfang4/SDL_FontCache) (with some fixes) by grimfang4 
