@@ -77,12 +77,12 @@ void lab2rgb(float l_s, float a_s, float b_s, float& R, float& G, float& B)
 	float var_X = a_s / 500. + var_Y;
 	float var_Z = var_Y - b_s / 200.;
 
-	if (pow(var_Y, 3) > 0.008856) var_Y = pow(var_Y, 3);
-	else                      var_Y = (var_Y - 16. / 116.) / 7.787;
-	if (pow(var_X, 3) > 0.008856) var_X = pow(var_X, 3);
-	else                      var_X = (var_X - 16. / 116.) / 7.787;
-	if (pow(var_Z, 3) > 0.008856) var_Z = pow(var_Z, 3);
-	else                      var_Z = (var_Z - 16. / 116.) / 7.787;
+	if (pow(var_Y, 3) > 0.008856f)	var_Y = pow(var_Y, 3);
+	else							var_Y = (var_Y - 16.0f / 116.0f) / 7.787f;
+	if (pow(var_X, 3) > 0.008856f)	var_X = pow(var_X, 3);
+	else							var_X = (var_X - 16.0f / 116.0f) / 7.787f;
+	if (pow(var_Z, 3) > 0.008856f)	var_Z = pow(var_Z, 3);
+	else							var_Z = (var_Z - 16.0f / 116.0f) / 7.787f;
 
 	float X = 95.047 * var_X;    //ref_X =  95.047     Observer= 2�, Illuminant= D65
 	float Y = 100.000 * var_Y;   //ref_Y = 100.000
@@ -193,6 +193,7 @@ inline UIBOX_INFO* uibox_new(uint16_t _x, uint16_t _y, uint16_t _w, uint16_t _h,
 	UIBOX_INFO new_uibox;
 	UIBOX_INFO* uibox_ptr = &new_uibox;
 
+	uibox_ptr->title = title;
 	uibox_ptr->can_grab = can_grab;
 	uibox_ptr->update = true;
 	uibox_ptr->x = _x;
@@ -253,6 +254,58 @@ inline UIBOX_INFO* uibox_new(uint16_t _x, uint16_t _y, uint16_t _w, uint16_t _h,
 	return &UIBOXES.back();
 }
 
+inline void uibox_update_element(int16_t uibox_in, int16_t element_in)
+{
+	UIBOX_INFO *uibox = &UIBOXES[uibox_in];
+	UIBOX_ELEMENT *uibox_element = &uibox->element[element_in];
+
+	switch (uibox_element->type) {
+		case 0:
+			if (uibox_element->input_bool != nullptr)
+			{
+				*uibox_element->input_bool = (!(bool)(*uibox_element->input_bool));
+			}
+			if (uibox_element->input_int != nullptr)
+			{
+				*uibox_element->input_int = uibox_element->input_int_var;
+			}
+		break;
+	}
+	uibox->element_update = true;
+}
+
+/*
+	Finds UIBOX though the title
+	RETURN: ID of that UIBOX or -1 if it does not exist
+*/
+inline int16_t uibox_get_uibox_by_title(std::string title)
+{
+	UIBOX_INFO *uibox;
+	for (int16_t i = 0; i < UIBOXES.size(); i++)
+	{
+		uibox = &UIBOXES[i];
+		if (uibox->title == title) return i;
+	}
+
+	return -1;
+}
+
+/*
+	Finds ELEMENT though the text
+	RETURN: ID of that UIBOX or -1 if it does not exist
+*/
+inline int16_t uibox_get_element_by_text(int16_t uibox_in, std::string text) {
+	UIBOX_INFO *uibox = &UIBOXES[uibox_in];
+	UIBOX_ELEMENT *uibox_element;
+
+	for (int16_t i = 0; i < uibox->element.size(); i++) {
+		uibox_element = &uibox->element[i];
+		if (uibox_element->text == text) return i;
+	}
+
+	return -1;
+}
+
 inline bool in_canvas(const uint16_t x, const uint16_t y)
 {
 	return (x < CANVAS_W && y < CANVAS_H);
@@ -276,8 +329,8 @@ inline void set_pixel(const int16_t x, const int16_t y, const COLOR c)
 
 void set_pixel_brush(int x, int y, COLOR c)
 {
-	float _a;
-	int _tx, _ty;
+	uint8_t _a;
+	int16_t _tx, _ty;
 	for (int i = 0; i < BRUSH_W; i++)
 		for (int j = 0; j < BRUSH_W; j++)
 		{
@@ -582,12 +635,15 @@ inline SDL_Renderer* INIT_RENDERER(SDL_Window* WINDOW)
 	UIBOX_COLOR = uibox_new(0, 9999, 256, 256, 1, "COLOUR");
 	UIBOX_BRUSH = uibox_new(9999, 9999, 256, 256, 1, "BRUSH");
 
-	for (int i = 0; i < BRUSH_W * BRUSH_W; i++) uibox_addinteract(UIBOX_BRUSH, "::", STR_NBSP STR_NBSP, 0, (bool*)&(BRUSH_LIST[BRUSH_LIST_POS]->alpha[i]), nullptr, 0, true, 3 + ((i % BRUSH_W) * 2), 2 + (i / BRUSH_W));
+	for (int i = 0; i < BRUSH_W * BRUSH_W; i++)
+	{
+		uibox_addinteract(UIBOX_BRUSH, "::", STR_NBSP STR_NBSP, 0, (bool*)&(BRUSH_LIST[BRUSH_LIST_POS]->alpha[i]), nullptr, 0, true, 3 + ((i % BRUSH_W) * 2), 2 + (i / BRUSH_W));
+	}
 
 	UIBOX_TOOLS = uibox_new(0, 0, 128, 512, 0, "TOOLS");
-	uibox_addinteract(UIBOX_TOOLS, "BRUSH", "> BRUSH", 0, nullptr, &CURRENT_TOOL, 0, false, 0, 0);
+	uibox_addinteract(UIBOX_TOOLS, "BRUSH",  "> BRUSH",  0, nullptr, &CURRENT_TOOL, 0, false, 0, 0);
 	uibox_addinteract(UIBOX_TOOLS, "ERASER", "> ERASER", 0, nullptr, &CURRENT_TOOL, 1, false, 0, 0);
-	uibox_addinteract(UIBOX_TOOLS, "FILL", "> FILL", 0, nullptr, &CURRENT_TOOL, 2, false, 0, 0);
+	uibox_addinteract(UIBOX_TOOLS, "FILL",   "> FILL",   0, nullptr, &CURRENT_TOOL, 2, false, 0, 0);
 
 
 	SDL_SetCursor(init_system_cursor(arrow));
@@ -665,119 +721,143 @@ inline void EVENT_LOOP() {
 
 		switch (event.type)
 		{
-		case SDL_TEXTINPUT:
-			if (SDL_strlen(event.text.text) == 0 || event.text.text[0] == '\n') break;
-			// add input to text
-			if (SDL_strlen(KEY_TEXT) + SDL_strlen(event.text.text) < sizeof(KEY_TEXT))
-				SDL_strlcat(KEY_TEXT, event.text.text, sizeof(KEY_TEXT));
-			KEY_TEXT_INT = atoi(KEY_TEXT);
-			break;
-
-		case SDL_MOUSEBUTTONUP:
-			if (event.button.button == SDL_BUTTON_LEFT)
-			{
-				MOUSEBUTTON_LEFT = false;
-				MOUSEBUTTON_PRESSED_LEFT = false;
-			}
-
-			if (event.button.button == SDL_BUTTON_MIDDLE)
-			{
-				MOUSEBUTTON_MIDDLE = false;
-				MOUSEBUTTON_PRESSED_MIDDLE = false;
-			}
-
-			if (event.button.button == SDL_BUTTON_RIGHT)
-			{
-				MOUSEBUTTON_RIGHT = false;
-				MOUSEBUTTON_PRESSED_RIGHT = false;
-			}
-			break;
-
-		case SDL_MOUSEBUTTONDOWN:
-			if (event.button.button == SDL_BUTTON_LEFT)
-			{
-				MOUSEBUTTON_LEFT = true;
-				MOUSEBUTTON_PRESSED_LEFT = true;
-			}
-
-			if (event.button.button == SDL_BUTTON_MIDDLE)
-			{
-				MOUSEBUTTON_MIDDLE = true;
-				MOUSEBUTTON_PRESSED_MIDDLE = true;
-			}
-
-			if (event.button.button == SDL_BUTTON_RIGHT)
-			{
-				MOUSEBUTTON_RIGHT = true;
-				MOUSEBUTTON_PRESSED_RIGHT = true;
-			}
-			break;
-
-		case SDL_MOUSEWHEEL: {
-			float t_CANVAS_ZOOM = CANVAS_ZOOM;
-			CANVAS_ZOOM = clamp(CANVAS_ZOOM + ((float)event.wheel.y * (CANVAS_ZOOM * 0.5f) * 0.5f), 1.0f, 50.0f);
-			CANVAS_ZOOM = clamp(CANVAS_ZOOM + (float)event.wheel.y, 1.0f, 100.0f);
-			CANVAS_ZOOM = floor(CANVAS_ZOOM);
-			if (t_CANVAS_ZOOM != CANVAS_ZOOM)
-			{
-				float _mx = (((float)MOUSE_X - (float)CANVAS_X) / (float)t_CANVAS_ZOOM), _my = (((float)MOUSE_Y - (float)CANVAS_Y) / (float)t_CANVAS_ZOOM);
-
-				float _nmx = (((float)MOUSE_X - (float)CANVAS_X) / (float)CANVAS_ZOOM), _nmy = (((float)MOUSE_Y - (float)CANVAS_Y) / (float)CANVAS_ZOOM);
-				CANVAS_X += (float)((_nmx - _mx) * CANVAS_ZOOM);
-				CANVAS_Y += (float)((_nmy - _my) * CANVAS_ZOOM);
-			}
-			break;
-		}
-
-		case SDL_KEYDOWN: {
-			const auto keysym = event.key.keysym;
-			if (keysym.mod & KMOD_CTRL) {
-				switch (keysym.sym) {
-				case SDLK_z: {
-					if (keysym.mod & KMOD_SHIFT) {
-						// because it's the superior 'redo' shortcut :)
-						function_undo(-1);
-					} else {
-						function_undo(1);
-					}
-					break;
-				}
-				case SDLK_y: function_undo(-1);  break;
-				default: break;
-				}
-			}
-			else
-			if (keysym.sym == SDLK_BACKSPACE)
-			{
-				int textlen = SDL_strlen(KEY_TEXT);
-				do {
-					if (!textlen)
-					{
-						break;
-					}
-					if ((KEY_TEXT[textlen - 1] & 0x80) == 0x00)
-					{
-						/* One byte */
-						KEY_TEXT[textlen - 1] = 0x00;
-						break;
-					}
-					if ((KEY_TEXT[textlen - 1] & 0xC0) == 0x80)
-					{
-						/* Byte from the multibyte sequence */
-						KEY_TEXT[textlen - 1] = 0x00;
-						textlen--;
-					}
-					if ((KEY_TEXT[textlen - 1] & 0xC0) == 0xC0)
-					{
-						/* First byte of multibyte sequence */
-						KEY_TEXT[textlen - 1] = 0x00;
-						break;
-					}
-				} while (1);
+			case SDL_TEXTINPUT:
+				if (SDL_strlen(event.text.text) == 0 || event.text.text[0] == '\n') break;
+				// add input to text
+				if (SDL_strlen(KEY_TEXT) + SDL_strlen(event.text.text) < sizeof(KEY_TEXT))
+					SDL_strlcat(KEY_TEXT, event.text.text, sizeof(KEY_TEXT));
 				KEY_TEXT_INT = atoi(KEY_TEXT);
+				break;
+
+			case SDL_MOUSEBUTTONUP:
+				if (event.button.button == SDL_BUTTON_LEFT)
+				{
+					MOUSEBUTTON_LEFT = false;
+					MOUSEBUTTON_PRESSED_LEFT = false;
+				}
+
+				if (event.button.button == SDL_BUTTON_MIDDLE)
+				{
+					MOUSEBUTTON_MIDDLE = false;
+					MOUSEBUTTON_PRESSED_MIDDLE = false;
+				}
+
+				if (event.button.button == SDL_BUTTON_RIGHT)
+				{
+					MOUSEBUTTON_RIGHT = false;
+					MOUSEBUTTON_PRESSED_RIGHT = false;
+				}
+				break;
+
+			case SDL_MOUSEBUTTONDOWN:
+				if (event.button.button == SDL_BUTTON_LEFT)
+				{
+					MOUSEBUTTON_LEFT = true;
+					MOUSEBUTTON_PRESSED_LEFT = true;
+				}
+
+				if (event.button.button == SDL_BUTTON_MIDDLE)
+				{
+					MOUSEBUTTON_MIDDLE = true;
+					MOUSEBUTTON_PRESSED_MIDDLE = true;
+				}
+
+				if (event.button.button == SDL_BUTTON_RIGHT)
+				{
+					MOUSEBUTTON_RIGHT = true;
+					MOUSEBUTTON_PRESSED_RIGHT = true;
+				}
+				break;
+
+			case SDL_MOUSEWHEEL: {
+				float t_CANVAS_ZOOM = CANVAS_ZOOM;
+				CANVAS_ZOOM = clamp(CANVAS_ZOOM + ((float)event.wheel.y * (CANVAS_ZOOM * 0.5f) * 0.5f), 1.0f, 50.0f);
+				CANVAS_ZOOM = clamp(CANVAS_ZOOM + (float)event.wheel.y, 1.0f, 100.0f);
+				CANVAS_ZOOM = floor(CANVAS_ZOOM);
+				if (t_CANVAS_ZOOM != CANVAS_ZOOM)
+				{
+					float _mx = (((float)MOUSE_X - (float)CANVAS_X) / (float)t_CANVAS_ZOOM), _my = (((float)MOUSE_Y - (float)CANVAS_Y) / (float)t_CANVAS_ZOOM);
+
+					float _nmx = (((float)MOUSE_X - (float)CANVAS_X) / (float)CANVAS_ZOOM), _nmy = (((float)MOUSE_Y - (float)CANVAS_Y) / (float)CANVAS_ZOOM);
+					CANVAS_X += (float)((_nmx - _mx) * CANVAS_ZOOM);
+					CANVAS_Y += (float)((_nmy - _my) * CANVAS_ZOOM);
+				}
+				break;
 			}
-			break;
-		}
+
+			case SDL_KEYDOWN: {
+				const auto keysym = event.key.keysym;
+				if (keysym.mod & KMOD_CTRL) {
+					switch (keysym.sym) {
+					case SDLK_z: {
+						if (keysym.mod & KMOD_SHIFT) {
+							// because it's the superior 'redo' shortcut :)
+							function_undo(-1);
+						} else {
+							function_undo(1);
+						}
+						break;
+					}
+					case SDLK_y: function_undo(-1);  break;
+					default: break;
+					}
+				}
+				else if (keysym.sym == SDLK_BACKSPACE)
+				{
+					int textlen = SDL_strlen(KEY_TEXT);
+					do {
+						if (!textlen)
+						{
+							break;
+						}
+						if ((KEY_TEXT[textlen - 1] & 0x80) == 0x00)
+						{
+							/* One byte */
+							KEY_TEXT[textlen - 1] = 0x00;
+							break;
+						}
+						if ((KEY_TEXT[textlen - 1] & 0xC0) == 0x80)
+						{
+							/* Byte from the multibyte sequence */
+							KEY_TEXT[textlen - 1] = 0x00;
+							textlen--;
+						}
+						if ((KEY_TEXT[textlen - 1] & 0xC0) == 0xC0)
+						{
+							/* First byte of multibyte sequence */
+							KEY_TEXT[textlen - 1] = 0x00;
+							break;
+						}
+					} while (1);
+					KEY_TEXT_INT = atoi(KEY_TEXT);
+				}
+				else if (keysym.sym == SDLK_b)
+				{
+					CURRENT_TOOL = TOOL::BRUSH;
+				}
+				else if (keysym.sym == SDLK_e)
+				{
+					CURRENT_TOOL = TOOL::ERASER;
+				}
+				else if (keysym.sym == SDLK_f)
+				{
+					CURRENT_TOOL = TOOL::FILL;
+				}
+
+				int16_t tools = uibox_get_uibox_by_title("TOOLS");
+				if (tools != -1) {
+					uint16_t last;
+					switch (CURRENT_TOOL) {
+						case TOOL::BRUSH: last = uibox_get_element_by_text(tools, "BRUSH"); break;
+						case TOOL::ERASER: last = uibox_get_element_by_text(tools, "ERASER"); break;
+						case TOOL::FILL: last = uibox_get_element_by_text(tools, "FILL"); break;
+						default: last = -1;
+					}
+					if (last != -1) uibox_update_element(tools, last);
+				}
+
+				break;
+			}
 		}
 	}
 
@@ -800,22 +880,7 @@ inline void EVENT_LOOP() {
 			{
 				if (ELEMENT_IN >= 0)
 				{
-					UIBOX_INFO* uibox = &UIBOXES[UIBOX_IN];
-					UIBOX_ELEMENT* uibox_element = &uibox->element[ELEMENT_IN];
-					switch (uibox_element->type)
-					{
-					case 0:
-						if (uibox_element->input_bool != nullptr)
-						{
-							*uibox_element->input_bool = (!(bool)(*uibox_element->input_bool));
-						}
-						if (uibox_element->input_int != nullptr)
-						{
-							*uibox_element->input_int = uibox_element->input_int_var;
-						}
-						break;
-					}
-					uibox->element_update = true;
+					uibox_update_element(UIBOX_IN, ELEMENT_IN);
 				}
 
 				move_to_end(UIBOXES, UIBOX_IN); // move window to end
@@ -836,7 +901,7 @@ inline void EVENT_LOOP() {
 					UIBOX_PANY = (int16_t)(MOUSE_Y - uibox_click->y);
 				}
 
-				// shrink
+				// shrink [↓]
 				if (!uibox_click->in_grab && !uibox_click->grab && uibox_click->in_shrink)
 				{
 					UIBOX_CHAR* _charinfo;

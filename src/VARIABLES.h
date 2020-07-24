@@ -155,7 +155,12 @@ bool MOUSEBUTTON_RIGHT = false;
 bool MOUSEBUTTON_PRESSED_RIGHT = false;
 
 // TOOL
-uint16_t CURRENT_TOOL = 0;
+enum TOOL {
+	BRUSH,
+	ERASER,
+	FILL,
+};
+uint16_t CURRENT_TOOL = TOOL::BRUSH;
 
 // UI
 int16_t UIBOX_IN = -1;
@@ -207,6 +212,7 @@ struct UIBOX_INFO {
 	std::vector<UIBOX_CHAR> charinfo;
 	std::vector<UIBOX_ELEMENT> element;
 	std::deque<uint16_t> update_stack;
+	std::string title;
 	SDL_Texture* texture;
 	uint16_t tex_w;
 	uint16_t tex_h;
