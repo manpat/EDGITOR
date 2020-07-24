@@ -8,7 +8,7 @@ struct UIBOX_INFO;
 void INIT_SDL();
 SDL_Window* INIT_WINDOW();
 SDL_Renderer* INIT_RENDERER(SDL_Window* WINDOW);
-SDL_Texture* INIT_FONT(SDL_Renderer* renderer);
+SDL_Texture* INIT_FONT();
 
 void SYSTEM_SHUTDOWN(SDL_Window* WINDOW);
 

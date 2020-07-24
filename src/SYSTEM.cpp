@@ -169,7 +169,7 @@ SDL_Renderer* INIT_RENDERER(SDL_Window* WINDOW)
 	return RENDERER;
 }
 
-SDL_Texture* INIT_FONT(SDL_Renderer* renderer)
+SDL_Texture* INIT_FONT()
 {
 	//static const std::vector<const char*> FONT_CHARS;
 
@@ -197,7 +197,7 @@ SDL_Texture* INIT_FONT(SDL_Renderer* renderer)
 	"≡±≥≤⌠⌡÷≈°∙·√ⁿ²■ ";
 
 	SDL_Surface* sur = TTF_RenderUTF8_Solid(FONT, char_map, SDL_Color{ 255, 255, 255, 255 });
-	SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, sur);
+	SDL_Texture* texture = SDL_CreateTextureFromSurface(RENDERER, sur);
 	SDL_FreeSurface(sur);
 
 	return texture;

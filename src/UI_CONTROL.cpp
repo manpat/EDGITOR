@@ -366,7 +366,7 @@ UIBOX_INFO* uibox_new(uint16_t _x, uint16_t _y, uint16_t _w, uint16_t _h, bool c
 		COLOR _tcol{ 255, 255, 255, 255 };
 		_chr.col = _tcol;
 		_chr.chr = ' ';
-		new_uibox->charinfo.push_back(_chr);
+		new_uibox->charinfo.push_back(std::move(_chr));
 		new_uibox->update_stack.insert(new_uibox->update_stack.begin() + (rand() % (new_uibox->update_stack.size() + 1)), j);
 	}
 
