@@ -80,12 +80,12 @@ inline void lab2rgb(float l_s, float a_s, float b_s, float& R, float& G, float& 
 	float var_X = a_s / 500. + var_Y;
 	float var_Z = var_Y - b_s / 200.;
 
-	if (pow(var_Y, 3) > 0.008856) var_Y = pow(var_Y, 3);
-	else                      var_Y = (var_Y - 16. / 116.) / 7.787;
-	if (pow(var_X, 3) > 0.008856) var_X = pow(var_X, 3);
-	else                      var_X = (var_X - 16. / 116.) / 7.787;
-	if (pow(var_Z, 3) > 0.008856) var_Z = pow(var_Z, 3);
-	else                      var_Z = (var_Z - 16. / 116.) / 7.787;
+	if (pow(var_Y, 3) > 0.008856f)	var_Y = pow(var_Y, 3);
+	else							var_Y = (var_Y - 16.0f / 116.0f) / 7.787f;
+	if (pow(var_X, 3) > 0.008856f)	var_X = pow(var_X, 3);
+	else							var_X = (var_X - 16.0f / 116.0f) / 7.787f;
+	if (pow(var_Z, 3) > 0.008856f)	var_Z = pow(var_Z, 3);
+	else							var_Z = (var_Z - 16.0f / 116.0f) / 7.787f;
 
 	float X = 95.047 * var_X;    //ref_X =  95.047     Observer= 2�, Illuminant= D65
 	float Y = 100.000 * var_Y;   //ref_Y = 100.000
@@ -131,6 +131,5 @@ inline void move_to_end(std::vector<T>& v, size_t index)
 	auto it = v.begin() + index;
 	std::rotate(it, it + 1, v.end());
 }
-
 
 #endif // FUNCTIONS_H

@@ -154,14 +154,15 @@ SDL_Renderer* INIT_RENDERER(SDL_Window* WINDOW)
 	UIBOX_COLOR = uibox_new(0, 9999, 256, 256, 1, "COLOUR");
 	UIBOX_BRUSH = uibox_new(9999, 9999, 256, 256, 1, "BRUSH");
 
-	for (int i = 0; i < BRUSH_W * BRUSH_W; i++) {
+	for (int i = 0; i < BRUSH_W * BRUSH_W; i++)
+	{
 		uibox_addinteract(UIBOX_BRUSH, "::", STR_NBSP STR_NBSP, 0, (bool*)&(BRUSH_LIST[BRUSH_LIST_POS]->alpha[i]), nullptr, 0, true, 3 + ((i % BRUSH_W) * 2), 2 + (i / BRUSH_W));
 	}
 
 	UIBOX_TOOLS = uibox_new(0, 0, 128, 512, 0, "TOOLS");
-	uibox_addinteract(UIBOX_TOOLS, "BRUSH", "> BRUSH", 0, nullptr, &CURRENT_TOOL, 0, false, 0, 0);
+	uibox_addinteract(UIBOX_TOOLS, "BRUSH",  "> BRUSH",  0, nullptr, &CURRENT_TOOL, 0, false, 0, 0);
 	uibox_addinteract(UIBOX_TOOLS, "ERASER", "> ERASER", 0, nullptr, &CURRENT_TOOL, 1, false, 0, 0);
-	uibox_addinteract(UIBOX_TOOLS, "FILL", "> FILL", 0, nullptr, &CURRENT_TOOL, 2, false, 0, 0);
+	uibox_addinteract(UIBOX_TOOLS, "FILL",   "> FILL",   0, nullptr, &CURRENT_TOOL, 2, false, 0, 0);
 
 
 	SDL_SetCursor(create_system_cursor());
@@ -254,119 +255,143 @@ void SYSTEM_INPUT_UPDATE()
 
 		switch (event.type)
 		{
-		case SDL_TEXTINPUT:
-			if (SDL_strlen(event.text.text) == 0 || event.text.text[0] == '\n') break;
-			// add input to text
-			if (SDL_strlen(KEY_TEXT) + SDL_strlen(event.text.text) < sizeof(KEY_TEXT))
-				SDL_strlcat(KEY_TEXT, event.text.text, sizeof(KEY_TEXT));
-			KEY_TEXT_INT = atoi(KEY_TEXT);
-			break;
-
-		case SDL_MOUSEBUTTONUP:
-			if (event.button.button == SDL_BUTTON_LEFT)
-			{
-				MOUSEBUTTON_LEFT = false;
-				MOUSEBUTTON_PRESSED_LEFT = false;
-			}
-
-			if (event.button.button == SDL_BUTTON_MIDDLE)
-			{
-				MOUSEBUTTON_MIDDLE = false;
-				MOUSEBUTTON_PRESSED_MIDDLE = false;
-			}
-
-			if (event.button.button == SDL_BUTTON_RIGHT)
-			{
-				MOUSEBUTTON_RIGHT = false;
-				MOUSEBUTTON_PRESSED_RIGHT = false;
-			}
-			break;
-
-		case SDL_MOUSEBUTTONDOWN:
-			if (event.button.button == SDL_BUTTON_LEFT)
-			{
-				MOUSEBUTTON_LEFT = true;
-				MOUSEBUTTON_PRESSED_LEFT = true;
-			}
-
-			if (event.button.button == SDL_BUTTON_MIDDLE)
-			{
-				MOUSEBUTTON_MIDDLE = true;
-				MOUSEBUTTON_PRESSED_MIDDLE = true;
-			}
-
-			if (event.button.button == SDL_BUTTON_RIGHT)
-			{
-				MOUSEBUTTON_RIGHT = true;
-				MOUSEBUTTON_PRESSED_RIGHT = true;
-			}
-			break;
-
-		case SDL_MOUSEWHEEL: {
-			float t_CANVAS_ZOOM = CANVAS_ZOOM;
-			CANVAS_ZOOM = clamp(CANVAS_ZOOM + ((float)event.wheel.y * (CANVAS_ZOOM * 0.5f) * 0.5f), 1.0f, 50.0f);
-			CANVAS_ZOOM = clamp(CANVAS_ZOOM + (float)event.wheel.y, 1.0f, 100.0f);
-			CANVAS_ZOOM = floor(CANVAS_ZOOM);
-			if (t_CANVAS_ZOOM != CANVAS_ZOOM)
-			{
-				float _mx = (((float)MOUSE_X - (float)CANVAS_X) / (float)t_CANVAS_ZOOM), _my = (((float)MOUSE_Y - (float)CANVAS_Y) / (float)t_CANVAS_ZOOM);
-
-				float _nmx = (((float)MOUSE_X - (float)CANVAS_X) / (float)CANVAS_ZOOM), _nmy = (((float)MOUSE_Y - (float)CANVAS_Y) / (float)CANVAS_ZOOM);
-				CANVAS_X += (float)((_nmx - _mx) * CANVAS_ZOOM);
-				CANVAS_Y += (float)((_nmy - _my) * CANVAS_ZOOM);
-			}
-			break;
-		}
-
-		case SDL_KEYDOWN: {
-			const auto keysym = event.key.keysym;
-			if (keysym.mod & KMOD_CTRL) {
-				switch (keysym.sym) {
-				case SDLK_z: {
-					if (keysym.mod & KMOD_SHIFT) {
-						// because it's the superior 'redo' shortcut :)
-						function_undo(-1);
-					} else {
-						function_undo(1);
-					}
-					break;
-				}
-				case SDLK_y: function_undo(-1);  break;
-				default: break;
-				}
-			}
-			else
-			if (keysym.sym == SDLK_BACKSPACE)
-			{
-				int textlen = SDL_strlen(KEY_TEXT);
-				do {
-					if (!textlen)
-					{
-						break;
-					}
-					if ((KEY_TEXT[textlen - 1] & 0x80) == 0x00)
-					{
-						/* One byte */
-						KEY_TEXT[textlen - 1] = 0x00;
-						break;
-					}
-					if ((KEY_TEXT[textlen - 1] & 0xC0) == 0x80)
-					{
-						/* Byte from the multibyte sequence */
-						KEY_TEXT[textlen - 1] = 0x00;
-						textlen--;
-					}
-					if ((KEY_TEXT[textlen - 1] & 0xC0) == 0xC0)
-					{
-						/* First byte of multibyte sequence */
-						KEY_TEXT[textlen - 1] = 0x00;
-						break;
-					}
-				} while (1);
+			case SDL_TEXTINPUT:
+				if (SDL_strlen(event.text.text) == 0 || event.text.text[0] == '\n') break;
+				// add input to text
+				if (SDL_strlen(KEY_TEXT) + SDL_strlen(event.text.text) < sizeof(KEY_TEXT))
+					SDL_strlcat(KEY_TEXT, event.text.text, sizeof(KEY_TEXT));
 				KEY_TEXT_INT = atoi(KEY_TEXT);
+				break;
+
+			case SDL_MOUSEBUTTONUP:
+				if (event.button.button == SDL_BUTTON_LEFT)
+				{
+					MOUSEBUTTON_LEFT = false;
+					MOUSEBUTTON_PRESSED_LEFT = false;
+				}
+
+				if (event.button.button == SDL_BUTTON_MIDDLE)
+				{
+					MOUSEBUTTON_MIDDLE = false;
+					MOUSEBUTTON_PRESSED_MIDDLE = false;
+				}
+
+				if (event.button.button == SDL_BUTTON_RIGHT)
+				{
+					MOUSEBUTTON_RIGHT = false;
+					MOUSEBUTTON_PRESSED_RIGHT = false;
+				}
+				break;
+
+			case SDL_MOUSEBUTTONDOWN:
+				if (event.button.button == SDL_BUTTON_LEFT)
+				{
+					MOUSEBUTTON_LEFT = true;
+					MOUSEBUTTON_PRESSED_LEFT = true;
+				}
+
+				if (event.button.button == SDL_BUTTON_MIDDLE)
+				{
+					MOUSEBUTTON_MIDDLE = true;
+					MOUSEBUTTON_PRESSED_MIDDLE = true;
+				}
+
+				if (event.button.button == SDL_BUTTON_RIGHT)
+				{
+					MOUSEBUTTON_RIGHT = true;
+					MOUSEBUTTON_PRESSED_RIGHT = true;
+				}
+				break;
+
+			case SDL_MOUSEWHEEL: {
+				float t_CANVAS_ZOOM = CANVAS_ZOOM;
+				CANVAS_ZOOM = clamp(CANVAS_ZOOM + ((float)event.wheel.y * (CANVAS_ZOOM * 0.5f) * 0.5f), 1.0f, 50.0f);
+				CANVAS_ZOOM = clamp(CANVAS_ZOOM + (float)event.wheel.y, 1.0f, 100.0f);
+				CANVAS_ZOOM = floor(CANVAS_ZOOM);
+				if (t_CANVAS_ZOOM != CANVAS_ZOOM)
+				{
+					float _mx = (((float)MOUSE_X - (float)CANVAS_X) / (float)t_CANVAS_ZOOM), _my = (((float)MOUSE_Y - (float)CANVAS_Y) / (float)t_CANVAS_ZOOM);
+
+					float _nmx = (((float)MOUSE_X - (float)CANVAS_X) / (float)CANVAS_ZOOM), _nmy = (((float)MOUSE_Y - (float)CANVAS_Y) / (float)CANVAS_ZOOM);
+					CANVAS_X += (float)((_nmx - _mx) * CANVAS_ZOOM);
+					CANVAS_Y += (float)((_nmy - _my) * CANVAS_ZOOM);
+				}
+				break;
 			}
-			break;
-		}
+
+			case SDL_KEYDOWN: {
+				const auto keysym = event.key.keysym;
+				if (keysym.mod & KMOD_CTRL) {
+					switch (keysym.sym) {
+					case SDLK_z: {
+						if (keysym.mod & KMOD_SHIFT) {
+							// because it's the superior 'redo' shortcut :)
+							function_undo(-1);
+						} else {
+							function_undo(1);
+						}
+						break;
+					}
+					case SDLK_y: function_undo(-1);  break;
+					default: break;
+					}
+				}
+				else if (keysym.sym == SDLK_BACKSPACE)
+				{
+					int textlen = SDL_strlen(KEY_TEXT);
+					do {
+						if (!textlen)
+						{
+							break;
+						}
+						if ((KEY_TEXT[textlen - 1] & 0x80) == 0x00)
+						{
+							/* One byte */
+							KEY_TEXT[textlen - 1] = 0x00;
+							break;
+						}
+						if ((KEY_TEXT[textlen - 1] & 0xC0) == 0x80)
+						{
+							/* Byte from the multibyte sequence */
+							KEY_TEXT[textlen - 1] = 0x00;
+							textlen--;
+						}
+						if ((KEY_TEXT[textlen - 1] & 0xC0) == 0xC0)
+						{
+							/* First byte of multibyte sequence */
+							KEY_TEXT[textlen - 1] = 0x00;
+							break;
+						}
+					} while (1);
+					KEY_TEXT_INT = atoi(KEY_TEXT);
+				}
+				else if (keysym.sym == SDLK_b)
+				{
+					CURRENT_TOOL = TOOL::BRUSH;
+				}
+				else if (keysym.sym == SDLK_e)
+				{
+					CURRENT_TOOL = TOOL::ERASER;
+				}
+				else if (keysym.sym == SDLK_f)
+				{
+					CURRENT_TOOL = TOOL::FILL;
+				}
+
+				int16_t tools = uibox_get_uibox_by_title("TOOLS");
+				if (tools != -1) {
+					int16_t last;
+					switch (CURRENT_TOOL) {
+						case TOOL::BRUSH: last = uibox_get_element_by_text(tools, "BRUSH"); break;
+						case TOOL::ERASER: last = uibox_get_element_by_text(tools, "ERASER"); break;
+						case TOOL::FILL: last = uibox_get_element_by_text(tools, "FILL"); break;
+						default: last = -1;
+					}
+					if (last != -1) uibox_update_element(tools, last);
+				}
+
+				break;
+			}
 		}
 	}
 
