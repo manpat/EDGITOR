@@ -8,26 +8,26 @@
  //   FUNCTIONS   ///////////////////////////////////////////////// ///////  //////   /////    ////     ///      //       /
 //
 
-inline float reach_tween(float a, float b, float t)
+inline const float reach_tween(const float a, const float b, const float t)
 {
 	return (a != b) ? (a + ((1 / t) * (b - a))) : (a);
 }
 
-inline float clampf(float x, float lo, float hi)
+inline const float clampf(const float x, const float lo, const float hi)
 {
 	return (x) < (lo) ? (lo) : (x) > (hi) ? (hi) : (x);
 }
 
-inline int16_t clamp(int16_t x, int16_t lo, int16_t hi)
+inline const int16_t clamp(const int16_t x, const int16_t lo, const int16_t hi)
 {
 	return (x) < (lo) ? (lo) : (x) > (hi) ? (hi) : (x);
 }
 
-inline int16_t sign(int16_t x) {
+inline const int16_t sign(const int16_t x) {
 	return (x > 0) - (x < 0);
 }
 
-inline bool point_in_rect(int16_t px, int16_t py, int16_t rx, int16_t ry, int16_t rw, int16_t rh)
+inline const bool point_in_rect(const int16_t px, const int16_t py, const int16_t rx, const int16_t ry, const int16_t rw, const int16_t rh)
 {
 	return (px >= rx && py >= ry && px < (rx + rw) && py < (ry + rh));
 }
@@ -112,7 +112,7 @@ inline void lab2rgb(float l_s, float a_s, float b_s, float& R, float& G, float& 
 	B = clamp(var_B * 255., 0.0f, 255.0f);
 }
 
-inline COLOR blend_colors(COLOR src_color, COLOR dst_color) {
+inline const COLOR blend_colors(const COLOR src_color, const COLOR dst_color) {
 	const float src_cola = src_color.a / 255.0f;
 	const float dest_cola = dst_color.a / 255.0f * (1. - src_cola);
 	const float new_cola = (src_cola + dest_cola);
