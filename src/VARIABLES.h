@@ -62,6 +62,12 @@ extern bool MOUSEBUTTON_RIGHT;
 extern bool MOUSEBUTTON_PRESSED_RIGHT;
 
 // TOOL
+enum TOOL {
+	BRUSH,
+	ERASER,
+	FILL,
+};
+
 extern uint16_t CURRENT_TOOL;
 
 

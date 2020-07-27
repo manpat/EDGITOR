@@ -33,7 +33,6 @@ void SYSTEM_UIBOX_UPDATE()
 	// RENDER THE UI BOXES
 	int16_t t_UIBOX_IN = UIBOX_IN;
 	UIBOX_IN = -1;
-	int16_t t_ELEMENT_IN = ELEMENT_IN;
 	ELEMENT_IN = -1;
 
 	for (int16_t i = 0; i < (int)UIBOXES.size(); i++)
@@ -227,22 +226,7 @@ bool SYSTEM_UIBOX_HANDLE_MOUSE_DOWN(bool is_click, int mouse_x, int mouse_y)
 	{
 		if (ELEMENT_IN >= 0)
 		{
-			UIBOX_INFO* uibox = UIBOXES[UIBOX_IN].get();
-			UIBOX_ELEMENT* uibox_element = &uibox->element[ELEMENT_IN];
-			switch (uibox_element->type)
-			{
-			case 0:
-				if (uibox_element->input_bool != nullptr)
-				{
-					*uibox_element->input_bool = (!*uibox_element->input_bool);
-				}
-				if (uibox_element->input_int != nullptr)
-				{
-					*uibox_element->input_int = uibox_element->input_int_var;
-				}
-				break;
-			}
-			uibox->element_update = true;
+			uibox_update_element(UIBOX_IN, ELEMENT_IN);
 		}
 
 		move_to_end(UIBOXES, UIBOX_IN); // move window to end
@@ -263,7 +247,7 @@ bool SYSTEM_UIBOX_HANDLE_MOUSE_DOWN(bool is_click, int mouse_x, int mouse_y)
 			UIBOX_PANY = (int16_t)(mouse_y - uibox_click->y);
 		}
 
-		// shrink
+		// shrink [↓]
 		if (!uibox_click->in_grab && !uibox_click->grab && uibox_click->in_shrink)
 		{
 			UIBOX_CHAR* _charinfo;
@@ -346,6 +330,7 @@ UIBOX_INFO* uibox_new(uint16_t _x, uint16_t _y, uint16_t _w, uint16_t _h, bool c
 {
 	auto new_uibox = std::make_unique<UIBOX_INFO>();
 
+	new_uibox->title = title;
 	new_uibox->can_grab = can_grab;
 	new_uibox->update = true;
 	new_uibox->x = _x;
@@ -449,4 +434,46 @@ void uibox_addinteract(UIBOX_INFO* uibox, std::string text, std::string over_tex
 	{
 		uibox_setstring(uibox, text, px, py, COL_WHITE, false);
 	}
+}
+
+void uibox_update_element(int16_t uibox_in, int16_t element_in)
+{
+	UIBOX_INFO* uibox = UIBOXES[uibox_in].get();
+	UIBOX_ELEMENT* uibox_element = &uibox->element[element_in];
+	switch (uibox_element->type)
+	{
+	case 0:
+		if (uibox_element->input_bool != nullptr)
+		{
+			*uibox_element->input_bool = (!*uibox_element->input_bool);
+		}
+		if (uibox_element->input_int != nullptr)
+		{
+			*uibox_element->input_int = uibox_element->input_int_var;
+		}
+		break;
+	}
+	uibox->element_update = true;
+}
+
+int16_t uibox_get_uibox_by_title(std::string title)
+{
+	for (int16_t i = 0; i < (int)UIBOXES.size(); i++)
+	{
+		UIBOX_INFO* uibox = UIBOXES[i].get();
+		if (uibox->title == title) return i;
+	}
+
+	return -1;
+}
+
+int16_t uibox_get_element_by_text(int16_t uibox_in, std::string text) {
+	UIBOX_INFO* uibox = UIBOXES[uibox_in].get();
+
+	for (int16_t i = 0; i < (int)uibox->element.size(); i++) {
+		UIBOX_ELEMENT* uibox_element = &uibox->element[i];
+		if (uibox_element->text == text) return i;
+	}
+
+	return -1;
 }

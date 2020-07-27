@@ -91,19 +91,19 @@ void set_pixel(const int16_t x, const int16_t y, const COLOR c)
 
 void set_pixel_brush(int x, int y, COLOR c)
 {
-	float _a;
-	int _tx, _ty;
 	for (int i = 0; i < BRUSH_W; i++)
+	{
 		for (int j = 0; j < BRUSH_W; j++)
 		{
-			_tx = ((x + BRUSH_X) + i);
-			_ty = ((y + BRUSH_Y) + j);
+			int16_t _tx = ((x + BRUSH_X) + i);
+			int16_t _ty = ((y + BRUSH_Y) + j);
 			//if (!in_canvas(_tx, _ty)) continue;
-			_a = (BRUSH_LIST[BRUSH_LIST_POS]->alpha[j * BRUSH_W + i]);
+			uint8_t _a = (BRUSH_LIST[BRUSH_LIST_POS]->alpha[j * BRUSH_W + i]);
 			if (!_a) continue;
 			//if (BRUSH_PIXELS[_tx, _ty] != 0x00000000) continue;
 			if (_a) set_pixel(_tx, _ty, c);
 		}
+	}
 }
 
 void set_pixel_layer(const int16_t x, const int16_t y, const COLOR c, uint16_t l)

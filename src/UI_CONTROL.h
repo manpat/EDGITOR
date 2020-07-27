@@ -46,6 +46,7 @@ struct UIBOX_INFO {
 	std::vector<UIBOX_CHAR> charinfo;
 	std::vector<UIBOX_ELEMENT> element;
 	std::deque<uint16_t> update_stack;
+	std::string title;
 	SDL_Texture* texture;
 	uint16_t tex_w;
 	uint16_t tex_h;
@@ -71,6 +72,19 @@ void uibox_setchar(UIBOX_CHAR* ci, UIBOX_INFO* ui, uint16_t char_pos, uint8_t _C
 void uibox_setstring(UIBOX_INFO* uibox, std::string _charlist, uint16_t x, uint16_t y, COLOR col, bool update);
 void uibox_addinteract(UIBOX_INFO* uibox, std::string text, std::string over_text, uint8_t type, bool* bool_ptr, uint16_t* int_ptr, uint16_t int_var, bool is_pos, uint16_t px, uint16_t py);
 
+void uibox_update_element(int16_t uibox_in, int16_t element_in);
+
+/*
+	Finds UIBOX though the title
+	RETURN: ID of that UIBOX or -1 if it does not exist
+*/
+int16_t uibox_get_uibox_by_title(std::string title);
+
+/*
+	Finds ELEMENT though the text
+	RETURN: ID of that UIBOX or -1 if it does not exist
+*/
+int16_t uibox_get_element_by_text(int16_t uibox_in, std::string text);
 
 extern SDL_Texture* UI_TEXTURE_HUEBAR;
 extern COLOR* UI_PIXELS_HUEBAR;

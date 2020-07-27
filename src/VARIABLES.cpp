@@ -50,7 +50,7 @@ bool MOUSEBUTTON_RIGHT = false;
 bool MOUSEBUTTON_PRESSED_RIGHT = false;
 
 // TOOL
-uint16_t CURRENT_TOOL = 0;
+uint16_t CURRENT_TOOL = TOOL::BRUSH;
 
 
 
