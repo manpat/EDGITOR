@@ -9,6 +9,7 @@
 
 #include "VARIABLES.h"
 #include "FUNCTIONS.h"
+#include <iostream>
 
 SDL_Texture* UI_TEXTURE_HUEBAR;
 COLOR* UI_PIXELS_HUEBAR;
@@ -63,7 +64,7 @@ void SYSTEM_UIBOX_UPDATE()
 				for (uint16_t j = (_check_shrink ? (_uibox_w - 4) : 0); j < (_check_shrink ? (_uibox_w - 1) : (_uibox_w - 4)); j++)
 				{
 					_charinfo = &uibox->charinfo[j];
-					uibox_setchar(_charinfo, uibox, j, _charinfo->chr, COL_BLACK, COL_ACCENT, 1);
+					uibox_set_char(_charinfo, uibox, j, _charinfo->chr, COL_BLACK, COL_ACCENT, 1);
 				}
 				if (_in_grab) uibox->in_grab = true;
 				if (_in_shrink) uibox->in_shrink = true;
@@ -78,20 +79,30 @@ void SYSTEM_UIBOX_UPDATE()
 				for (uint16_t j = (_check_shrink ? (_uibox_w - 4) : 0); j < (_check_shrink ? (_uibox_w - 1) : (_uibox_w - 4)); j++)
 				{
 					_charinfo = &uibox->charinfo[j];
-					uibox_setchar(_charinfo, uibox, j, _charinfo->chr, COL_WHITE, COL_BGUPDATE, 1);
+					uibox_set_char(_charinfo, uibox, j, _charinfo->chr, COL_WHITE, COL_BGUPDATE, 1);
 				}
 				uibox->in_grab = false;
 				uibox->in_shrink = false;
 				uibox->update = true;
 			}
 
-
-			if ((uibox->element_update || UIBOX_IN == UIBOX_PREVIN) && !uibox->shrink)
+			if ((uibox->element_update || UIBOX_IN == UIBOX_PREVIN) && !uibox->shrink && !uibox->element_list.empty())
 			{
-				UIBOX_ELEMENT* _element;
-				for (int e = 0; e < (int)uibox->element.size(); e++)
+				UIBOX_ELEMENT_MAIN* _element;
+				//for (int e = 0; e < (int)uibox->element.size(); e++)
+				for (int e = 0; e < uibox->element_list.size(); e++)
 				{
-					_element = &uibox->element[e];
+					_element = uibox->element_list[e].get();
+					//std::cout << _element->y << std::endl;
+					if (point_in_rect(MOUSE_X, MOUSE_Y,
+						uibox->x + (FONT_CHRW * _element->x), uibox->y + (FONT_CHRH * _element->y),
+						FONT_CHRW * _element->text.size(), FONT_CHRH))
+					{
+						ELEMENT_IN = e;
+						//std::cout << _element->text.size() << std::endl;
+					}
+
+					/*_element = &uibox->element[e];
 					if ((uibox->element_update && ((_element->input_int == nullptr && (bool)(*_element->input_bool)) || (_element->input_int != nullptr && *_element->input_int == _element->input_int_var))) ||
 						((!_element->is_pos && point_in_rect(MOUSE_X, MOUSE_Y, uibox->x + (FONT_CHRW * 2), uibox->y + ((e + 2) * FONT_CHRH), uibox->w - (FONT_CHRW * 4), FONT_CHRH)) ||
 							(_element->is_pos && point_in_rect(MOUSE_X, MOUSE_Y, uibox->x + (FONT_CHRW * _element->px), uibox->y + (FONT_CHRH * _element->py), FONT_CHRW * _element->text.size(), FONT_CHRH))))
@@ -139,10 +150,10 @@ void SYSTEM_UIBOX_UPDATE()
 							}
 							_element->over = false;
 						}
-					}
+					}*/
 				}
-				uibox->element_update = false;
 			}
+			uibox->element_update = false;
 		}
 
 		if (uibox->update)
@@ -369,20 +380,11 @@ UIBOX_INFO* uibox_new(uint16_t _x, uint16_t _y, uint16_t _w, uint16_t _h, bool c
 		}
 	}
 
-	/*new_uibox->charinfo[1].chr = '[';
-	new_uibox->charinfo[2].chr = ' ';
-	new_uibox->charinfo[3].chr = 'T';
-	new_uibox->charinfo[4].chr = 'E';
-	new_uibox->charinfo[5].chr = 'S';
-	new_uibox->charinfo[6].chr = 'T';
-	new_uibox->charinfo[7].chr = ' ';
-	new_uibox->charinfo[8].chr = ']';*/
-
 	// TITLE
-	uibox_setstring(new_uibox.get(), STR_NBSP + title + STR_NBSP, 1, 0, COL_WHITE, false);
+	uibox_set_string(new_uibox.get(), STR_NBSP + title + STR_NBSP, 1, 0, COL_WHITE, false);
 
 	// SHRINK BUTTON
-	uibox_setstring(new_uibox.get(), STR_NBSP STR_ARWD STR_NBSP, new_uibox->chr_w - 4, 0, COL_WHITE, false);
+	uibox_set_string(new_uibox.get(), STR_NBSP STR_ARWD STR_NBSP, new_uibox->chr_w - 4, 0, COL_WHITE, false);
 
 	new_uibox->texture = nullptr;
 
@@ -391,7 +393,7 @@ UIBOX_INFO* uibox_new(uint16_t _x, uint16_t _y, uint16_t _w, uint16_t _h, bool c
 	return UIBOXES.back().get();
 }
 
-void uibox_setchar(UIBOX_CHAR* ci, UIBOX_INFO* ui, uint16_t char_pos, uint8_t _chr, COLOR _col, COLOR _bg_col, bool update)
+void uibox_set_char(UIBOX_CHAR* ci, UIBOX_INFO* ui, uint16_t char_pos, uint8_t _chr, COLOR _col, COLOR _bg_col, bool update)
 {
 	ci->chr = _chr;
 	ci->col = _col;
@@ -401,18 +403,18 @@ void uibox_setchar(UIBOX_CHAR* ci, UIBOX_INFO* ui, uint16_t char_pos, uint8_t _c
 	ui->update = true;
 }
 
-void uibox_setstring(UIBOX_INFO* uibox, std::string _charlist, uint16_t x, uint16_t y, COLOR col, bool update)
+void uibox_set_string(UIBOX_INFO* uibox, std::string _charlist, uint16_t x, uint16_t y, COLOR col, bool update)
 {
 	const char* _chars = _charlist.c_str();
 	for (uint16_t j = 0; j < _charlist.size(); j++)
 	{
 		const auto pos = j + (y * uibox->chr_w + x);
 		auto _charinfo = &uibox->charinfo[pos];
-		uibox_setchar(_charinfo, uibox, pos, _chars[j], col, _charinfo->bg_col, update);
+		uibox_set_char(_charinfo, uibox, pos, _chars[j], col, _charinfo->bg_col, update);
 	}
 }
 
-void uibox_addinteract(UIBOX_INFO* uibox, std::string text, std::string over_text, uint8_t type, bool* bool_ptr, uint16_t* int_ptr, uint16_t int_var, bool is_pos, uint16_t px, uint16_t py)
+/*void uibox_add_element(UIBOX_INFO* uibox, std::string text, std::string over_text, uint8_t type, bool* bool_ptr, uint16_t* int_ptr, uint16_t int_var, bool is_pos, uint16_t px, uint16_t py)
 {
 	UIBOX_ELEMENT newuibox_interact;
 	newuibox_interact.text = text;
@@ -426,34 +428,93 @@ void uibox_addinteract(UIBOX_INFO* uibox, std::string text, std::string over_tex
 	newuibox_interact.py = py;
 	uibox->element.push_back(std::move(newuibox_interact));
 
+	UIBOX_ELEMENT_BUTTON _checkbox;
+	_checkbox.text = "HELLO";
+
+	uibox->element_list.push_back(&_checkbox);
+
+	std::cout << (uibox->element_list[0]->text) << std::endl;
+	uibox->element_list[0]->update();
+
 	if (!is_pos)
 	{
-		uibox_setstring(uibox, text, 2, 2 + (uibox->element.size() - 1), COL_WHITE, false);
+		uibox_set_string(uibox, text, 2, 2 + (uibox->element.size() - 1), COL_WHITE, false);
 	}
 	else
 	{
-		uibox_setstring(uibox, text, px, py, COL_WHITE, false);
+		uibox_set_string(uibox, text, px, py, COL_WHITE, false);
 	}
+}*/
+
+void uibox_add_element_textbox(UIBOX_INFO* uibox, uint16_t x, uint16_t y, std::string text)
+{
+	std::unique_ptr<UIBOX_ELEMENT_TEXTBOX> _element = std::make_unique<UIBOX_ELEMENT_TEXTBOX>();
+	_element->x = x;
+	_element->y = y;
+	_element->text = text;
+	_element->create(uibox);
+	uibox->element_list.push_back(std::move(_element));
+}
+
+void uibox_add_element_button(UIBOX_INFO* uibox, uint16_t x, uint16_t y, std::string text, uint16_t* input_var, uint16_t button_var)
+{
+	std::unique_ptr<UIBOX_ELEMENT_BUTTON> _element = std::make_unique<UIBOX_ELEMENT_BUTTON>();
+	_element->x = x;
+	_element->y = y;
+	_element->text = text;
+	_element->input_var = input_var;
+	_element->button_var = button_var;
+	_element->create(uibox);
+	uibox->element_list.push_back(std::move(_element));
+}
+
+void uibox_add_element_toggle(UIBOX_INFO* uibox, uint16_t x, uint16_t y, std::string text, bool* input_var)
+{
+	std::unique_ptr<UIBOX_ELEMENT_TOGGLE> _element = std::make_unique<UIBOX_ELEMENT_TOGGLE>();
+	_element->x = x;
+	_element->y = y;
+	_element->text = text;
+	_element->create(uibox);
+	uibox->element_list.push_back(std::move(_element));
+}
+
+void uibox_add_element_slider(UIBOX_INFO* uibox, uint16_t x, uint16_t y, std::string text, uint16_t* input_var)
+{
+	std::unique_ptr<UIBOX_ELEMENT_SLIDER> _element = std::make_unique<UIBOX_ELEMENT_SLIDER>();
+	_element->x = x;
+	_element->y = y;
+	_element->text = text;
+	_element->create(uibox);
+	uibox->element_list.push_back(std::move(_element));
+}
+
+void uibox_add_element_textinput(UIBOX_INFO* uibox, uint16_t x, uint16_t y, std::string text)
+{
+	std::unique_ptr<UIBOX_ELEMENT_TEXTINPUT> _element = std::make_unique<UIBOX_ELEMENT_TEXTINPUT>();
+	_element->x = x;
+	_element->y = y;
+	_element->text = text;
+	_element->create(uibox);
+	uibox->element_list.push_back(std::move(_element));
+}
+
+void uibox_add_element_numinput(UIBOX_INFO* uibox, uint16_t x, uint16_t y, std::string text)
+{
+	std::unique_ptr<UIBOX_ELEMENT_NUMINPUT> _element = std::make_unique<UIBOX_ELEMENT_NUMINPUT>();
+	_element->x = x;
+	_element->y = y;
+	_element->text = text;
+	_element->create(uibox);
+	uibox->element_list.push_back(std::move(_element));
 }
 
 void uibox_update_element(int16_t uibox_in, int16_t element_in)
 {
 	UIBOX_INFO* uibox = UIBOXES[uibox_in].get();
-	UIBOX_ELEMENT* uibox_element = &uibox->element[element_in];
-	switch (uibox_element->type)
-	{
-	case 0:
-		if (uibox_element->input_bool != nullptr)
-		{
-			*uibox_element->input_bool = (!*uibox_element->input_bool);
-		}
-		if (uibox_element->input_int != nullptr)
-		{
-			*uibox_element->input_int = uibox_element->input_int_var;
-		}
-		break;
-	}
+
+	uibox->element_list[element_in]->update();
 	uibox->element_update = true;
+	uibox->creation_update = true; // the whole window updates every time you click
 }
 
 int16_t uibox_get_uibox_by_title(std::string title)

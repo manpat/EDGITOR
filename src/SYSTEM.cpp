@@ -111,6 +111,7 @@ SDL_Renderer* INIT_RENDERER(SDL_Window* WINDOW)
 	const int _t_bs = 13;
 	BRUSH_W = _t_bs;
 	static uint8_t BRUSH_POINTGRID[_t_bs * _t_bs] = {};
+	BRUSH_POINTGRID[0] = 1;
 	brush_new(BRUSH_POINTGRID, _t_bs);
 	brush_set(BRUSH_LIST_POS);
 
@@ -156,14 +157,16 @@ SDL_Renderer* INIT_RENDERER(SDL_Window* WINDOW)
 
 	for (int i = 0; i < BRUSH_W * BRUSH_W; i++)
 	{
-		uibox_addinteract(UIBOX_BRUSH, "::", STR_NBSP STR_NBSP, 0, (bool*)&(BRUSH_LIST[BRUSH_LIST_POS]->alpha[i]), nullptr, 0, true, 3 + ((i % BRUSH_W) * 2), 2 + (i / BRUSH_W));
+		//uibox_add_element(UIBOX_BRUSH, "::", STR_NBSP STR_NBSP, 0, (bool*)&(BRUSH_LIST[BRUSH_LIST_POS]->alpha[i]), nullptr, 0, true, 3 + ((i % BRUSH_W) * 2), 2 + (i / BRUSH_W));
 	}
 
 	UIBOX_TOOLS = uibox_new(0, 0, 128, 512, 0, "TOOLS");
-	uibox_addinteract(UIBOX_TOOLS, "BRUSH",  "> BRUSH",  0, nullptr, &CURRENT_TOOL, 0, false, 0, 0);
-	uibox_addinteract(UIBOX_TOOLS, "ERASER", "> ERASER", 0, nullptr, &CURRENT_TOOL, 1, false, 0, 0);
-	uibox_addinteract(UIBOX_TOOLS, "FILL",   "> FILL",   0, nullptr, &CURRENT_TOOL, 2, false, 0, 0);
-
+	//uibox_add_element(UIBOX_TOOLS, "BRUSH",  "> BRUSH",  0, nullptr, &CURRENT_TOOL, 0, false, 0, 0);
+	//uibox_add_element(UIBOX_TOOLS, "ERASER", "> ERASER", 0, nullptr, &CURRENT_TOOL, 1, false, 0, 0);
+	//uibox_add_element(UIBOX_TOOLS, "FILL",   "> FILL",   0, nullptr, &CURRENT_TOOL, 2, false, 0, 0);
+	uibox_add_element_button(UIBOX_TOOLS, 2, 2, "BRUSH", &CURRENT_TOOL, 0);
+	uibox_add_element_button(UIBOX_TOOLS, 2, 3, "ERASER", &CURRENT_TOOL, 1);
+	uibox_add_element_button(UIBOX_TOOLS, 2, 4, "FILL", &CURRENT_TOOL, 2);
 
 	SDL_SetCursor(create_system_cursor());
 
@@ -377,7 +380,7 @@ void SYSTEM_INPUT_UPDATE()
 				{
 					CURRENT_TOOL = TOOL::FILL;
 				}
-
+				/*
 				int16_t tools = uibox_get_uibox_by_title("TOOLS");
 				if (tools != -1) {
 					int16_t last;
@@ -388,7 +391,7 @@ void SYSTEM_INPUT_UPDATE()
 						default: last = -1;
 					}
 					if (last != -1) uibox_update_element(tools, last);
-				}
+				}*/
 
 				break;
 			}
