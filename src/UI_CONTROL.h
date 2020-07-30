@@ -11,7 +11,7 @@
 #include "BRUSH.h"
 
 struct SDL_Texture;
-
+constexpr uint16_t UIBOX_UPDATE_TICK = 10;
 
 struct UIBOX_CHAR {
 	uint8_t chr;
@@ -51,7 +51,7 @@ struct UIBOX_INFO {
 	std::vector<UIBOX_CHAR> charinfo;
 	std::vector<UIBOX_ELEMENT> element;
 
-	std::vector<std::unique_ptr<UIBOX_ELEMENT_MAIN>> element_list;
+	std::vector<std::shared_ptr<UIBOX_ELEMENT_MAIN>> element_list;
 
 	std::deque<uint16_t> update_stack;
 	std::string title;
@@ -76,13 +76,13 @@ bool SYSTEM_UIBOX_HANDLE_MOUSE_DOWN(bool is_click, int mouse_x, int mouse_y);
 void SYSTEM_UIBOX_HANDLE_MOUSE_UP();
 
 UIBOX_INFO* uibox_new(uint16_t _x, uint16_t _y, uint16_t _w, uint16_t _h, bool can_grab, std::string title);
-void uibox_set_char(UIBOX_CHAR* ci, UIBOX_INFO* ui, uint16_t char_pos, uint8_t _CHR, COLOR _COL, COLOR _BG_COL, bool update);
+void uibox_set_char(UIBOX_INFO* ui, uint16_t char_pos, uint8_t _CHR, COLOR _COL, COLOR _BG_COL, bool update);
 void uibox_set_string(UIBOX_INFO* uibox, std::string _charlist, uint16_t x, uint16_t y, COLOR col, bool update);
 //void uibox_add_element(UIBOX_INFO* uibox, std::string text, std::string over_text, uint8_t type, bool* bool_ptr, uint16_t* int_ptr, uint16_t int_var, bool is_pos, uint16_t px, uint16_t py);
 
 void uibox_add_element_textbox(UIBOX_INFO* uibox, uint16_t x, uint16_t y, std::string text);
-void uibox_add_element_button(UIBOX_INFO* uibox, uint16_t x, uint16_t y, std::string text, uint16_t* input_var, uint16_t button_var);
-void uibox_add_element_toggle(UIBOX_INFO* uibox, uint16_t x, uint16_t y, std::string text, bool* input_var);
+void uibox_add_element_button(UIBOX_INFO* uibox, uint16_t x, uint16_t y, int16_t w, int16_t h, std::string text, std::string sel_text, uint16_t* input_var, uint16_t button_var);
+void uibox_add_element_toggle(UIBOX_INFO* uibox, uint16_t x, uint16_t y, int16_t w, int16_t h, std::string text, std::string sel_text, bool* input_var);
 void uibox_add_element_slider(UIBOX_INFO* uibox, uint16_t x, uint16_t y, std::string text, uint16_t* input_var);
 void uibox_add_element_textinput(UIBOX_INFO* uibox, uint16_t x, uint16_t y, std::string text);
 void uibox_add_element_numinput(UIBOX_INFO* uibox, uint16_t x, uint16_t y, std::string text);
@@ -110,15 +110,28 @@ extern COLOR* UI_PIXELS_HUEBAR;
 
 // UIBOX_ELEMENT_MAIN
 struct UIBOX_ELEMENT_MAIN {
+	bool over = 0;
+	bool highlight = 1;
+	bool prev_sel = 0;
+	bool prev_over = 0;
 	std::string text = "";
+	std::string sel_text = "";
 	uint16_t x = 0;
 	uint16_t y = 0;
+	// for W & H: 0=text size, -1=window size
+	int16_t w = 0;
+	int16_t h = 0;
 	virtual void create(UIBOX_INFO*) = 0;
 	virtual void update(void) = 0;
+	virtual bool is_sel()
+	{
+		return 0;
+	}
 };
 
 // TEXTBOX
 struct UIBOX_ELEMENT_TEXTBOX : public UIBOX_ELEMENT_MAIN {
+	bool highlight = false;
 	void create(UIBOX_INFO* uibox)
 	{
 		uibox_set_string(uibox, text, x, y, COL_WHITE, false);
@@ -140,16 +153,27 @@ struct UIBOX_ELEMENT_BUTTON : public UIBOX_ELEMENT_MAIN {
 	void update()
 	{
 		*input_var = button_var;
-		std::cout << button_var << std::endl;
+	}
+	bool is_sel()
+	{
+		return *input_var == button_var;
 	}
 };
 
 // TOGGLE
 struct UIBOX_ELEMENT_TOGGLE : public UIBOX_ELEMENT_MAIN {
-	void create(UIBOX_INFO* uibox) {};
+	bool* input_var = nullptr;
+	void create(UIBOX_INFO* uibox)
+	{
+		uibox_set_string(uibox, text, x, y, COL_WHITE, false);
+	};
 	void update()
 	{
-		std::cout << "TOGGLE" << std::endl;
+		*input_var = !(*input_var);
+	}
+	bool is_sel()
+	{
+		return *input_var == true;
 	}
 };
 
