@@ -26,6 +26,8 @@ struct SDL_Rect;
  //   VARIABLES   ///////////////////////////////////////////////// ///////  //////   /////    ///     //      /
 //
 
+extern bool TEST_BOOL;
+extern bool TEST_BOOL2;
 
 extern SDL_Renderer* RENDERER;
 extern SDL_Texture* FONTMAP;

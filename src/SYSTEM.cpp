@@ -12,6 +12,8 @@
 #include "BRUSH.h"
 #include "UNDO.h"
 
+#include <algorithm>
+
 UIBOX_INFO* UIBOX_TOOLS;
 UIBOX_INFO* UIBOX_COLOR;
 UIBOX_INFO* UIBOX_BRUSH;
@@ -158,7 +160,7 @@ SDL_Renderer* INIT_RENDERER(SDL_Window* WINDOW)
 	for (int i = 0; i < BRUSH_W * BRUSH_W; i++)
 	{
 		uibox_add_element_toggle(UIBOX_BRUSH, 2 + ((i % BRUSH_W) * 2), 1 + (i / BRUSH_W), 2, 1,
-			"::", "[]", (bool*)&(BRUSH_LIST[BRUSH_LIST_POS]->alpha[i]));
+			"::", "\xb0\xb0", (bool*)&(BRUSH_LIST[BRUSH_LIST_POS]->alpha[i]));
 	}
 
 	UIBOX_TOOLS = uibox_new(0, 0, 128, 512, 0, "TOOLS");
@@ -166,6 +168,26 @@ SDL_Renderer* INIT_RENDERER(SDL_Window* WINDOW)
 	uibox_add_element_button(UIBOX_TOOLS, 0, 2, -1, 1, "BRUSH", "> BRUSH", &CURRENT_TOOL, TOOL::BRUSH);
 	uibox_add_element_button(UIBOX_TOOLS, 0, 3, -1, 1, "ERASER", "> ERASER", &CURRENT_TOOL, TOOL::ERASER);
 	uibox_add_element_button(UIBOX_TOOLS, 0, 4, -1, 1, "FILL", "> FILL", &CURRENT_TOOL, TOOL::FILL);
+
+	uibox_add_element_textbox(UIBOX_COLOR, 2, 2, "R:");
+	uibox_add_element_varbox_u8(UIBOX_COLOR, 5, 2, "", &(BRUSH_COLOR.r), 0);
+
+	uibox_add_element_textbox(UIBOX_COLOR, 2, 4, "G:");
+	uibox_add_element_varbox_u8(UIBOX_COLOR, 5, 4, "", &(BRUSH_COLOR.g), 0);
+
+	uibox_add_element_textbox(UIBOX_COLOR, 2, 6, "B:");
+	uibox_add_element_varbox_u8(UIBOX_COLOR, 5, 6, "", &(BRUSH_COLOR.b), 0);
+
+	uibox_add_element_textbox(UIBOX_COLOR, 2, 8, "A:");
+	uibox_add_element_varbox_u8(UIBOX_COLOR, 5, 8, "", &(BRUSH_COLOR.a), 0);
+
+	for (int i = 0; i <= 16; i++)
+	{
+		uibox_add_element_button_u8(UIBOX_COLOR, 2 + i, 3, 1, 1, "-", "\xd7", &(BRUSH_COLOR.r), (uint8_t)std::min(i * 16, 255));
+		uibox_add_element_button_u8(UIBOX_COLOR, 2 + i, 5, 1, 1, "-", "\xd7", &(BRUSH_COLOR.g), (uint8_t)std::min(i * 16, 255));
+		uibox_add_element_button_u8(UIBOX_COLOR, 2 + i, 7, 1, 1, "-", "\xd7", &(BRUSH_COLOR.b), (uint8_t)std::min(i * 16, 255));
+		uibox_add_element_button_u8(UIBOX_COLOR, 2 + i, 9, 1, 1, "-", "\xd7", &(BRUSH_COLOR.a), (uint8_t)std::min(i * 16, 255));
+	}
 
 	SDL_SetCursor(create_system_cursor());
 

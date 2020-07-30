@@ -81,7 +81,10 @@ void uibox_set_string(UIBOX_INFO* uibox, std::string _charlist, uint16_t x, uint
 //void uibox_add_element(UIBOX_INFO* uibox, std::string text, std::string over_text, uint8_t type, bool* bool_ptr, uint16_t* int_ptr, uint16_t int_var, bool is_pos, uint16_t px, uint16_t py);
 
 void uibox_add_element_textbox(UIBOX_INFO* uibox, uint16_t x, uint16_t y, std::string text);
+void uibox_add_element_varbox(UIBOX_INFO* uibox, uint16_t x, uint16_t y, std::string text, uint16_t* input_var, uint16_t var);
+void uibox_add_element_varbox_u8(UIBOX_INFO* uibox, uint16_t x, uint16_t y, std::string text, uint8_t* input_var, uint8_t var);
 void uibox_add_element_button(UIBOX_INFO* uibox, uint16_t x, uint16_t y, int16_t w, int16_t h, std::string text, std::string sel_text, uint16_t* input_var, uint16_t button_var);
+void uibox_add_element_button_u8(UIBOX_INFO* uibox, uint16_t x, uint16_t y, int16_t w, int16_t h, std::string text, std::string sel_text, uint8_t* input_var, uint16_t button_var);
 void uibox_add_element_toggle(UIBOX_INFO* uibox, uint16_t x, uint16_t y, int16_t w, int16_t h, std::string text, std::string sel_text, bool* input_var);
 void uibox_add_element_slider(UIBOX_INFO* uibox, uint16_t x, uint16_t y, std::string text, uint16_t* input_var);
 void uibox_add_element_textinput(UIBOX_INFO* uibox, uint16_t x, uint16_t y, std::string text);
@@ -114,6 +117,7 @@ struct UIBOX_ELEMENT_MAIN {
 	bool highlight = 1;
 	bool prev_sel = 0;
 	bool prev_over = 0;
+	
 	std::string text = "";
 	std::string sel_text = "";
 	uint16_t x = 0;
@@ -122,7 +126,22 @@ struct UIBOX_ELEMENT_MAIN {
 	int16_t w = 0;
 	int16_t h = 0;
 	virtual void create(UIBOX_INFO*) = 0;
-	virtual void update(void) = 0;
+	virtual void set(void)
+	{
+		//
+	}
+	virtual void update(UIBOX_INFO* uibox)
+	{
+		for (uint16_t iy = 0; iy < h; iy++)
+		for (uint16_t ix = 0; ix < w; ix++)
+		{
+			uibox_set_char(uibox, x + ix + ((y + iy) * uibox->chr_w),
+				prev_sel ? (ix < sel_text.size() ? (sel_text.c_str())[ix] : 32) : (ix < text.size() ? (text.c_str())[ix] : 32),
+				COL_EMPTY,
+				(prev_over || prev_sel) ? COL_ACCENT : COL_BGUPDATE,
+				1);
+		}
+	}
 	virtual bool is_sel()
 	{
 		return 0;
@@ -131,14 +150,74 @@ struct UIBOX_ELEMENT_MAIN {
 
 // TEXTBOX
 struct UIBOX_ELEMENT_TEXTBOX : public UIBOX_ELEMENT_MAIN {
-	bool highlight = false;
 	void create(UIBOX_INFO* uibox)
 	{
 		uibox_set_string(uibox, text, x, y, COL_WHITE, false);
 	}
-	void update()
+	void update(UIBOX_INFO* uibox)
 	{
-		std::cout << "TEXTBOX" << std::endl;
+		//
+	}
+};
+
+// VARBOX
+struct UIBOX_ELEMENT_VARBOX : public UIBOX_ELEMENT_MAIN {
+	uint16_t* input_var = nullptr;
+	uint16_t var = 0;
+	void create(UIBOX_INFO* uibox)
+	{
+		uibox_set_string(uibox, text, x, y, COL_WHITE, false);
+	}
+	void update(UIBOX_INFO* uibox)
+	{
+		char buffer[16];
+		sprintf(buffer, "%i", *input_var);
+		std::string var_text(buffer);
+
+		for (uint16_t ix = 0; ix < 3; ix++)
+		{
+			uibox_set_char(uibox, x + ix + (y * uibox->chr_w),
+				ix < var_text.size() ? (var_text.c_str())[ix] : 32,
+				COL_EMPTY,
+				COL_BGUPDATE,
+				1);
+		}
+	}
+	bool is_sel()
+	{
+		bool _c = *input_var != var;
+		if (_c) var = *input_var;
+		return _c;
+	}
+};
+
+struct UIBOX_ELEMENT_VARBOX_U8 : public UIBOX_ELEMENT_MAIN {
+	uint8_t* input_var = nullptr;
+	uint8_t var = 0;
+	void create(UIBOX_INFO* uibox)
+	{
+		uibox_set_string(uibox, text, x, y, COL_WHITE, false);
+	}
+	void update(UIBOX_INFO* uibox)
+	{
+		char buffer[4];
+		sprintf(buffer, "%i", *input_var);
+		std::string var_text(buffer);
+		
+		for (uint16_t ix = 0; ix < 3; ix++)
+		{
+			uibox_set_char(uibox, x + ix + (y * uibox->chr_w),
+				ix < var_text.size() ? (var_text.c_str())[ix] : 32,
+				COL_EMPTY,
+				COL_BGUPDATE,
+				1);
+		}
+	}
+	bool is_sel()
+	{
+		bool _c = *input_var != var;
+		if (_c) var = *input_var;
+		return _c;
 	}
 };
 
@@ -146,11 +225,30 @@ struct UIBOX_ELEMENT_TEXTBOX : public UIBOX_ELEMENT_MAIN {
 struct UIBOX_ELEMENT_BUTTON : public UIBOX_ELEMENT_MAIN {
 	uint16_t* input_var = nullptr;
 	uint16_t button_var = 0;
+	
 	void create(UIBOX_INFO* uibox)
 	{
 		uibox_set_string(uibox, text, x, y, COL_WHITE, false);
 	};
-	void update()
+	void set()
+	{
+		*input_var = button_var;
+	}
+	bool is_sel()
+	{
+		return *input_var == button_var;
+	}
+};
+
+struct UIBOX_ELEMENT_BUTTON_U8 : public UIBOX_ELEMENT_MAIN {
+	uint8_t* input_var = nullptr;
+	uint8_t button_var = 0;
+
+	void create(UIBOX_INFO* uibox)
+	{
+		uibox_set_string(uibox, text, x, y, COL_WHITE, false);
+	};
+	void set()
 	{
 		*input_var = button_var;
 	}
@@ -167,7 +265,7 @@ struct UIBOX_ELEMENT_TOGGLE : public UIBOX_ELEMENT_MAIN {
 	{
 		uibox_set_string(uibox, text, x, y, COL_WHITE, false);
 	};
-	void update()
+	void set()
 	{
 		*input_var = !(*input_var);
 	}
@@ -180,26 +278,14 @@ struct UIBOX_ELEMENT_TOGGLE : public UIBOX_ELEMENT_MAIN {
 // SLIDER
 struct UIBOX_ELEMENT_SLIDER : public UIBOX_ELEMENT_MAIN {
 	void create(UIBOX_INFO* uibox) {};
-	void update()
-	{
-		std::cout << "SLIDER" << std::endl;
-	}
 };
 
 // TEXTINPUT
 struct UIBOX_ELEMENT_TEXTINPUT : public UIBOX_ELEMENT_MAIN {
 	void create(UIBOX_INFO* uibox) {};
-	void update()
-	{
-		std::cout << "TEXTINPUT" << std::endl;
-	}
 };
 
 // NUM_INPUT
 struct UIBOX_ELEMENT_NUMINPUT : public UIBOX_ELEMENT_MAIN {
 	void create(UIBOX_INFO* uibox) {};
-	void update()
-	{
-		std::cout << "NUMINPUT" << std::endl;
-	}
 };

@@ -15,6 +15,9 @@
  //   VARIABLES   ///////////////////////////////////////////////// ///////  //////   /////    ///     //      /
 //
 
+bool TEST_BOOL = 0;
+bool TEST_BOOL2 = 0;
+
 SDL_Renderer* RENDERER;
 SDL_Texture* FONTMAP;
 

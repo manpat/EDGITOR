@@ -87,10 +87,10 @@ void SYSTEM_UIBOX_UPDATE()
 				uibox->update = true;
 			}
 
+			// ELEMENT UPDATE
 			if ((uibox->element_update || UIBOX_IN == t_UIBOX_IN) && !uibox->shrink && !uibox->element_list.empty())
 			{
 				UIBOX_ELEMENT_MAIN* _element;
-				bool _in_element;
 				bool _t_over;
 				bool _t_is_sel;
 				bool _t_update = 0;
@@ -127,107 +127,9 @@ void SYSTEM_UIBOX_UPDATE()
 
 					if (_t_update)
 					{
-						for (uint16_t iy = 0; iy < _element->h; iy++)
-							for (uint16_t ix = 0; ix < _element->w; ix++)
-							{
-								uibox_set_char(uibox, _element->x + ix + ((_element->y + iy) * _uibox_w),
-									_t_is_sel ? (ix < _element->sel_text.size() ? (_element->sel_text.c_str())[ix] : 32) : (ix < _element->text.size() ? (_element->text.c_str())[ix] : 32),
-									COL_EMPTY,
-									(_t_over || _t_is_sel) ? COL_ACCENT : COL_BGUPDATE,
-									1);
-							}
+						_element->update(uibox);
 					}
 				}
-
-				//for (int e = 0; e < (int)uibox->element.size(); e++)
-				/*for (uint16_t e = 0; e < uibox->element_list.size(); e++)
-				{
-					_element = uibox->element_list[e].get();
-					
-					_in_element = (point_in_rect(MOUSE_X, MOUSE_Y,
-						uibox->x + (FONT_CHRW * _element->x), uibox->y + (FONT_CHRH * _element->y),
-						FONT_CHRW * _element->w, FONT_CHRH * _element->h));
-
-					if (!uibox->element_update && _in_element) ELEMENT_IN = e;
-
-					if (_in_element && !_element->over)
-					{
-						//if (_element->over && !uibox->element_update) continue;
-
-						for (uint16_t iy = 0; iy < _element->h; iy++)
-							for (uint16_t ix = 0; ix < _element->w; ix++)
-							{
-								uibox_set_char(uibox, _element->x + ix + ((_element->y + iy) * _uibox_w),
-									(_element->is_sel()) ? (ix < _element->sel_text.size() ? (_element->sel_text.c_str())[ix] : 32) : (0),
-									COL_EMPTY, COL_ACCENT, 1);
-
-							}
-
-						_element->over = true;
-					}
-					else
-					if ((_element->over || uibox->element_update) && !_in_element)
-					{
-						for (uint16_t iy = 0; iy < _element->h; iy++)
-							for (uint16_t ix = 0; ix < _element->w; ix++)
-							{
-								uibox_set_char(uibox, _element->x + ix + ((_element->y + iy) * _uibox_w),
-									(!_element->is_sel()) ? (ix < _element->text.size() ? (_element->text.c_str())[ix] : 32) : (0),
-									COL_EMPTY, COL_BGUPDATE, 1);
-							}
-						_element->over = false;
-					}
-
-					/*_element = &uibox->element[e];
-					if ((uibox->element_update && ((_element->input_int == nullptr && (bool)(*_element->input_bool)) || (_element->input_int != nullptr && *_element->input_int == _element->input_int_var))) ||
-						((!_element->is_pos && point_in_rect(MOUSE_X, MOUSE_Y, uibox->x + (FONT_CHRW * 2), uibox->y + ((e + 2) * FONT_CHRH), uibox->w - (FONT_CHRW * 4), FONT_CHRH)) ||
-							(_element->is_pos && point_in_rect(MOUSE_X, MOUSE_Y, uibox->x + (FONT_CHRW * _element->px), uibox->y + (FONT_CHRH * _element->py), FONT_CHRW * _element->text.size(), FONT_CHRH))))
-					{
-						if (!uibox->element_update) ELEMENT_IN = e;
-						if (_element->over && !uibox->element_update) continue; // if mouse is already over, don't update
-
-						for (uint16_t ej = 0; ej < _uibox_w; ej++)
-						{
-							if (((!_element->is_pos) && ej >= (_uibox_w - 4)) || ((_element->is_pos) && ej >= _element->text.size())) break;
-							uint16_t _tj = (!_element->is_pos) ? (ej + 2 + ((e + 2) * _uibox_w)) : (_element->px + (_element->py * _uibox_w) + ej);
-							_charinfo = &uibox->charinfo[_tj];
-							_charinfo->col = COL_WHITE;// COL_BLACK;// (!_element->is_pos) ? COL_BLACK : (!(bool)(*_element->input_bool) ? COL_BLACK : COLOR{ 255,0,64,255 });
-							_charinfo->bg_col = COLOR{ 255,0,64,255 };
-							if (((_element->input_int == nullptr && (bool)(*_element->input_bool)) || (_element->input_int != nullptr && *_element->input_int == _element->input_int_var)) || uibox->element_update)
-							{
-								if (ej < _element->over_text.size()) _charinfo->chr = (_element->over_text.c_str())[ej]; else _charinfo->chr = 32;
-							}
-							uibox->update_stack.insert(uibox->update_stack.begin() + (rand() % (uibox->update_stack.size() + 1)), _tj);
-						}
-
-						uibox->update = true;
-						_element->over = true;
-					}
-					else
-					{
-						if (_element->over || uibox->element_update)
-						{
-							if (((_element->input_int == nullptr && !(*_element->input_bool)) || (_element->input_int != nullptr && *_element->input_int != _element->input_int_var)) || uibox->element_update)
-							{
-								for (uint16_t ej = 0; ej < _uibox_w; ej++)
-								{
-									if (((!_element->is_pos) && ej >= (_uibox_w - 4)) || ((_element->is_pos) && ej >= _element->text.size())) break;
-									uint16_t _tj = (!_element->is_pos) ? (ej + 2 + ((e + 2) * _uibox_w)) : (_element->px + (_element->py * _uibox_w) + ej);
-									_charinfo = &uibox->charinfo[_tj];
-									_charinfo->col = COL_WHITE;
-									_charinfo->bg_col = COLOR{ 0,0,0,1 };
-									if (((_element->input_int == nullptr && !(bool)(*_element->input_bool)) || (_element->input_int != nullptr && *_element->input_int != _element->input_int_var)) || uibox->element_update)
-									{
-										if (ej < _element->text.size()) _charinfo->chr = (_element->text.c_str())[ej]; else _charinfo->chr = 32;
-									}
-									uibox->update_stack.insert(uibox->update_stack.begin() + (rand() % (uibox->update_stack.size() + 1)), _tj);
-								}
-								uibox->update = true;
-							}
-							_element->over = false;
-						}
-					}* /
-				}*/
 			}
 			uibox->element_update = false;
 		}
@@ -475,9 +377,46 @@ void uibox_add_element_textbox(UIBOX_INFO* uibox, uint16_t x, uint16_t y, std::s
 	uibox->element_list.push_back(std::move(_element));
 }
 
+void uibox_add_element_varbox(UIBOX_INFO* uibox, uint16_t x, uint16_t y, std::string text, uint16_t* input_var, uint16_t var)
+{
+	std::shared_ptr<UIBOX_ELEMENT_VARBOX> _element = std::make_shared<UIBOX_ELEMENT_VARBOX>();
+	_element->x = x;
+	_element->y = y;
+	_element->text = text;
+	_element->input_var = input_var;
+	_element->var = var;
+	_element->create(uibox);
+	uibox->element_list.push_back(std::move(_element));
+}
+
+void uibox_add_element_varbox_u8(UIBOX_INFO* uibox, uint16_t x, uint16_t y, std::string text, uint8_t* input_var, uint8_t var)
+{
+	std::shared_ptr<UIBOX_ELEMENT_VARBOX_U8> _element = std::make_shared<UIBOX_ELEMENT_VARBOX_U8>();
+	_element->x = x;
+	_element->y = y;
+	_element->text = text;
+	_element->input_var = input_var;
+	_element->var = var;
+	_element->create(uibox);
+	uibox->element_list.push_back(std::move(_element));
+}
+
 void uibox_add_element_button(UIBOX_INFO* uibox, uint16_t x, uint16_t y, int16_t w, int16_t h, std::string text, std::string sel_text, uint16_t* input_var, uint16_t button_var)
 {
 	std::shared_ptr<UIBOX_ELEMENT_BUTTON> _element = std::make_shared<UIBOX_ELEMENT_BUTTON>();
+	uibox_element_setxywh(uibox, _element, x, y, w, h, text, sel_text);
+
+	_element->text = text;
+	_element->sel_text = sel_text;
+	_element->input_var = input_var;
+	_element->button_var = button_var;
+	_element->create(uibox);
+	uibox->element_list.push_back(std::move(_element));
+}
+
+void uibox_add_element_button_u8(UIBOX_INFO* uibox, uint16_t x, uint16_t y, int16_t w, int16_t h, std::string text, std::string sel_text, uint8_t* input_var, uint16_t button_var)
+{
+	std::shared_ptr<UIBOX_ELEMENT_BUTTON_U8> _element = std::make_shared<UIBOX_ELEMENT_BUTTON_U8>();
 	uibox_element_setxywh(uibox, _element, x, y, w, h, text, sel_text);
 
 	_element->text = text;
@@ -534,7 +473,7 @@ void uibox_update_element(int16_t uibox_in, int16_t element_in)
 {
 	UIBOX_INFO* uibox = UIBOXES[uibox_in].get();
 
-	uibox->element_list[element_in]->update();
+	uibox->element_list[element_in]->set();
 	uibox->element_update = true;
 	uibox->creation_update = true; // the whole window updates every time you click
 }
