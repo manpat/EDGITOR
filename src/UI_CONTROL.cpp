@@ -54,8 +54,8 @@ void SYSTEM_UIBOX_UPDATE()
 			|| point_in_rect(MOUSE_PREVX, MOUSE_PREVY, uibox->x, uibox->y, uibox->w, uibox->h))))
 		{
 			UIBOX_IN = _uibox_id;
-			bool _in_grab = (uibox->can_grab && point_in_rect(MOUSE_X, MOUSE_Y, uibox->x, uibox->y, uibox->w - (FONT_CHRW * 4), FONT_CHRH));
-			bool _in_shrink = (uibox->can_shrink && point_in_rect(MOUSE_X, MOUSE_Y, uibox->x + (uibox->w - (FONT_CHRW * 4)), uibox->y, FONT_CHRW * 3, FONT_CHRH));
+			bool _in_grab = (uibox->can_grab && UIBOX_IN == t_UIBOX_IN && point_in_rect(MOUSE_X, MOUSE_Y, uibox->x, uibox->y, uibox->w - (FONT_CHRW * 4), FONT_CHRH));
+			bool _in_shrink = (uibox->can_shrink && UIBOX_IN == t_UIBOX_IN && point_in_rect(MOUSE_X, MOUSE_Y, uibox->x + (uibox->w - (FONT_CHRW * 4)), uibox->y, FONT_CHRW * 3, FONT_CHRH));
 
 			bool _check_grab = (_in_grab && !uibox->in_grab);
 			bool _check_shrink = (_in_shrink && !uibox->in_shrink);
@@ -65,7 +65,7 @@ void SYSTEM_UIBOX_UPDATE()
 				for (uint16_t j = (_check_shrink ? (_uibox_w - 4) : 0); j < (_check_shrink ? (_uibox_w - 1) : (_uibox_w - 4)); j++)
 				{
 					//_charinfo = &uibox->charinfo[j];
-					uibox_set_char(uibox, j, 0, COL_BLACK, COL_ACCENT, 1);
+					uibox_set_char(uibox, j, 0, COL_EMPTY, COL_ACCENT, 1);
 				}
 				if (_in_grab) uibox->in_grab = true;
 				if (_in_shrink) uibox->in_shrink = true;
@@ -80,7 +80,7 @@ void SYSTEM_UIBOX_UPDATE()
 				for (uint16_t j = (_check_shrink ? (_uibox_w - 4) : 0); j < (_check_shrink ? (_uibox_w - 1) : (_uibox_w - 4)); j++)
 				{
 					//_charinfo = &uibox->charinfo[j];
-					uibox_set_char(uibox, j, 0, COL_WHITE, COL_BGUPDATE, 1);
+					uibox_set_char(uibox, j, 0, COL_EMPTY, COL_BGUPDATE, 1);
 				}
 				uibox->in_grab = false;
 				uibox->in_shrink = false;

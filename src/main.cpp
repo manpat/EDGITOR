@@ -20,6 +20,10 @@
 #include "UI_CONTROL.h"
 #include "CANVAS.h"
 #include "BRUSH.h"
+#include <filesystem>
+#include <fstream>
+//#include "SUPERSTACK.h"
+namespace fs = std::filesystem;
 
   //
  //   MAIN LOOP   ///////////////////////////////////////////////// ///////  //////   /////    ////     ///      //       /
@@ -27,10 +31,27 @@
 
 int main(int, char*[])
 {
+
+	/*typedef stack< Index, vector< Index > > SStack;
+	typedef FastStack< Index >              FStack;
+
+	test< SStack >("std::stack");
+	test< FStack >("FastStack");
+
+	cout << "Done";*/
+
 #if __APPLE__
     SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengl");
 #endif
     
+	//fs::create_directories("sandbox/a/b");
+	//std::ofstream("sandbox/file1.txt");
+	//std::ofstream("sandbox/file2.txt");
+	//fs::temp_directory_path();
+	//fs::current_path();
+	/*for (auto& p : fs::recursive_directory_iterator(fs::current_path()))
+		std::cout << p.path() << " : " << ((float)p.file_size())/1000.0f << "KB" << '\n';*/
+
 	// MAIN INIT
 	INIT_SDL();
 	auto WINDOW = INIT_WINDOW();

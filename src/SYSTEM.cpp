@@ -13,10 +13,12 @@
 #include "UNDO.h"
 
 #include <algorithm>
+#include <filesystem>
 
 UIBOX_INFO* UIBOX_TOOLS;
 UIBOX_INFO* UIBOX_COLOR;
 UIBOX_INFO* UIBOX_BRUSH;
+UIBOX_INFO* UIBOX_FILES;
 UIBOX_INFO* UIBOX_CANVAS;
 
   //
@@ -156,18 +158,47 @@ SDL_Renderer* INIT_RENDERER(SDL_Window* WINDOW)
 	// BOXES
 	UIBOX_COLOR = uibox_new(0, 9999, 256, 256, 1, "COLOUR");
 	UIBOX_BRUSH = uibox_new(9999, 9999, 256, 256, 1, "BRUSH");
+	UIBOX_FILES = uibox_new(WINDOW_W / 2, 9999, 768, 512, 1, "FILES");
 
 	for (int i = 0; i < BRUSH_W * BRUSH_W; i++)
 	{
 		uibox_add_element_toggle(UIBOX_BRUSH, 2 + ((i % BRUSH_W) * 2), 1 + (i / BRUSH_W), 2, 1,
 			"::", "\xb0\xb0", (bool*)&(BRUSH_LIST[BRUSH_LIST_POS]->alpha[i]));
 	}
+	std::vector<std::string> files;
+	for (auto& p : std::filesystem::directory_iterator(std::filesystem::current_path()))
+	{
+		std::string _path = p.path().string();
+		std::string _name;
+		for (auto _htap = _path.crbegin(); _htap != _path.crend(); ++_htap)
+		{
+			if (*_htap == '\\') break;
+			_name.insert(_name.begin(), *_htap);
+		}
+
+		if (_name[0] != '.' && p.is_regular_file())
+		{
+			files.push_back(_name);
+		}
+	}
+	
+	uibox_add_element_textbox(UIBOX_FILES, 2, 2, std::filesystem::current_path().string() + "\\");
+	uibox_add_element_textbox(UIBOX_FILES, 2, 3, STR_LINEV);
+	for (auto _file = files.begin(); _file != files.end(); ++_file)
+	{
+		uibox_add_element_textbox(UIBOX_FILES, 2, 4 + (_file - files.begin()), (_file<(files.end()-1) ? STR_LINEVR " " : STR_LINEBL " ") + *_file);
+	}
+	/*uibox_add_element_textbox(UIBOX_FILES, 2, 4, STR_LINEVR " " + files[0]);
+	uibox_add_element_textbox(UIBOX_FILES, 2, 5, STR_LINEVR " " + files[1]);
+	uibox_add_element_textbox(UIBOX_FILES, 2, 5, STR_LINEVR " " + files[2]);
+	uibox_add_element_textbox(UIBOX_FILES, 2, 6, STR_LINEBL " " + files[3]);*/
 
 	UIBOX_TOOLS = uibox_new(0, 0, 128, 512, 0, "TOOLS");
 	
 	uibox_add_element_button(UIBOX_TOOLS, 0, 2, -1, 1, "BRUSH", "> BRUSH", &CURRENT_TOOL, TOOL::BRUSH);
 	uibox_add_element_button(UIBOX_TOOLS, 0, 3, -1, 1, "ERASER", "> ERASER", &CURRENT_TOOL, TOOL::ERASER);
 	uibox_add_element_button(UIBOX_TOOLS, 0, 4, -1, 1, "FILL", "> FILL", &CURRENT_TOOL, TOOL::FILL);
+	uibox_add_element_varbox(UIBOX_TOOLS, 0, 6, "", (uint16_t*)(&(CANVAS_MOUSE_X)), 0);
 
 	uibox_add_element_textbox(UIBOX_COLOR, 2, 2, "R:");
 	uibox_add_element_varbox_u8(UIBOX_COLOR, 5, 2, "", &(BRUSH_COLOR.r), 0);
@@ -439,7 +470,18 @@ void SYSTEM_INPUT_UPDATE()
 		
 		if (!uibox_claimed_input)
 		{
-			set_pixel_line(CANVAS_MOUSE_PREVX, CANVAS_MOUSE_PREVY, CANVAS_MOUSE_X, CANVAS_MOUSE_Y, CURRENT_TOOL ? UNDO_COLOR : BRUSH_COLOR);
+			switch (CURRENT_TOOL)
+			{
+			case TOOL::ERASER:
+			case TOOL::BRUSH:
+				set_pixel_line(CANVAS_MOUSE_PREVX, CANVAS_MOUSE_PREVY, CANVAS_MOUSE_X, CANVAS_MOUSE_Y, CURRENT_TOOL ? UNDO_COLOR : BRUSH_COLOR);
+				break;
+
+			case TOOL::FILL:
+				//if (MOUSEBUTTON_PRESSED_LEFT)
+					floodfill(CANVAS_MOUSE_X, CANVAS_MOUSE_Y, get_pixel_layer(CANVAS_MOUSE_X, CANVAS_MOUSE_Y, CURRENT_LAYER), BRUSH_COLOR);
+				//break;
+			}
 		}
 	}
 	else

@@ -2,6 +2,8 @@
 #include "COLOR.h"
 #include "VARIABLES.h"
 #include "BRUSH.h"
+#include <stack>
+#include "SUPERSTACK.h"
 
 
 // CANVAS
@@ -9,8 +11,8 @@ bool CANVAS_UPDATE = false;
 float CANVAS_ZOOM = 1.0;
 float CANVAS_X = 0.0;
 float CANVAS_Y = 0.0;
-uint16_t CANVAS_W = 512;
-uint16_t CANVAS_H = 256;
+uint16_t CANVAS_W = 4000;
+uint16_t CANVAS_H = 4000;
 int16_t CANVAS_MOUSE_X = 0;
 int16_t CANVAS_MOUSE_Y = 0;
 int16_t CANVAS_MOUSE_CLICKX = 0;
@@ -133,7 +135,17 @@ void set_pixel_line(int16_t x0, int16_t y0, const int16_t x1, const int16_t y1, 
 	LAYER_UPDATE = 2;
 }
 
-bool floodfill_check(const uint16_t x, const uint16_t y, const COLOR col)
+COLOR get_pixel(const int16_t x, const int16_t y)
+{
+	return BRUSH_PIXELS[y * CANVAS_W + x];
+}
+
+COLOR get_pixel_layer(const int16_t x, const int16_t y, uint16_t l)
+{
+	return LAYERS[l].pixels[y * CANVAS_W + x];
+}
+
+/*bool floodfill_check(const uint16_t x, const uint16_t y, const COLOR col)
 {
 	return ((CURRENT_LAYER_PTR[y * CANVAS_W + x] != col) || (BRUSH_PIXELS[y * CANVAS_W + x] != col));
 }
@@ -199,5 +211,69 @@ void floodfill_core(uint16_t x, uint16_t y, const uint16_t width, const uint16_t
 		}
 		lastRowLength = rowLength;
 	} while (lastRowLength != 0 && ++y < height);
+}*/
+
+void floodfill(int x, int y, COLOR oldColor, COLOR newColor)
+{
+	if (oldColor == newColor) return;
+
+	int x1;
+	bool spanAbove, spanBelow;
+
+	faststack<int> check;
+
+	check.reserve(200);
+
+	for (int i = 0; i < 100; ++i) { check.push(i); }
+	for (int i = 0; i < 100; ++i) { check.pop(); }
+
+	// when you uncomment this line, std::stack performance will magically rise about 18%
+	std::vector<int> magicVector(10);
+
+	check.push(y);
+	check.push(x);
+
+	while (check.size() > 0)
+	{
+		x = (check.top());
+		check.pop();
+		y = (check.top());
+		check.pop();
+
+		x1 = x;
+		while (x1 >= 0 && ((get_pixel_layer(x1, y, CURRENT_LAYER) == oldColor) && (get_pixel(x1, y) == oldColor))) x1--;
+		x1++;
+		spanAbove = spanBelow = 0;
+		while (x1 < CANVAS_W && ((get_pixel_layer(x1, y, CURRENT_LAYER) == oldColor) && (get_pixel(x1, y) == oldColor)))
+		{
+			//set_pixel_surface(x1, y, newColor, S);
+			set_pixel(x1, y, newColor);
+			//set_pixel_layer(x1, y, newColor, CURRENT_LAYER);
+			if (!spanAbove && y > 0 && ((get_pixel_layer(x1, (y - 1), CURRENT_LAYER) == oldColor) && (get_pixel(x1, (y - 1)) == oldColor)))
+			{
+				check.push((y - 1));
+				check.push(x1);
+				spanAbove = 1;
+			}
+			else if (spanAbove && y > 0 && ((get_pixel_layer(x1, (y - 1), CURRENT_LAYER) != oldColor) || (get_pixel(x1, (y - 1)) != oldColor)))
+			{
+				spanAbove = 0;
+			}
+			if (!spanBelow && y < CANVAS_H - 1 && ((get_pixel_layer(x1, (y + 1), CURRENT_LAYER) == oldColor) && (get_pixel(x1, (y + 1)) == oldColor)))
+			{
+				check.push((y + 1));
+				check.push(x1);
+				spanBelow = 1;
+			}
+			else if (spanBelow && y < CANVAS_H - 1 && ((get_pixel_layer(x1, (y + 1), CURRENT_LAYER) != oldColor) || (get_pixel(x1, (y + 1)) != oldColor)))
+			{
+				spanBelow = 0;
+			}
+			x1++;
+		}
+	}
+	BRUSH_UPDATE = 1;
+	LAYER_UPDATE = 2;
+	CANVAS_UPDATE = 1;
 }
 

@@ -32,11 +32,15 @@ void set_pixel_brush(int x, int y, COLOR c);
 void set_pixel_layer(const int16_t x, const int16_t y, const COLOR c, uint16_t l);
 void set_pixel_line(int16_t x0, int16_t y0, const int16_t x1, const int16_t y1, COLOR c);
 
-bool floodfill_check(const uint16_t x, const uint16_t y, const COLOR col);
-bool floodfill_check_not(const uint16_t x, const uint16_t y, const COLOR col);
+COLOR get_pixel(const int16_t x, const int16_t y);
+COLOR get_pixel_layer(const int16_t x, const int16_t y, uint16_t l);
 
-void floodfill(uint16_t x, uint16_t y, const uint16_t width, const uint16_t height, const COLOR col_old, const COLOR col_new);
-void floodfill_core(uint16_t x, uint16_t y, const uint16_t width, const uint16_t height, const COLOR col_old, const COLOR col_new);
+
+//bool floodfill_check(const uint16_t x, const uint16_t y, const COLOR col);
+//bool floodfill_check_not(const uint16_t x, const uint16_t y, const COLOR col);
+
+void floodfill(int x, int y, COLOR newColor, COLOR oldColor);
+//void floodfill_core(uint16_t x, uint16_t y, const uint16_t width, const uint16_t height, const COLOR col_old, const COLOR col_new);
 
 
 // CANVAS

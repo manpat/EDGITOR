@@ -26,9 +26,6 @@ struct SDL_Rect;
  //   VARIABLES   ///////////////////////////////////////////////// ///////  //////   /////    ///     //      /
 //
 
-extern bool TEST_BOOL;
-extern bool TEST_BOOL2;
-
 extern SDL_Renderer* RENDERER;
 extern SDL_Texture* FONTMAP;
 
@@ -93,6 +90,13 @@ const uint8_t CHAR_BOXH = 0xcd;//u8"═";
 #define STR_BOXH "\xcd"
 const uint8_t CHAR_BOXV = 0xba;//u8"║";
 #define STR_BOXV "\xba"
+
+const uint8_t CHAR_LINEV = 0xb3;// │
+#define STR_LINEV "\xb3"
+const uint8_t CHAR_LINEVR = 0xc3;// ├
+#define STR_LINEVR "\xc3"
+const uint8_t CHAR_LINEBL = 0xc0;// └
+#define STR_LINEBL "\xc0"
 
 const uint8_t CHAR_ARWU = 0x18;
 #define STR_ARWU "\x18"
