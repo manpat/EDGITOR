@@ -28,8 +28,9 @@ if(APPLE)
 	set(CMAKE_FIND_FRAMEWORK ONLY)
 	find_library(SDL2_LIBRARY SDL2)
 	find_library(SDL2_TTF_LIBRARY SDL2_ttf)
+	find_library(SDL2_IMAGE_LIBRARY SDL2_image)
 
-	target_link_libraries(${PROJECT_NAME} ${SDL2_LIBRARY} ${SDL2_TTF_LIBRARY})
+	target_link_libraries(${PROJECT_NAME} ${SDL2_LIBRARY} ${SDL2_TTF_LIBRARY} ${SDL2_IMAGE_LIBRARY})
 elseif(WIN32)
 	message("RESOURCE_PATH: " ${RESOURCE_PATH})
 
@@ -39,9 +40,11 @@ elseif(WIN32)
 	else()
 		set(SDL_VER "2.0.12")
 		set(SDL_ttf_VER "2.0.15")
+		set(SDL_image_VER "2.0.5")
 		
 		set(SDL2_LIB_PATH "${CMAKE_BINARY_DIR}/packages/sdl2.nuget.${SDL_VER}/build/native/lib/x64/dynamic")
 		set(SDL2_ttf_LIB_PATH "${CMAKE_BINARY_DIR}/packages/sdl2_ttf.nuget.${SDL_ttf_VER}/build/native/lib/x64/dynamic")
+		set(SDL2_image_LIB_PATH "${CMAKE_BINARY_DIR}/packages/sdl2_image.nuget.${SDL_image_VER}/build/native/lib/x64/dynamic")
 		
 		configure_file(packages.config packages.config COPYONLY)
 		
@@ -52,7 +55,8 @@ elseif(WIN32)
 
 		include_directories(${PROJECT_NAME} "${CMAKE_BINARY_DIR}/packages/sdl2.nuget.${SDL_VER}/build/native/include")
 		include_directories(${PROJECT_NAME} "${CMAKE_BINARY_DIR}/packages/sdl2_ttf.nuget.${SDL_ttf_VER}/build/native/include")
-		target_link_libraries(${PROJECT_NAME} "${SDL2_LIB_PATH}/SDL2.lib;${SDL2_LIB_PATH}/SDL2main.lib;${SDL2_ttf_LIB_PATH}/SDL2_ttf.lib")
+		include_directories(${PROJECT_NAME} "${CMAKE_BINARY_DIR}/packages/sdl2_image.nuget.${SDL_image_VER}/build/native/include")
+		target_link_libraries(${PROJECT_NAME} "${SDL2_LIB_PATH}/SDL2.lib;${SDL2_LIB_PATH}/SDL2main.lib;${SDL2_ttf_LIB_PATH}/SDL2_ttf.lib;${SDL2_image_LIB_PATH}/SDL2_image.lib")
 		
 		configure_file("${CMAKE_BINARY_DIR}/packages/sdl2.nuget.redist.${SDL_VER}/build/native/bin/x64/dynamic/SDL2.dll"
 			"${CMAKE_BINARY_DIR}/Debug/SDL2.dll" COPYONLY)
@@ -62,9 +66,20 @@ elseif(WIN32)
 			"${CMAKE_BINARY_DIR}/Debug/libfreetype-6.dll" COPYONLY)
 		configure_file("${CMAKE_BINARY_DIR}/packages/sdl2_ttf.nuget.redist.${SDL_ttf_VER}/build/native/bin/x64/dynamic/zlib1.dll"
 			"${CMAKE_BINARY_DIR}/Debug/zlib1.dll" COPYONLY)
+		configure_file("${CMAKE_BINARY_DIR}/packages/sdl2_image.nuget.redist.${SDL_image_VER}/build/native/bin/x64/dynamic/SDL2_image.dll"
+			"${CMAKE_BINARY_DIR}/Debug/SDL2_image.dll" COPYONLY)
+		configure_file("${CMAKE_BINARY_DIR}/packages/sdl2_image.nuget.redist.${SDL_image_VER}/build/native/bin/x64/dynamic/libjpeg-9.dll"
+			"${CMAKE_BINARY_DIR}/Debug/libjpeg-9.dll" COPYONLY)
+		configure_file("${CMAKE_BINARY_DIR}/packages/sdl2_image.nuget.redist.${SDL_image_VER}/build/native/bin/x64/dynamic/libpng16-16.dll"
+			"${CMAKE_BINARY_DIR}/Debug/libpng16-16.dll" COPYONLY)
+		configure_file("${CMAKE_BINARY_DIR}/packages/sdl2_image.nuget.redist.${SDL_image_VER}/build/native/bin/x64/dynamic/libtiff-5.dll"
+			"${CMAKE_BINARY_DIR}/Debug/libtiff-5.dll" COPYONLY)
+		configure_file("${CMAKE_BINARY_DIR}/packages/sdl2_image.nuget.redist.${SDL_image_VER}/build/native/bin/x64/dynamic/libwebp-7.dll"
+			"${CMAKE_BINARY_DIR}/Debug/libwebp-7.dll" COPYONLY)
 	endif()
 elseif(PKG_CONFIG_FOUND)
 	pkg_check_modules(SDL2 REQUIRED sdl2 SDL2_ttf)
+	pkg_check_modules(SDL2 REQUIRED sdl2 SDL2_image)
 	include_directories(${PROJECT_NAME} ${SDL2_INCLUDE_DIRS})
 	target_link_libraries(${PROJECT_NAME} ${SDL2_LIBRARIES})
 endif()
