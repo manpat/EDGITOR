@@ -36,6 +36,8 @@ extern uint16_t FONT_CHRH;
 extern bool QUIT;
 extern float FPS;
 
+extern std::string CURRENT_PATH;
+
 extern char KEY_TEXT[256];
 extern int* KEY_TEXT_HOLD;
 extern int KEY_TEXT_INT;
@@ -59,6 +61,8 @@ extern bool MOUSEBUTTON_MIDDLE;
 extern bool MOUSEBUTTON_PRESSED_MIDDLE;
 extern bool MOUSEBUTTON_RIGHT;
 extern bool MOUSEBUTTON_PRESSED_RIGHT;
+extern int16_t MOUSEWHEEL_X;
+extern int16_t MOUSEWHEEL_Y;
 
 // TOOL
 enum TOOL {

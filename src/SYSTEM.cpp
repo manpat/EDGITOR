@@ -160,40 +160,15 @@ SDL_Renderer* INIT_RENDERER(SDL_Window* WINDOW)
 	// BOXES
 	UIBOX_COLOR = uibox_new(0, 9999, 256, 256, 1, "COLOUR");
 	UIBOX_BRUSH = uibox_new(9999, 9999, 256, 256, 1, "BRUSH");
-	UIBOX_FILES = uibox_new(WINDOW_W / 2, 9999, 768, 512, 1, "FILES");
+	UIBOX_FILES = uibox_new((WINDOW_W / 2) - 320, (WINDOW_H / 2) - 240, 640, 480, 1, "FILES");
 
 	for (int i = 0; i < BRUSH_W * BRUSH_W; i++)
 	{
 		uibox_add_element_toggle(UIBOX_BRUSH, 2 + ((i % BRUSH_W) * 2), 1 + (i / BRUSH_W), 2, 1,
 			"::", "\xb0\xb0", (bool*)&(BRUSH_LIST[BRUSH_LIST_POS]->alpha[i]));
 	}
-	std::vector<std::string> files;
-	for (auto& p : std::filesystem::directory_iterator(std::filesystem::current_path()))
-	{
-		std::string _path = p.path().string();
-		std::string _name;
-		for (auto _htap = _path.crbegin(); _htap != _path.crend(); ++_htap)
-		{
-			if (*_htap == '\\') break;
-			_name.insert(_name.begin(), *_htap);
-		}
 
-		if (_name[0] != '.' && p.is_regular_file())
-		{
-			files.push_back(_name);
-		}
-	}
-	
-	uibox_add_element_textbox(UIBOX_FILES, 2, 2, std::filesystem::current_path().string() + "\\");
-	uibox_add_element_textbox(UIBOX_FILES, 2, 3, STR_LINEV);
-	for (auto _file = files.begin(); _file != files.end(); ++_file)
-	{
-		uibox_add_element_textbox(UIBOX_FILES, 2, 4 + (_file - files.begin()), (_file<(files.end()-1) ? STR_LINEVR " " : STR_LINEBL " ") + *_file);
-	}
-	/*uibox_add_element_textbox(UIBOX_FILES, 2, 4, STR_LINEVR " " + files[0]);
-	uibox_add_element_textbox(UIBOX_FILES, 2, 5, STR_LINEVR " " + files[1]);
-	uibox_add_element_textbox(UIBOX_FILES, 2, 5, STR_LINEVR " " + files[2]);
-	uibox_add_element_textbox(UIBOX_FILES, 2, 6, STR_LINEBL " " + files[3]);*/
+	uibox_update_files();
 
 	UIBOX_TOOLS = uibox_new(0, 0, 128, 512, 0, "TOOLS");
 	
@@ -214,12 +189,14 @@ SDL_Renderer* INIT_RENDERER(SDL_Window* WINDOW)
 	uibox_add_element_textbox(UIBOX_COLOR, 2, 8, "A:");
 	uibox_add_element_varbox_u8(UIBOX_COLOR, 5, 8, "", &(BRUSH_COLOR.a), 0);
 
-	for (int i = 0; i <= 16; i++)
+	std::string _sp = "-";
+	for (int i = 0; i < 17; i++)
 	{
-		uibox_add_element_button_u8(UIBOX_COLOR, 2 + i, 3, 1, 1, "-", "\xd7", &(BRUSH_COLOR.r), (uint8_t)std::min(i * 16, 255));
-		uibox_add_element_button_u8(UIBOX_COLOR, 2 + i, 5, 1, 1, "-", "\xd7", &(BRUSH_COLOR.g), (uint8_t)std::min(i * 16, 255));
-		uibox_add_element_button_u8(UIBOX_COLOR, 2 + i, 7, 1, 1, "-", "\xd7", &(BRUSH_COLOR.b), (uint8_t)std::min(i * 16, 255));
-		uibox_add_element_button_u8(UIBOX_COLOR, 2 + i, 9, 1, 1, "-", "\xd7", &(BRUSH_COLOR.a), (uint8_t)std::min(i * 16, 255));
+		if (i == 0 || i == 16 || i == 8) _sp = "+"; else _sp = "-";
+		uibox_add_element_button_u8(UIBOX_COLOR, 2 + i, 3, 1, 1, _sp, "\xfe", &(BRUSH_COLOR.r), (uint8_t)std::min(i * 16, 255));
+		uibox_add_element_button_u8(UIBOX_COLOR, 2 + i, 5, 1, 1, _sp, "\xfe", &(BRUSH_COLOR.g), (uint8_t)std::min(i * 16, 255));
+		uibox_add_element_button_u8(UIBOX_COLOR, 2 + i, 7, 1, 1, _sp, "\xfe", &(BRUSH_COLOR.b), (uint8_t)std::min(i * 16, 255));
+		uibox_add_element_button_u8(UIBOX_COLOR, 2 + i, 9, 1, 1, _sp, "\xfe", &(BRUSH_COLOR.a), (uint8_t)std::min(i * 16, 255));
 	}
 
 	SDL_SetCursor(create_system_cursor());
@@ -280,6 +257,8 @@ void SYSTEM_INPUT_UPDATE()
 	MOUSEBUTTON_PRESSED_LEFT = false;
 	MOUSEBUTTON_PRESSED_MIDDLE = false;
 	MOUSEBUTTON_PRESSED_RIGHT = false;
+	MOUSEWHEEL_X = 0;
+	MOUSEWHEEL_Y = 0;
 
 	MOUSE_PREVX = MOUSE_X;
 	MOUSE_PREVY = MOUSE_Y;
@@ -361,17 +340,21 @@ void SYSTEM_INPUT_UPDATE()
 				break;
 
 			case SDL_MOUSEWHEEL: {
-				float t_CANVAS_ZOOM = CANVAS_ZOOM;
-				CANVAS_ZOOM = clamp(CANVAS_ZOOM + ((float)event.wheel.y * (CANVAS_ZOOM * 0.5f) * 0.5f), 1.0f, 50.0f);
-				CANVAS_ZOOM = clamp(CANVAS_ZOOM + (float)event.wheel.y, 1.0f, 100.0f);
-				CANVAS_ZOOM = floor(CANVAS_ZOOM);
-				if (t_CANVAS_ZOOM != CANVAS_ZOOM)
-				{
-					float _mx = (((float)MOUSE_X - (float)CANVAS_X) / (float)t_CANVAS_ZOOM), _my = (((float)MOUSE_Y - (float)CANVAS_Y) / (float)t_CANVAS_ZOOM);
+				MOUSEWHEEL_X = (int16_t)event.wheel.x;
+				MOUSEWHEEL_Y = (int16_t)event.wheel.y;
+				if (UIBOX_IN < 0) {
+					float t_CANVAS_ZOOM = CANVAS_ZOOM;
+					CANVAS_ZOOM = clamp(CANVAS_ZOOM + ((float)MOUSEWHEEL_Y * (CANVAS_ZOOM * 0.5f) * 0.5f), 1.0f, 50.0f);
+					CANVAS_ZOOM = clamp(CANVAS_ZOOM + (float)MOUSEWHEEL_Y, 1.0f, 100.0f);
+					CANVAS_ZOOM = floor(CANVAS_ZOOM);
+					if (t_CANVAS_ZOOM != CANVAS_ZOOM)
+					{
+						float _mx = (((float)MOUSE_X - (float)CANVAS_X) / (float)t_CANVAS_ZOOM), _my = (((float)MOUSE_Y - (float)CANVAS_Y) / (float)t_CANVAS_ZOOM);
 
-					float _nmx = (((float)MOUSE_X - (float)CANVAS_X) / (float)CANVAS_ZOOM), _nmy = (((float)MOUSE_Y - (float)CANVAS_Y) / (float)CANVAS_ZOOM);
-					CANVAS_X += (float)((_nmx - _mx) * CANVAS_ZOOM);
-					CANVAS_Y += (float)((_nmy - _my) * CANVAS_ZOOM);
+						float _nmx = (((float)MOUSE_X - (float)CANVAS_X) / (float)CANVAS_ZOOM), _nmy = (((float)MOUSE_Y - (float)CANVAS_Y) / (float)CANVAS_ZOOM);
+						CANVAS_X += (float)((_nmx - _mx) * CANVAS_ZOOM);
+						CANVAS_Y += (float)((_nmy - _my) * CANVAS_ZOOM);
+					}
 				}
 				break;
 			}

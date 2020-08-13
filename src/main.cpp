@@ -69,7 +69,6 @@ int main(int, char*[])
             SDL_ClearError();
         }
         
-        
 		const Uint64 fps_start = SDL_GetPerformanceCounter(); // fps counter
 
 		BRUSH_UPDATE = 0; // reset brush update
@@ -184,6 +183,7 @@ int main(int, char*[])
         FPS = reach_tween(FPS, 1 / (float)fps_seconds, 100.0);
         if (fps_rate <= 0) {
             std::cout << " FPS: " << (int)floor(FPS) << "       " << '\r';
+            //std::cout << MOUSEWHEEL_X << " " << MOUSEWHEEL_Y << "       " << '\r';
             fps_rate = 60 * 4;
         } else fps_rate--;
 	}

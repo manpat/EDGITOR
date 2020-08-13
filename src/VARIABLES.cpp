@@ -1,5 +1,6 @@
 #include "VARIABLES.h"
 #include "COLOR.h"
+#include <filesystem>
 
 // manpat: really not a fan of this - this should be cmakes job :(
 #ifdef __APPLE__
@@ -26,6 +27,8 @@ uint16_t FONT_CHRH;
 bool QUIT = false;
 float FPS = 0;
 
+std::string CURRENT_PATH = (std::filesystem::current_path().string());
+
 char KEY_TEXT[256];
 int* KEY_TEXT_HOLD = nullptr;
 int KEY_TEXT_INT;
@@ -49,6 +52,8 @@ bool MOUSEBUTTON_MIDDLE = false;
 bool MOUSEBUTTON_PRESSED_MIDDLE = false;
 bool MOUSEBUTTON_RIGHT = false;
 bool MOUSEBUTTON_PRESSED_RIGHT = false;
+int16_t MOUSEWHEEL_X = 0;
+int16_t MOUSEWHEEL_Y = 0;
 
 // TOOL
 uint16_t CURRENT_TOOL = TOOL::BRUSH;
