@@ -65,15 +65,29 @@ extern bool MOUSEBUTTON_PRESSED_RIGHT;
 extern int16_t MOUSEWHEEL_X;
 extern int16_t MOUSEWHEEL_Y;
 
+extern bool KEYBOARD_CTRL;
+extern bool KEYBOARD_PRESSED_CTRL;
+extern bool KEYBOARD_SHIFT;
+extern bool KEYBOARD_PRESSED_SHIFT;
+extern bool KEYBOARD_ALT;
+extern bool KEYBOARD_PRESSED_ALT;
+
+extern bool KEYBOARD_SPACE;
+extern bool KEYBOARD_PRESSED_SPACE;
+extern bool KEYBOARD_ESC;
+extern bool KEYBOARD_PRESSED_ESC;
+
 // TOOL
 enum TOOL {
 	BRUSH,
 	ERASER,
 	PICKER,
 	FILL,
+	CANVAS,
 };
 
 extern uint16_t CURRENT_TOOL;
+extern uint16_t TEMP_CURRENT_TOOL;
 
 
 SDL_Cursor* create_system_cursor();

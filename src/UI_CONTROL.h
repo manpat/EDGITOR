@@ -29,6 +29,7 @@ extern int16_t UIBOX_PANY;
 
 extern int16_t ELEMENT_IN;
 extern int16_t ELEMENT_CLICKED_IN;
+extern bool ELEMENT_TOGGLE_BOOL;
 
 extern std::vector<std::unique_ptr<UIBOX_INFO>> UIBOXES;
 
@@ -390,6 +391,9 @@ struct UIBOX_ELEMENT_BUTTON_FILES_GOTO : public UIBOX_ELEMENT_MAIN {
 	};
 	void set()
 	{
+		MOUSEBUTTON_LEFT = 0;
+		MOUSEBUTTON_PRESSED_LEFT = 0;
+
 		if (*input_var != button_var)
 		{
 			std::cout << *input_var << std::endl;
@@ -440,6 +444,9 @@ struct UIBOX_ELEMENT_BUTTON_FILES_LOAD : public UIBOX_ELEMENT_MAIN {
 	};
 	void set()
 	{
+		MOUSEBUTTON_LEFT = 0;
+		MOUSEBUTTON_PRESSED_LEFT = 0;
+
 		SDL_Surface* _surfload = IMG_Load(path.c_str());
 		SDL_Surface* _surf = SDL_ConvertSurfaceFormat(_surfload, SDL_PIXELFORMAT_RGBA32, 0);
 
@@ -491,7 +498,8 @@ struct UIBOX_ELEMENT_TOGGLE : public UIBOX_ELEMENT_MAIN {
 	};
 	void set()
 	{
-		*input_var = !(*input_var);
+		if (MOUSEBUTTON_LEFT && MOUSEBUTTON_PRESSED_LEFT) ELEMENT_TOGGLE_BOOL = !(*input_var);
+		*input_var = ELEMENT_TOGGLE_BOOL;// !(*input_var);
 	}
 	bool is_sel()
 	{

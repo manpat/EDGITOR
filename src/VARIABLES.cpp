@@ -56,8 +56,21 @@ bool MOUSEBUTTON_PRESSED_RIGHT = false;
 int16_t MOUSEWHEEL_X = 0;
 int16_t MOUSEWHEEL_Y = 0;
 
+bool KEYBOARD_CTRL = false;
+bool KEYBOARD_PRESSED_CTRL = false;
+bool KEYBOARD_SHIFT = false;
+bool KEYBOARD_PRESSED_SHIFT = false;
+bool KEYBOARD_ALT = false;
+bool KEYBOARD_PRESSED_ALT = false;
+
+bool KEYBOARD_SPACE = false;
+bool KEYBOARD_PRESSED_SPACE = false;
+bool KEYBOARD_ESC = false;
+bool KEYBOARD_PRESSED_ESC = false;
+
 // TOOL
 uint16_t CURRENT_TOOL = TOOL::BRUSH;
+uint16_t TEMP_CURRENT_TOOL = CURRENT_TOOL;
 
 
 

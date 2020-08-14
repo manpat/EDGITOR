@@ -39,6 +39,7 @@ int16_t UIBOX_PANY = 0;
 
 int16_t ELEMENT_IN = -1;
 int16_t ELEMENT_CLICKED_IN = -1;
+bool ELEMENT_TOGGLE_BOOL = 0;
 
 std::vector<std::unique_ptr<UIBOX_INFO>> UIBOXES;
 
@@ -300,12 +301,17 @@ bool SYSTEM_UIBOX_HANDLE_MOUSE_DOWN(bool is_click, int mouse_x, int mouse_y)
 		return false;
 	}
 
-	if (is_click)
+	if (is_click && ELEMENT_IN >= 0)
 	{
-		if (ELEMENT_IN >= 0)
+		uibox_update_element(UIBOX_IN, ELEMENT_IN);
+	}
+
+	if (MOUSEBUTTON_PRESSED_LEFT)
+	{
+		/*if (ELEMENT_IN >= 0)
 		{
 			uibox_update_element(UIBOX_IN, ELEMENT_IN);
-		}
+		}*/
 
 		move_to_end(UIBOXES, UIBOX_IN); // move window to end
 		std::rotate(UIBOXES.rbegin(), UIBOXES.rbegin() + 1, UIBOXES.rend()); // then rotate once more to move to start

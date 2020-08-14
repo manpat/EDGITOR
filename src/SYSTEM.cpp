@@ -158,6 +158,7 @@ SDL_Renderer* INIT_RENDERER(SDL_Window* WINDOW)
 	uibox_add_element_button(UIBOX_TOOLS, 0, 3, -1, 1, "ERASER", "> ERASER", &CURRENT_TOOL, TOOL::ERASER);
 	uibox_add_element_button(UIBOX_TOOLS, 0, 4, -1, 1, "PICKER", "> PICKER", &CURRENT_TOOL, TOOL::PICKER);
 	uibox_add_element_button(UIBOX_TOOLS, 0, 5, -1, 1, "FILL", "> FILL", &CURRENT_TOOL, TOOL::FILL);
+	uibox_add_element_button(UIBOX_TOOLS, 0, 5, -1, 1, "CANVAS", "> CANVAS", &CURRENT_TOOL, TOOL::CANVAS);
 	uibox_add_element_textbox(UIBOX_TOOLS, 2, 7, "MOUSE:");
 	uibox_add_element_textbox(UIBOX_TOOLS, 2, 8, "X ");
 	uibox_add_element_varbox(UIBOX_TOOLS, 4, 8, "", (uint16_t*)(&CANVAS_MOUSE_X), 0);
@@ -254,9 +255,18 @@ void SYSTEM_SHUTDOWN(SDL_Window* WINDOW)
 
 void SYSTEM_INPUT_UPDATE()
 {
+	bool _tKEYBOARD_ALT = KEYBOARD_ALT;
+	bool _tKEYBOARD_SPACE = KEYBOARD_SPACE;
+
 	MOUSEBUTTON_PRESSED_LEFT = false;
 	MOUSEBUTTON_PRESSED_MIDDLE = false;
 	MOUSEBUTTON_PRESSED_RIGHT = false;
+	KEYBOARD_PRESSED_ALT = false;
+	KEYBOARD_PRESSED_CTRL = false;
+	KEYBOARD_PRESSED_SHIFT = false;
+	KEYBOARD_PRESSED_SPACE = false;
+	KEYBOARD_PRESSED_ESC = false;
+
 	MOUSEWHEEL_X = 0;
 	MOUSEWHEEL_Y = 0;
 
@@ -367,6 +377,33 @@ void SYSTEM_INPUT_UPDATE()
 
 			case SDL_KEYDOWN: {
 				const auto keysym = event.key.keysym;
+
+				if (keysym.sym == SDLK_LALT)
+				{
+					KEYBOARD_ALT = 1;
+					KEYBOARD_PRESSED_ALT = 1;
+				} else
+				if (keysym.sym == SDLK_LCTRL)
+				{
+					KEYBOARD_CTRL = 1;
+					KEYBOARD_PRESSED_CTRL = 1;
+				} else
+				if (keysym.sym == SDLK_LSHIFT)
+				{
+					KEYBOARD_SHIFT = 1;
+					KEYBOARD_PRESSED_SHIFT = 1;
+				} else
+				if (keysym.sym == SDLK_SPACE)
+				{
+					KEYBOARD_SPACE = 1;
+					KEYBOARD_PRESSED_SPACE = 1;
+				} else
+				if (keysym.sym == SDLK_ESCAPE)
+				{
+					KEYBOARD_ESC = 1;
+					KEYBOARD_PRESSED_ESC = 1;
+				}
+
 				if (keysym.mod & KMOD_CTRL) {
 					switch (keysym.sym) {
 					case SDLK_z: {
@@ -427,22 +464,27 @@ void SYSTEM_INPUT_UPDATE()
 				else if (keysym.sym == SDLK_b)
 				{
 					CURRENT_TOOL = TOOL::BRUSH;
-					UIBOX_TOOLS->element_update = 1;
+					//UIBOX_TOOLS->element_update = 1;
 				}
 				else if (keysym.sym == SDLK_e)
 				{
 					CURRENT_TOOL = TOOL::ERASER;
-					UIBOX_TOOLS->element_update = 1;
+					//UIBOX_TOOLS->element_update = 1;
 				}
 				else if (keysym.sym == SDLK_p)
 				{
 					CURRENT_TOOL = TOOL::PICKER;
-					UIBOX_TOOLS->element_update = 1;
+					//UIBOX_TOOLS->element_update = 1;
 				}
 				else if (keysym.sym == SDLK_f)
 				{
 					CURRENT_TOOL = TOOL::FILL;
-					UIBOX_TOOLS->element_update = 1;
+					//UIBOX_TOOLS->element_update = 1;
+				}
+				else if (keysym.sym == SDLK_c)
+				{
+					CURRENT_TOOL = TOOL::CANVAS;
+					//UIBOX_TOOLS->element_update = 1;
 				}
 				/*
 				int16_t tools = uibox_get_uibox_by_title("TOOLS");
@@ -459,7 +501,62 @@ void SYSTEM_INPUT_UPDATE()
 
 				break;
 			}
+
+			case SDL_KEYUP: {
+				const auto keysym = event.key.keysym;
+
+				if (keysym.sym == SDLK_LALT)
+				{
+					KEYBOARD_ALT = 0;
+					KEYBOARD_PRESSED_ALT = 0;
+				}
+				else
+				if (keysym.sym == SDLK_LCTRL)
+				{
+					KEYBOARD_CTRL = 0;
+					KEYBOARD_PRESSED_CTRL = 0;
+				}
+				else
+				if (keysym.sym == SDLK_LSHIFT)
+				{
+					KEYBOARD_SHIFT = 0;
+					KEYBOARD_PRESSED_SHIFT = 0;
+				} else
+				if (keysym.sym == SDLK_SPACE)
+				{
+					KEYBOARD_SPACE = 0;
+					KEYBOARD_PRESSED_SPACE = 0;
+				} else
+				if (keysym.sym == SDLK_ESCAPE)
+				{
+					KEYBOARD_ESC = 0;
+					KEYBOARD_PRESSED_ESC = 0;
+				}
+
+				break;
+			}
 		}
+	}
+
+	if (!_tKEYBOARD_ALT && KEYBOARD_ALT && KEYBOARD_PRESSED_ALT && CURRENT_TOOL == TOOL::BRUSH)
+	{
+		CURRENT_TOOL = TOOL::PICKER;
+	}
+	else
+	if (_tKEYBOARD_ALT && !KEYBOARD_ALT && !KEYBOARD_PRESSED_ALT && CURRENT_TOOL == TOOL::PICKER)
+	{
+		CURRENT_TOOL = TOOL::BRUSH;
+	}
+
+	if (!_tKEYBOARD_SPACE && KEYBOARD_SPACE && KEYBOARD_PRESSED_SPACE && (CURRENT_TOOL == TOOL::BRUSH || CURRENT_TOOL == TOOL::ERASER || CURRENT_TOOL == TOOL::PICKER || CURRENT_TOOL == TOOL::FILL))
+	{
+		TEMP_CURRENT_TOOL = CURRENT_TOOL;
+		CURRENT_TOOL = TOOL::CANVAS;
+	}
+	else
+	if (_tKEYBOARD_SPACE && !KEYBOARD_SPACE && !KEYBOARD_PRESSED_SPACE && CURRENT_TOOL == TOOL::CANVAS)
+	{
+		CURRENT_TOOL = TEMP_CURRENT_TOOL;
 	}
 
 	if (MOUSEBUTTON_MIDDLE)
@@ -475,7 +572,7 @@ void SYSTEM_INPUT_UPDATE()
 
 	if (MOUSEBUTTON_LEFT)
 	{
-		const bool uibox_claimed_input = SYSTEM_UIBOX_HANDLE_MOUSE_DOWN(MOUSEBUTTON_PRESSED_LEFT, MOUSE_X, MOUSE_Y);
+		const bool uibox_claimed_input = SYSTEM_UIBOX_HANDLE_MOUSE_DOWN(MOUSEBUTTON_LEFT, MOUSE_X, MOUSE_Y);
 		
 		if (!uibox_claimed_input)
 		{
@@ -483,16 +580,29 @@ void SYSTEM_INPUT_UPDATE()
 			{
 			case TOOL::ERASER:
 			case TOOL::BRUSH:
+				//if (KEYBOARD_ALT) BRUSH_COLOR = get_pixel_layer(CANVAS_MOUSE_X, CANVAS_MOUSE_Y, CURRENT_LAYER); else
 				set_pixel_line(CANVAS_MOUSE_PREVX, CANVAS_MOUSE_PREVY, CANVAS_MOUSE_X, CANVAS_MOUSE_Y, CURRENT_TOOL ? UNDO_COLOR : BRUSH_COLOR);
 				break;
 
 			case TOOL::PICKER:
 				BRUSH_COLOR = get_pixel_layer(CANVAS_MOUSE_X, CANVAS_MOUSE_Y, CURRENT_LAYER);
+				//CURRENT_TOOL = TOOL::BRUSH;
+				//UIBOX_TOOLS->element_update = 1;
 				break;
 
 			case TOOL::FILL:
 				//if (MOUSEBUTTON_PRESSED_LEFT)
 					floodfill(CANVAS_MOUSE_X, CANVAS_MOUSE_Y, get_pixel_layer(CANVAS_MOUSE_X, CANVAS_MOUSE_Y, CURRENT_LAYER), BRUSH_COLOR);
+				break;
+
+			case TOOL::CANVAS:
+				if (MOUSEBUTTON_PRESSED_LEFT)
+				{
+					CANVAS_PANX = (float)((float)MOUSE_X - CANVAS_X);
+					CANVAS_PANY = (float)((float)MOUSE_Y - CANVAS_Y);
+				}
+				CANVAS_X = (float)((float)MOUSE_X - CANVAS_PANX);
+				CANVAS_Y = (float)((float)MOUSE_Y - CANVAS_PANY);
 				break;
 			}
 		}
