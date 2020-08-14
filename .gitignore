@@ -41,6 +41,8 @@ EDGITOR
 *.sln
 *.vcxproj*
 *.cmake
+*.sublime-project
+*.sublime-workspace
 CMakeCache.txt
 Makefile
 CMakeFiles/
