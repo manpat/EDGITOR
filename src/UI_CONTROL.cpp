@@ -432,7 +432,7 @@ void uibox_update_files()
 			std::string _tstr = PATH_FILES[_file].first.substr(PATH_FILES[_file].first.size() - 3, 3);
 			if (_tstr == "png" || _tstr == "PNG")
 			{
-				uibox_add_element_button_files_load(UIBOX_FILES, 2, (4 + _file) - UIBOX_FILES->scroll_y, 0, 1, (_file < (PATH_FILES.size() - 1) ? "\xc5 " : "\xc1 ") + PATH_FILES[_file].first, CURRENT_PATH + PATH_FILES[_file].first);
+				uibox_add_element_button_files_load(UIBOX_FILES, 2, (4 + _file) - UIBOX_FILES->scroll_y, 0, 1, (_file < (PATH_FILES.size() - 1) ? "\xc5 " : "\xc1 ") + PATH_FILES[_file].first, CURRENT_PATH + PATH_FILES[_file].first, PATH_FILES[_file].first);
 			}
 			else
 				uibox_add_element_textbox(UIBOX_FILES, 2, (4 + _file) - UIBOX_FILES->scroll_y, "\xb3 " + PATH_FILES[_file].first);
@@ -541,6 +541,18 @@ void uibox_add_element_varbox_u8(UIBOX_INFO* uibox, uint16_t x, uint16_t y, std:
 	uibox->element_list.push_back(std::move(_element));
 }
 
+void uibox_add_element_varbox_f(UIBOX_INFO* uibox, uint16_t x, uint16_t y, std::string text, float* input_var, float var)
+{
+	std::shared_ptr<UIBOX_ELEMENT_VARBOX_F> _element = std::make_shared<UIBOX_ELEMENT_VARBOX_F>();
+	_element->x = x;
+	_element->y = y;
+	_element->text = text;
+	_element->input_var = input_var;
+	_element->var = var;
+	_element->create(uibox);
+	uibox->element_list.push_back(std::move(_element));
+}
+
 void uibox_add_element_button(UIBOX_INFO* uibox, uint16_t x, uint16_t y, int16_t w, int16_t h, std::string text, std::string sel_text, uint16_t* input_var, uint16_t button_var)
 {
 	std::shared_ptr<UIBOX_ELEMENT_BUTTON> _element = std::make_shared<UIBOX_ELEMENT_BUTTON>();
@@ -594,7 +606,7 @@ void uibox_add_element_button_files_goto(UIBOX_INFO* uibox, uint16_t x, uint16_t
 	uibox->element_list.push_back(std::move(_element));
 }
 
-void uibox_add_element_button_files_load(UIBOX_INFO* uibox, uint16_t x, uint16_t y, int16_t w, int16_t h, std::string text, std::string path)
+void uibox_add_element_button_files_load(UIBOX_INFO* uibox, uint16_t x, uint16_t y, int16_t w, int16_t h, std::string text, std::string path, std::string file)
 {
 	if (x + text.size() > (uibox->chr_w - 1)) return;
 	std::shared_ptr<UIBOX_ELEMENT_BUTTON_FILES_LOAD> _element = std::make_shared<UIBOX_ELEMENT_BUTTON_FILES_LOAD>();
@@ -603,6 +615,7 @@ void uibox_add_element_button_files_load(UIBOX_INFO* uibox, uint16_t x, uint16_t
 	_element->text = text;
 	_element->sel_text = text;
 	_element->path = path;
+	_element->file = file;
 	_element->create(uibox);
 	uibox->element_list.push_back(std::move(_element));
 }

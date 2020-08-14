@@ -156,8 +156,26 @@ SDL_Renderer* INIT_RENDERER(SDL_Window* WINDOW)
 	
 	uibox_add_element_button(UIBOX_TOOLS, 0, 2, -1, 1, "BRUSH", "> BRUSH", &CURRENT_TOOL, TOOL::BRUSH);
 	uibox_add_element_button(UIBOX_TOOLS, 0, 3, -1, 1, "ERASER", "> ERASER", &CURRENT_TOOL, TOOL::ERASER);
-	uibox_add_element_button(UIBOX_TOOLS, 0, 4, -1, 1, "FILL", "> FILL", &CURRENT_TOOL, TOOL::FILL);
-	uibox_add_element_varbox(UIBOX_TOOLS, 0, 6, "", (uint16_t*)(&(CANVAS_MOUSE_X)), 0);
+	uibox_add_element_button(UIBOX_TOOLS, 0, 4, -1, 1, "PICKER", "> PICKER", &CURRENT_TOOL, TOOL::PICKER);
+	uibox_add_element_button(UIBOX_TOOLS, 0, 5, -1, 1, "FILL", "> FILL", &CURRENT_TOOL, TOOL::FILL);
+	uibox_add_element_textbox(UIBOX_TOOLS, 2, 7, "MOUSE:");
+	uibox_add_element_textbox(UIBOX_TOOLS, 2, 8, "X ");
+	uibox_add_element_varbox(UIBOX_TOOLS, 4, 8, "", (uint16_t*)(&CANVAS_MOUSE_X), 0);
+	uibox_add_element_textbox(UIBOX_TOOLS, 2, 9, "Y ");
+	uibox_add_element_varbox(UIBOX_TOOLS, 4, 9, "", (uint16_t*)(&CANVAS_MOUSE_Y), 0);
+	uibox_add_element_textbox(UIBOX_TOOLS, 2, 10, "CELL X ");
+	uibox_add_element_varbox(UIBOX_TOOLS, 9, 10, "", (uint16_t*)(&CANVAS_MOUSE_CELL_X), 0);
+	uibox_add_element_textbox(UIBOX_TOOLS, 2, 11, "CELL Y ");
+	uibox_add_element_varbox(UIBOX_TOOLS, 9, 11, "", (uint16_t*)(&CANVAS_MOUSE_CELL_Y), 0);
+	uibox_add_element_textbox(UIBOX_TOOLS, 2, 13, "CANVAS:");
+	uibox_add_element_textbox(UIBOX_TOOLS, 2, 14, "W ");
+	uibox_add_element_varbox(UIBOX_TOOLS, 4, 14, "", (uint16_t*)(&CANVAS_W), 0);
+	uibox_add_element_textbox(UIBOX_TOOLS, 2, 15, "H ");
+	uibox_add_element_varbox(UIBOX_TOOLS, 4, 15, "", (uint16_t*)(&CANVAS_H), 0);
+	uibox_add_element_textbox(UIBOX_TOOLS, 2, 16, "ZOOM ");
+	//uibox_add_element_varbox(UIBOX_TOOLS, 7, 16, "", (uint16_t*)(&CANVAS_ZOOM), 0);
+	uibox_add_element_varbox_f(UIBOX_TOOLS, 7, 16, "", &CANVAS_ZOOM, 0);
+	
 
 	uibox_add_element_textbox(UIBOX_COLOR, 2, 2, "R:");
 	uibox_add_element_varbox_u8(UIBOX_COLOR, 5, 2, "", &(BRUSH_COLOR.r), 0);
@@ -326,9 +344,15 @@ void SYSTEM_INPUT_UPDATE()
 				MOUSEWHEEL_Y = (int16_t)event.wheel.y;
 				if (UIBOX_IN < 0) {
 					float t_CANVAS_ZOOM = CANVAS_ZOOM;
-					CANVAS_ZOOM = clamp(CANVAS_ZOOM + ((float)MOUSEWHEEL_Y * (CANVAS_ZOOM * 0.5f) * 0.5f), 1.0f, 50.0f);
-					CANVAS_ZOOM = clamp(CANVAS_ZOOM + (float)MOUSEWHEEL_Y, 1.0f, 100.0f);
-					CANVAS_ZOOM = floor(CANVAS_ZOOM);
+					//CANVAS_ZOOM = clamp(CANVAS_ZOOM + ((float)MOUSEWHEEL_Y * (CANVAS_ZOOM * 0.5f) * 0.5f), 1.0f, 50.0f);
+					CANVAS_ZOOM = clamp(CANVAS_ZOOM + (((float)abs(MOUSEWHEEL_Y) +
+						truncf(CANVAS_ZOOM / 10.0f) +
+						truncf(CANVAS_ZOOM / 20.0f) +
+						truncf(CANVAS_ZOOM / 30.0f) +
+						truncf(CANVAS_ZOOM / 40.0f) +
+						truncf(CANVAS_ZOOM / 50.0f)) * sign((float)MOUSEWHEEL_Y)), 1.0f, 100.0f);
+
+					//CANVAS_ZOOM = floorf((floorf((CANVAS_ZOOM * 0.5f) + 0.5f) * 2.0f) - 0.5f);
 					if (t_CANVAS_ZOOM != CANVAS_ZOOM)
 					{
 						float _mx = (((float)MOUSE_X - (float)CANVAS_X) / (float)t_CANVAS_ZOOM), _my = (((float)MOUSE_Y - (float)CANVAS_Y) / (float)t_CANVAS_ZOOM);
@@ -355,6 +379,19 @@ void SYSTEM_INPUT_UPDATE()
 						break;
 					}
 					case SDLK_y: function_undo(-1);  break;
+					case SDLK_s: {
+						SDL_Surface* _tsurf = SDL_CreateRGBSurfaceWithFormat(0, CANVAS_W, CANVAS_H, 32, SDL_PIXELFORMAT_RGBA32);
+
+						const LAYER_INFO& layer = LAYERS[0];
+						for (int i = 0; i < CANVAS_W * CANVAS_H; i++)
+						{
+							((COLOR*)_tsurf->pixels)[i] = layer.pixels[i]; // THERE ISN'T MULTI-LAYER BLENDING YET
+						}
+						std::string _tpath = (CURRENT_PATH + CURRENT_FILE);
+						IMG_SavePNG(_tsurf, _tpath.c_str());
+						SDL_FreeSurface(_tsurf);
+						break;
+					}
 					default: break;
 					}
 				}
@@ -395,6 +432,11 @@ void SYSTEM_INPUT_UPDATE()
 				else if (keysym.sym == SDLK_e)
 				{
 					CURRENT_TOOL = TOOL::ERASER;
+					UIBOX_TOOLS->element_update = 1;
+				}
+				else if (keysym.sym == SDLK_p)
+				{
+					CURRENT_TOOL = TOOL::PICKER;
 					UIBOX_TOOLS->element_update = 1;
 				}
 				else if (keysym.sym == SDLK_f)
@@ -444,10 +486,14 @@ void SYSTEM_INPUT_UPDATE()
 				set_pixel_line(CANVAS_MOUSE_PREVX, CANVAS_MOUSE_PREVY, CANVAS_MOUSE_X, CANVAS_MOUSE_Y, CURRENT_TOOL ? UNDO_COLOR : BRUSH_COLOR);
 				break;
 
+			case TOOL::PICKER:
+				BRUSH_COLOR = get_pixel_layer(CANVAS_MOUSE_X, CANVAS_MOUSE_Y, CURRENT_LAYER);
+				break;
+
 			case TOOL::FILL:
 				//if (MOUSEBUTTON_PRESSED_LEFT)
 					floodfill(CANVAS_MOUSE_X, CANVAS_MOUSE_Y, get_pixel_layer(CANVAS_MOUSE_X, CANVAS_MOUSE_Y, CURRENT_LAYER), BRUSH_COLOR);
-				//break;
+				break;
 			}
 		}
 	}

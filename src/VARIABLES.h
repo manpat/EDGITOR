@@ -37,6 +37,7 @@ extern bool QUIT;
 extern float FPS;
 
 extern std::string CURRENT_PATH;
+extern std::string CURRENT_FILE;
 
 extern char KEY_TEXT[256];
 extern int* KEY_TEXT_HOLD;
@@ -68,6 +69,7 @@ extern int16_t MOUSEWHEEL_Y;
 enum TOOL {
 	BRUSH,
 	ERASER,
+	PICKER,
 	FILL,
 };
 

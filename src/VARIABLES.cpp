@@ -28,6 +28,7 @@ bool QUIT = false;
 float FPS = 0;
 
 std::string CURRENT_PATH = (std::filesystem::current_path().string());
+std::string CURRENT_FILE = "";
 
 char KEY_TEXT[256];
 int* KEY_TEXT_HOLD = nullptr;

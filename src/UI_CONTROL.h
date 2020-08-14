@@ -152,11 +152,12 @@ UIBOX_INFO* uibox_new(uint16_t _x, uint16_t _y, uint16_t _w, uint16_t _h, bool c
 void uibox_add_element_textbox(UIBOX_INFO* uibox, uint16_t x, uint16_t y, std::string text);
 void uibox_add_element_varbox(UIBOX_INFO* uibox, uint16_t x, uint16_t y, std::string text, uint16_t* input_var, uint16_t var);
 void uibox_add_element_varbox_u8(UIBOX_INFO* uibox, uint16_t x, uint16_t y, std::string text, uint8_t* input_var, uint8_t var);
+void uibox_add_element_varbox_f(UIBOX_INFO* uibox, uint16_t x, uint16_t y, std::string text, float* input_var, float var);
 void uibox_add_element_button(UIBOX_INFO* uibox, uint16_t x, uint16_t y, int16_t w, int16_t h, std::string text, std::string sel_text, uint16_t* input_var, uint16_t button_var);
 void uibox_add_element_button_u8(UIBOX_INFO* uibox, uint16_t x, uint16_t y, int16_t w, int16_t h, std::string text, std::string sel_text, uint8_t* input_var, uint8_t button_var);
 void uibox_add_element_button_string(UIBOX_INFO* uibox, uint16_t x, uint16_t y, int16_t w, int16_t h, std::string text, std::string sel_text, std::string* input_var, std::string button_var);
 void uibox_add_element_button_files_goto(UIBOX_INFO* uibox, uint16_t x, uint16_t y, int16_t w, int16_t h, std::string text, std::string* input_var, std::string button_var);
-void uibox_add_element_button_files_load(UIBOX_INFO* uibox, uint16_t x, uint16_t y, int16_t w, int16_t h, std::string text, std::string path);
+void uibox_add_element_button_files_load(UIBOX_INFO* uibox, uint16_t x, uint16_t y, int16_t w, int16_t h, std::string text, std::string path, std::string file);
 void uibox_add_element_toggle(UIBOX_INFO* uibox, uint16_t x, uint16_t y, int16_t w, int16_t h, std::string text, std::string sel_text, bool* input_var);
 void uibox_add_element_slider(UIBOX_INFO* uibox, uint16_t x, uint16_t y, std::string text, uint16_t* input_var);
 void uibox_add_element_textinput(UIBOX_INFO* uibox, uint16_t x, uint16_t y, std::string text);
@@ -247,7 +248,7 @@ struct UIBOX_ELEMENT_VARBOX : public UIBOX_ELEMENT_MAIN {
 		sprintf(buffer, "%i", *input_var);
 		std::string var_text(buffer);
 
-		for (uint16_t ix = 0; ix < 3; ix++)
+		for (uint16_t ix = 0; ix < 5; ix++)
 		{
 			uibox_set_char(uibox, x + ix + (y * uibox->chr_w),
 				ix < var_text.size() ? (var_text.c_str())[ix] : 32,
@@ -277,7 +278,37 @@ struct UIBOX_ELEMENT_VARBOX_U8 : public UIBOX_ELEMENT_MAIN {
 		sprintf(buffer, "%i", *input_var);
 		std::string var_text(buffer);
 		
-		for (uint16_t ix = 0; ix < 3; ix++)
+		for (uint16_t ix = 0; ix < 5; ix++)
+		{
+			uibox_set_char(uibox, x + ix + (y * uibox->chr_w),
+				ix < var_text.size() ? (var_text.c_str())[ix] : 32,
+				COL_EMPTY,
+				COL_BGUPDATE,
+				1);
+		}
+	}
+	bool is_sel()
+	{
+		bool _c = *input_var != var;
+		if (_c) var = *input_var;
+		return _c;
+	}
+};
+
+struct UIBOX_ELEMENT_VARBOX_F : public UIBOX_ELEMENT_MAIN {
+	float* input_var = nullptr;
+	float var = 0;
+	void create(UIBOX_INFO* uibox)
+	{
+		uibox_set_string(uibox, text, x, y, COL_WHITE, uibox->element_update);
+	}
+	void update(UIBOX_INFO* uibox)
+	{
+		char buffer[256];
+		sprintf(buffer, "%f", *input_var);
+		std::string var_text(buffer);
+
+		for (uint16_t ix = 0; ix < 5; ix++)
 		{
 			uibox_set_char(uibox, x + ix + (y * uibox->chr_w),
 				ix < var_text.size() ? (var_text.c_str())[ix] : 32,
@@ -400,6 +431,7 @@ struct UIBOX_ELEMENT_BUTTON_FILES_GOTO : public UIBOX_ELEMENT_MAIN {
 };
 
 struct UIBOX_ELEMENT_BUTTON_FILES_LOAD : public UIBOX_ELEMENT_MAIN {
+	std::string file;
 	std::string path;
 
 	void create(UIBOX_INFO* uibox)
@@ -445,6 +477,8 @@ struct UIBOX_ELEMENT_BUTTON_FILES_LOAD : public UIBOX_ELEMENT_MAIN {
 		CELL_W_ANIM = CELL_W;
 		CELL_H_ANIM = CELL_H;
 		CANVAS_ZOOM = 1;
+
+		CURRENT_FILE = file;
 	}
 };
 

@@ -28,6 +28,10 @@ inline const int16_t sign(const int16_t x) {
 	return (x > 0) - (x < 0);
 }
 
+inline const float sign(const float x) {
+	return (x > 0) - (x < 0);
+}
+
 inline const bool point_in_rect(const int16_t px, const int16_t py, const int16_t rx, const int16_t ry, const int16_t rw, const int16_t rh)
 {
 	return (px >= rx && py >= ry && px < (rx + rw) && py < (ry + rh));
