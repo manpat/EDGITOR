@@ -10,6 +10,7 @@
 #include "VARIABLES.h"
 #include "FUNCTIONS.h"
 #include "SYSTEM.h"
+#include "SUPERSTACK.h"
 #include <iostream>
 #include <algorithm>
 
@@ -41,6 +42,35 @@ int16_t ELEMENT_CLICKED_IN = -1;
 
 std::vector<std::unique_ptr<UIBOX_INFO>> UIBOXES;
 
+std::vector<std::pair<std::string, bool>> PATH_FILES;
+
+void UPDATE_PATH_FILES()
+{
+	int _folders = 0;
+	PATH_FILES.clear();
+	for (auto& p : std::filesystem::directory_iterator(std::filesystem::current_path()))
+	{
+		std::string _path = p.path().string();
+		std::string _name;
+		for (auto _htap = _path.crbegin(); _htap != _path.crend(); ++_htap)
+		{
+			if (*_htap == '\\') break;
+			_name.insert(_name.begin(), *_htap);
+		}
+
+		if (_name[0] != '.')
+		{
+			if (p.is_directory())
+			{
+				PATH_FILES.insert(PATH_FILES.begin() + _folders, std::pair{ _name,1 });
+				_folders += 1;
+			}
+			else
+				PATH_FILES.push_back(std::pair{ _name,0 });
+		}
+	}
+}
+
 
 void SYSTEM_UIBOX_UPDATE()
 {
@@ -61,8 +91,11 @@ void SYSTEM_UIBOX_UPDATE()
 
 		uint16_t _uibox_w = uibox->chr_w;
 
+		// MOUSE IS IN WINDOW
+		bool _in_uibox = (point_in_rect(MOUSE_X, MOUSE_Y, uibox->x, uibox->y, uibox->w, uibox->h) || point_in_rect(MOUSE_PREVX, MOUSE_PREVY, uibox->x, uibox->y, uibox->w, uibox->h));
+
 		// SCROLLING ELEMENTS
-		if (uibox->can_scroll && uibox->scroll_element_list.size() > 0 && (MOUSEWHEEL_X != 0 || MOUSEWHEEL_Y != 0))
+		if (_in_uibox && uibox->can_scroll && uibox->scroll_element_list.size() > 0 && (MOUSEWHEEL_X != 0 || MOUSEWHEEL_Y != 0))
 		{
 			/*int16_t _tscrollx = uibox->scroll_x;
 			uibox->scroll_x = clamp(uibox->scroll_x + MOUSEWHEEL_X, 0, uibox->scoll_maxx);
@@ -76,7 +109,6 @@ void SYSTEM_UIBOX_UPDATE()
 
 			if (_tscrolly != uibox->scroll_y)
 			{
-				//std::cout << uibox->scroll_y << "    " << uibox->scroll_element_list_size - 1 << "          " << std::endl;
 				int _tx, _ty;
 				std::string _tchar;
 				for (int si = 0; si < uibox->scroll_element_list.size(); si++)
@@ -98,9 +130,6 @@ void SYSTEM_UIBOX_UPDATE()
 				uibox_update_files();
 			}
 		}
-
-		// MOUSE IS IN WINDOW
-		bool _in_uibox = (point_in_rect(MOUSE_X, MOUSE_Y, uibox->x, uibox->y, uibox->w, uibox->h) || point_in_rect(MOUSE_PREVX, MOUSE_PREVY, uibox->x, uibox->y, uibox->w, uibox->h));
 
 		if (UIBOX_CLICKED_IN == -1 || UIBOX_CLICKED_IN == t_UIBOX_IN)
 		{
@@ -213,8 +242,8 @@ void SYSTEM_UIBOX_UPDATE()
 					{
 						do
 						{
-							j = uibox->update_stack.front();
-							uibox->update_stack.pop_front();
+							j = uibox->update_stack.top();
+							uibox->update_stack.pop();
 							_charinfo = &uibox->charinfo[j];
 						} while (uibox->update_stack.size() > 1 && _charinfo->chr == 32 && !_charinfo->bg_col.a); // skip Space chars, but not if it has to draw a bg
 
@@ -343,85 +372,72 @@ void SYSTEM_UIBOX_HANDLE_MOUSE_UP()
 
 void uibox_update_files()
 {
-	UIBOX_FILES->element_list.clear();
+	if (!UIBOX_FILES->scroll_element_list.empty() && !UIBOX_FILES->element_list.empty())
+	{
+		int _offset = 0;
+		for (int i = 0; i < UIBOX_FILES->scroll_element_list.size(); i++)
+		{
+			UIBOX_FILES->element_list.erase(UIBOX_FILES->element_list.begin() + UIBOX_FILES->scroll_element_list[i - _offset]);
+			++_offset;
+		}
+	}
 
 	UIBOX_FILES->can_scroll = true;
 	UIBOX_FILES->scroll_element_list.clear();
-
-	if (CURRENT_PATH.back() != '\\')
+	if (UIBOX_FILES->scroll_element_list_create)
 	{
-		CURRENT_PATH += '\\';
-		std::filesystem::current_path(CURRENT_PATH);
-	}
-	std::string _currentpath = CURRENT_PATH;
-	const char* _charpath = (_currentpath.c_str());
-	std::string _name;
-	int _tt = 0;
-	for (auto _htap = _currentpath.crbegin(); _htap != _currentpath.crend(); ++_htap)
-	{
-		if (*_htap == '\\' && _tt)
+		UIBOX_FILES->element_list.clear();
+		if (CURRENT_PATH.back() != '\\')
 		{
-			uibox_add_element_button_files_goto(UIBOX_FILES, (_currentpath.size() - _tt) + 2, 2, 0, 1, _name, &CURRENT_PATH, CURRENT_PATH.substr(0, (_currentpath.size() - _tt) + _name.size()));
-			_name.clear();
+			CURRENT_PATH += '\\';
+			std::filesystem::current_path(CURRENT_PATH);
 		}
-		_tt++;
-		_name.insert(_name.begin(), *_htap);
-	}
-
-	uibox_add_element_button_files_goto(UIBOX_FILES, (_currentpath.size() - _tt) + 2, 2, 0, 1, _name, &CURRENT_PATH, CURRENT_PATH.substr(0, (_currentpath.size() - _tt) + _name.size()));
-
-	uibox_add_element_textbox(UIBOX_FILES, 2, 3, STR_LINEV);
-
-	std::vector<std::pair<std::string,bool>> files;
-	int _folders = 0;
-	for (auto& p : std::filesystem::directory_iterator(std::filesystem::current_path()))
-	{
-		std::string _path = p.path().string();
+		std::string _currentpath = CURRENT_PATH;
+		const char* _charpath = (_currentpath.c_str());
 		std::string _name;
-		for (auto _htap = _path.crbegin(); _htap != _path.crend(); ++_htap)
+		int _tt = 0;
+		for (auto _htap = _currentpath.crbegin(); _htap != _currentpath.crend(); ++_htap)
 		{
-			if (*_htap == '\\') break;
+			if (*_htap == '\\' && _tt)
+			{
+				uibox_add_element_button_files_goto(UIBOX_FILES, (_currentpath.size() - _tt) + 2, 2, 0, 1, _name, &CURRENT_PATH, CURRENT_PATH.substr(0, (_currentpath.size() - _tt) + _name.size()));
+				_name.clear();
+			}
+			_tt++;
 			_name.insert(_name.begin(), *_htap);
 		}
 
-		if (_name[0] != '.')
-		{
-			if (p.is_directory())
-			{
-				files.insert(files.begin() + _folders, std::pair{ _name,1 });
-				_folders += 1;
-			}
-			else
-				files.push_back(std::pair{ _name,0 });
-		}
+		uibox_add_element_button_files_goto(UIBOX_FILES, (_currentpath.size() - _tt) + 2, 2, 0, 1, _name, &CURRENT_PATH, CURRENT_PATH.substr(0, (_currentpath.size() - _tt) + _name.size()));
+		uibox_add_element_textbox(UIBOX_FILES, 2, 3, STR_LINEV);
+		UPDATE_PATH_FILES();
 	}
-	for (int _file = 0; _file < files.size(); ++_file)
-	{
-		if ((_file - UIBOX_FILES->scroll_y) >= 0 && ((4 + _file) - UIBOX_FILES->scroll_y) < (UIBOX_FILES->chr_h - 1))
-		{
-			if (files[_file].first.size() > (UIBOX_FILES->chr_w - 6)) // shorten name if it's wider than uibox
-			{
-				files[_file].first.erase(UIBOX_FILES->chr_w - 10);
-				files[_file].first += "...";
-			}
 
-			if (files[_file].second)
+	for (int _file = 0; _file < PATH_FILES.size(); ++_file)
+	{
+		if (UIBOX_FILES->scroll_element_list_create) UIBOX_FILES->scroll_element_list_size += 1;
+		if (!((_file - UIBOX_FILES->scroll_y) >= 0 && ((4 + _file) - UIBOX_FILES->scroll_y) < (UIBOX_FILES->chr_h - 1))) continue;
+
+		if (PATH_FILES[_file].first.size() > (UIBOX_FILES->chr_w - 6)) // shorten name if it's wider than uibox
+		{
+			PATH_FILES[_file].first.erase(UIBOX_FILES->chr_w - 10);
+			PATH_FILES[_file].first += "...";
+		}
+
+		if (PATH_FILES[_file].second)
+		{
+			uibox_add_element_button_files_goto(UIBOX_FILES, 2, (4 + _file) - UIBOX_FILES->scroll_y, 0, 1, (_file < (PATH_FILES.size() - 1) ? STR_LINEBL STR_ARWR " " : STR_LINEBL STR_ARWR " ") + PATH_FILES[_file].first + "\\", &CURRENT_PATH, CURRENT_PATH + PATH_FILES[_file].first);
+		}
+		else
+		{
+			std::string _tstr = PATH_FILES[_file].first.substr(PATH_FILES[_file].first.size() - 3, 3);
+			if (_tstr == "png" || _tstr == "PNG")
 			{
-				uibox_add_element_button_files_goto(UIBOX_FILES, 2, (4 + _file) - UIBOX_FILES->scroll_y, 0, 1, (_file < (files.size() - 1) ? STR_LINEBL STR_ARWR " " : STR_LINEBL STR_ARWR " ") + files[_file].first + "\\", &CURRENT_PATH, CURRENT_PATH + files[_file].first);
+				uibox_add_element_button_files_load(UIBOX_FILES, 2, (4 + _file) - UIBOX_FILES->scroll_y, 0, 1, (_file < (PATH_FILES.size() - 1) ? "\xc5 " : "\xc1 ") + PATH_FILES[_file].first, CURRENT_PATH + PATH_FILES[_file].first);
 			}
 			else
-			{
-				//std::cout << files[_file].first.substr(files[_file].first.size() - 3, 3) << std::endl;
-				if (files[_file].first.substr(files[_file].first.size() - 3, 3) == "png")
-				{
-					uibox_add_element_button_files_goto(UIBOX_FILES, 2, (4 + _file) - UIBOX_FILES->scroll_y, 0, 1, (_file < (files.size() - 1) ? "\xc5 " : "\xc1 ") + files[_file].first, &CURRENT_PATH, CURRENT_PATH + files[_file].first);
-				}
-				else
-					uibox_add_element_textbox(UIBOX_FILES, 2, (4 + _file) - UIBOX_FILES->scroll_y, "\xb3 " + files[_file].first);
-			}
-			UIBOX_FILES->scroll_element_list.push_back(UIBOX_FILES->element_list.size() - 1);
+				uibox_add_element_textbox(UIBOX_FILES, 2, (4 + _file) - UIBOX_FILES->scroll_y, "\xb3 " + PATH_FILES[_file].first);
 		}
-		if (UIBOX_FILES->scroll_element_list_create) UIBOX_FILES->scroll_element_list_size += 1;
+		UIBOX_FILES->scroll_element_list.push_back(UIBOX_FILES->element_list.size() - 1);
 	}
 	UIBOX_FILES->scroll_element_list_create = 0;
 }
@@ -439,6 +455,7 @@ UIBOX_INFO* uibox_new(uint16_t _x, uint16_t _y, uint16_t _w, uint16_t _h, bool c
 	// GET CHARS THAT FIT WINDOW
 	new_uibox->chr_w = (int)floor(((float)_w / (float)FONT_CHRW) + 0.5f);
 	new_uibox->chr_h = (int)floor(((float)_h / (float)FONT_CHRH) + 0.5f);
+	new_uibox->update_stack.reserve(new_uibox->chr_w * new_uibox->chr_h);
 
 	// MAKE WINDOW THE NEW ROUNDED CHAR SIZE
 	new_uibox->w = (new_uibox->chr_w * FONT_CHRW);
@@ -461,7 +478,7 @@ void uibox_set_char(UIBOX_INFO* ui, uint16_t char_pos, uint8_t _chr, COLOR _col,
 	if (_bg_col != COL_EMPTY) ci->bg_col = _bg_col;
 	if (!update && !ci->update) return;
 	ci->update = true;
-	ui->update_stack.insert(ui->update_stack.begin() + (rand() % (ui->update_stack.size() + 1)), char_pos);
+	ui->update_stack.push(char_pos);// .insert(ui->update_stack.begin() + (rand() % (ui->update_stack.size() + 1)), char_pos);
 	ui->update = true;
 }
 
@@ -573,6 +590,19 @@ void uibox_add_element_button_files_goto(UIBOX_INFO* uibox, uint16_t x, uint16_t
 	_element->sel_text = text;
 	_element->input_var = input_var;
 	_element->button_var = button_var;
+	_element->create(uibox);
+	uibox->element_list.push_back(std::move(_element));
+}
+
+void uibox_add_element_button_files_load(UIBOX_INFO* uibox, uint16_t x, uint16_t y, int16_t w, int16_t h, std::string text, std::string path)
+{
+	if (x + text.size() > (uibox->chr_w - 1)) return;
+	std::shared_ptr<UIBOX_ELEMENT_BUTTON_FILES_LOAD> _element = std::make_shared<UIBOX_ELEMENT_BUTTON_FILES_LOAD>();
+	uibox_element_setxywh(uibox, _element, x, y, w, h, text, "");
+
+	_element->text = text;
+	_element->sel_text = text;
+	_element->path = path;
 	_element->create(uibox);
 	uibox->element_list.push_back(std::move(_element));
 }

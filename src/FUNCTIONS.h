@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <cmath>
+//#include <SDL_surface.h>
 
   //
  //   FUNCTIONS   ///////////////////////////////////////////////// ///////  //////   /////    ////     ///      //       /
@@ -124,6 +125,41 @@ inline const COLOR blend_colors(const COLOR src_color, const COLOR dst_color) {
 		uint8_t(new_cola * 255.0f),
 	};
 }
+
+/*COLOR surface_get_pixel(SDL_Surface* surface, int pos)
+{
+	int bpp = surface->format->BytesPerPixel;
+	/* Here p is the address to the pixel we want to retrieve *
+	Uint8* p = (Uint8*)surface->pixels + pos * bpp;
+
+	return COLOR{ p[0], p[1], p[2], p[3] };
+
+	/*
+	switch (bpp)
+	{
+	case 1:
+		return *p;
+		break;
+
+	case 2:
+		return *(Uint16*)p;
+		break;
+
+	case 3:
+		if (SDL_BYTEORDER == SDL_BIG_ENDIAN)
+			return p[0] << 16 | p[1] << 8 | p[2];
+		else
+			return p[0] | p[1] << 8 | p[2] << 16;
+		break;
+
+	case 4:
+		return *(Uint32*)p;
+		break;
+
+	default:
+		return 0;       /* shouldn't happen, but avoids warnings *
+	}*
+}*/
 
 template <typename T>
 inline void move_to_end(std::vector<T>& v, size_t index)

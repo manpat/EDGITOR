@@ -91,25 +91,7 @@ SDL_Renderer* INIT_RENDERER(SDL_Window* WINDOW)
 	FONT_CHRW = (uint16_t)_tfw;
 	FONT_CHRH = (uint16_t)_tfh;
 
-	// BACKGROUND GRID TEXTURE
-	BG_GRID_W = ((int16_t)ceil((double)CANVAS_W / (double)CELL_W));
-	BG_GRID_H = ((int16_t)ceil((double)CANVAS_H / (double)CELL_H));
-	auto BG_GRID_PIXELS = std::make_unique<COLOR[]>(BG_GRID_W * BG_GRID_H);
-	BG_GRID_TEXTURE = SDL_CreateTexture(RENDERER, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STATIC, BG_GRID_W, BG_GRID_H);
-	for (int i = 0; i < BG_GRID_H; i++)
-	{
-		for (int j = 0; j < BG_GRID_W; j++)
-		{
-			const COLOR cell_colors[] {
-				COLOR {0x0c, 0x0c, 0x0c, 0xff},
-				COLOR {0x10, 0x10, 0x10, 0xff},
-			};
-
-			BG_GRID_PIXELS[i * BG_GRID_W + j] = cell_colors[(i+j) % 2];
-		}
-	}
-	SDL_SetTextureBlendMode(BG_GRID_TEXTURE, SDL_BLENDMODE_NONE);
-	SDL_UpdateTexture(BG_GRID_TEXTURE, nullptr, BG_GRID_PIXELS.get(), BG_GRID_W * sizeof(COLOR));
+	
 
 	// BRUSH
 

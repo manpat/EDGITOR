@@ -22,6 +22,7 @@
 #include "UI_CONTROL.h"
 #include "CANVAS.h"
 #include "BRUSH.h"
+#include "UNDO.h"
 #include <filesystem>
 #include <fstream>
 //#include "SUPERSTACK.h"
@@ -63,6 +64,7 @@ int main(int, char*[])
 
 	while (!QUIT) // MAIN LOOP
 	{
+
         const char *error = SDL_GetError();
         if (*error) {
             std::cout << "SDL Error: " << error << std::endl;
@@ -115,6 +117,38 @@ int main(int, char*[])
 		CELL_H_ANIM = (reach_tween(CELL_H_ANIM, floor((float)CELL_H * CANVAS_ZOOM), anim_speed));
 		
 		SDL_FRect F_RECT {};
+
+		if (CANVAS_PREVW != CANVAS_W || CANVAS_PREVH != CANVAS_H)
+		{
+			UNDO_POS = 0;
+			UNDO_LIST.clear();
+			CANVAS_PITCH = (sizeof(COLOR) * CANVAS_W);
+			BRUSH_PIXELS = nullptr;
+			BRUSH_PIXELS = std::make_unique<COLOR[]>(CANVAS_W * CANVAS_H);
+			SDL_DestroyTexture(BRUSH_TEXTURE);
+			BRUSH_TEXTURE = SDL_CreateTexture(RENDERER, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, CANVAS_W, CANVAS_H);
+
+			if (CANVAS_PREVW && CANVAS_PREVH) SDL_DestroyTexture(BG_GRID_TEXTURE);
+			// BACKGROUND GRID TEXTURE
+			BG_GRID_W = ((int16_t)ceil((double)CANVAS_W / (double)CELL_W));
+			BG_GRID_H = ((int16_t)ceil((double)CANVAS_H / (double)CELL_H));
+			auto BG_GRID_PIXELS = std::make_unique<COLOR[]>(BG_GRID_W * BG_GRID_H);
+			BG_GRID_TEXTURE = SDL_CreateTexture(RENDERER, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STATIC, BG_GRID_W, BG_GRID_H);
+			for (int i = 0; i < BG_GRID_H; i++)
+			{
+				for (int j = 0; j < BG_GRID_W; j++)
+				{
+					const COLOR cell_colors[]{
+						COLOR {0x0c, 0x0c, 0x0c, 0xff},
+						COLOR {0x10, 0x10, 0x10, 0xff},
+					};
+
+					BG_GRID_PIXELS[i * BG_GRID_W + j] = cell_colors[(i + j) % 2];
+				}
+			}
+			SDL_SetTextureBlendMode(BG_GRID_TEXTURE, SDL_BLENDMODE_NONE);
+			SDL_UpdateTexture(BG_GRID_TEXTURE, nullptr, BG_GRID_PIXELS.get(), BG_GRID_W * sizeof(COLOR));
+		}
 
 		// transparent background grid
 		float bg_w = (ceil(CANVAS_W_ANIM / CELL_W_ANIM) * CELL_W_ANIM);
@@ -169,6 +203,9 @@ int main(int, char*[])
 		
 		SDL_SetRenderDrawColor(RENDERER, 0, 0, 0, 0);
 		SDL_RenderPresent(RENDERER);
+
+		CANVAS_PREVW = CANVAS_W;
+		CANVAS_PREVH = CANVAS_H;
         
 #if __APPLE__
         SDL_Delay(1);

@@ -13,8 +13,12 @@
 #include "BRUSH.h"
 #include "SYSTEM.h"
 #include "VARIABLES.h"
+#include "SDL_image.h"
+#include "SUPERSTACK.h"
 
 struct SDL_Texture;
+void UPDATE_PATH_FILES();
+extern std::vector<std::pair<std::string, bool>> PATH_FILES;
 constexpr uint16_t UIBOX_UPDATE_TICK = 0; // 0=go as fast as possible, >0=frame delay between character updates
 
 extern int16_t UIBOX_IN;
@@ -74,7 +78,7 @@ struct UIBOX_INFO {
 
 	std::vector<std::shared_ptr<UIBOX_ELEMENT_MAIN>> element_list;
 
-	std::deque<uint16_t> update_stack;
+	faststack<uint16_t> update_stack;
 	std::string title;
 	SDL_Texture* texture;
 	uint16_t tex_w;
@@ -109,7 +113,7 @@ struct UIBOX_INFO {
 			_chr.chr = ' ';
 			//_chr.bg_col = COL_BGUPDATE;
 			this->charinfo.push_back(std::move(_chr));
-			this->update_stack.insert(this->update_stack.begin() + (rand() % (this->update_stack.size() + 1)), j);
+			this->update_stack.push(j);// .insert(this->update_stack.begin() + (rand() % (this->update_stack.size() + 1)), j);
 		}
 
 		// ADD BORDER
@@ -152,6 +156,7 @@ void uibox_add_element_button(UIBOX_INFO* uibox, uint16_t x, uint16_t y, int16_t
 void uibox_add_element_button_u8(UIBOX_INFO* uibox, uint16_t x, uint16_t y, int16_t w, int16_t h, std::string text, std::string sel_text, uint8_t* input_var, uint8_t button_var);
 void uibox_add_element_button_string(UIBOX_INFO* uibox, uint16_t x, uint16_t y, int16_t w, int16_t h, std::string text, std::string sel_text, std::string* input_var, std::string button_var);
 void uibox_add_element_button_files_goto(UIBOX_INFO* uibox, uint16_t x, uint16_t y, int16_t w, int16_t h, std::string text, std::string* input_var, std::string button_var);
+void uibox_add_element_button_files_load(UIBOX_INFO* uibox, uint16_t x, uint16_t y, int16_t w, int16_t h, std::string text, std::string path);
 void uibox_add_element_toggle(UIBOX_INFO* uibox, uint16_t x, uint16_t y, int16_t w, int16_t h, std::string text, std::string sel_text, bool* input_var);
 void uibox_add_element_slider(UIBOX_INFO* uibox, uint16_t x, uint16_t y, std::string text, uint16_t* input_var);
 void uibox_add_element_textinput(UIBOX_INFO* uibox, uint16_t x, uint16_t y, std::string text);
@@ -386,10 +391,60 @@ struct UIBOX_ELEMENT_BUTTON_FILES_GOTO : public UIBOX_ELEMENT_MAIN {
 
 			uibox_update_files();
 		}
+		UPDATE_PATH_FILES();
 	}
 	bool is_sel()
 	{
 		return *input_var == button_var;
+	}
+};
+
+struct UIBOX_ELEMENT_BUTTON_FILES_LOAD : public UIBOX_ELEMENT_MAIN {
+	std::string path;
+
+	void create(UIBOX_INFO* uibox)
+	{
+		uibox_set_string(uibox, text, x, y, COL_WHITE, uibox->element_update);
+	};
+	void set()
+	{
+		SDL_Surface* _surfload = IMG_Load(path.c_str());
+		SDL_Surface* _surf = SDL_ConvertSurfaceFormat(_surfload, SDL_PIXELFORMAT_RGBA32, 0);
+
+		CANVAS_W = _surf->w;
+		CANVAS_H = _surf->h;
+		SDL_FreeSurface(_surfload);
+		while (LAYERS.size() > 1)
+		{
+			LAYERS.erase(LAYERS.end());
+		}
+		CURRENT_LAYER = 0;
+		CURRENT_LAYER_PTR = LAYERS[CURRENT_LAYER].pixels.get();
+
+		LAYERS[CURRENT_LAYER].texture = SDL_CreateTextureFromSurface(RENDERER, _surf);
+		LAYERS[CURRENT_LAYER].pixels = nullptr;
+		LAYERS[CURRENT_LAYER].pixels = std::make_unique<COLOR[]>(CANVAS_W * CANVAS_H);
+
+		COLOR* layer_data = (LAYERS[CURRENT_LAYER].pixels.get());
+		for (int i = 0; i < CANVAS_W * CANVAS_H; i++)
+		{
+
+			int bpp = _surf->format->BytesPerPixel;
+			uint8_t* p = (uint8_t*)_surf->pixels + i * bpp;
+
+			layer_data[i] = COLOR{ p[0], p[1], p[2], p[3] };
+		}
+
+		// CENTER CANVAS
+		CANVAS_X = (WINDOW_W * 0.5f) - (CANVAS_W * 0.5f);
+		CANVAS_Y = (WINDOW_H * 0.5f) - (CANVAS_H * 0.5f);
+		CANVAS_X_ANIM = CANVAS_X;
+		CANVAS_Y_ANIM = CANVAS_Y;
+		CANVAS_W_ANIM = CANVAS_W;
+		CANVAS_H_ANIM = CANVAS_H;
+		CELL_W_ANIM = CELL_W;
+		CELL_H_ANIM = CELL_H;
+		CANVAS_ZOOM = 1;
 	}
 };
 

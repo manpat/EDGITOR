@@ -50,6 +50,8 @@ extern float CANVAS_X;
 extern float CANVAS_Y;
 extern uint16_t CANVAS_W;
 extern uint16_t CANVAS_H;
+extern uint16_t CANVAS_PREVW;
+extern uint16_t CANVAS_PREVH;
 extern int16_t CANVAS_MOUSE_X;
 extern int16_t CANVAS_MOUSE_Y;
 extern int16_t CANVAS_MOUSE_CLICKX;
