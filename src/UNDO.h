@@ -7,7 +7,7 @@
 
 struct SDL_Rect;
 
-struct UNDO_DATA
+struct UNDO_ENTRY
 {
 	uint16_t layer = 0;
 	uint16_t x = 0;
@@ -17,7 +17,7 @@ struct UNDO_DATA
 	std::vector<COLOR> undo_pixels;
 	std::vector<COLOR> redo_pixels;
 
-	UNDO_DATA(uint16_t _w, uint16_t _h)
+	UNDO_ENTRY(uint16_t _w, uint16_t _h)
 		: w {_w}
 		, h {_h}
 		, undo_pixels(_w*_h)
@@ -34,12 +34,14 @@ struct UNDO_DATA
 };
 
 
-void function_undo(int n);
+void push_undo_entry(UNDO_ENTRY);
+void clear_undo_stack();
+
+// NOTE: these names are way too short but I couldn't think of anything better
+void undo();
+void redo();
 
 
-
-extern std::vector<UNDO_DATA> UNDO_LIST;
-extern uint16_t UNDO_POS;
 extern uint16_t UNDO_UPDATE;
 extern uint16_t UNDO_UPDATE_LAYER;
 extern SDL_Rect UNDO_UPDATE_RECT;

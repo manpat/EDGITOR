@@ -107,14 +107,8 @@ int main(int, char*[])
 
 		if (CANVAS_PREVW != CANVAS_W || CANVAS_PREVH != CANVAS_H)
 		{
-			UNDO_POS = 0;
-			UNDO_LIST.clear();
-			UNDO_DATA _u1{ 0, 0 };
-			_u1.x = 0;
-			_u1.y = 0;
-			_u1.w = 0;
-			_u1.h = 0;
-			UNDO_LIST.push_back(std::move(_u1));
+			clear_undo_stack();
+
 			CANVAS_PITCH = (sizeof(COLOR) * CANVAS_W);
 			BRUSH_PIXELS = nullptr;
 			BRUSH_PIXELS = std::make_unique<COLOR[]>(CANVAS_W * CANVAS_H);

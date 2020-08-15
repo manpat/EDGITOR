@@ -76,14 +76,6 @@ SDL_Renderer* INIT_RENDERER(SDL_Window* WINDOW)
 
 	// DEFAULT LAYER
 	layer_new(RENDERER, 0, 0, 255, SDL_BLENDMODE_BLEND);
-	
-	// SET DEFAULT CANVAS UNDO
-	UNDO_DATA _u1 {0, 0};
-	_u1.x = 0;
-	_u1.y = 0;
-	_u1.w = 0;
-	_u1.h = 0;
-	UNDO_LIST.push_back(std::move(_u1));
 
 	// TERMINAL FONT
 	std::string FONT_path	= std::string(RESOURCES_PATH) + "/FONT.ttf";
@@ -426,13 +418,13 @@ void SYSTEM_INPUT_UPDATE()
 					case SDLK_z: {
 						if (keysym.mod & KMOD_SHIFT) {
 							// because it's the superior 'redo' shortcut :)
-							function_undo(-1);
+							redo();
 						} else {
-							function_undo(1);
+							undo();
 						}
 						break;
 					}
-					case SDLK_y: function_undo(-1);  break;
+					case SDLK_y: redo();  break;
 					case SDLK_s: {
 						SDL_Surface* _tsurf = SDL_CreateRGBSurfaceWithFormat(0, CANVAS_W, CANVAS_H, 32, SDL_PIXELFORMAT_RGBA32);
 
@@ -699,7 +691,7 @@ void SYSTEM_LAYER_UPDATE()
 {
 	if ((LAYER_UPDATE == 1) && !LAYER_UPDATE_REGION.is_empty())
 	{
-		UNDO_DATA _u{ (uint16_t)LAYER_UPDATE_REGION.width(), (uint16_t)LAYER_UPDATE_REGION.height() };
+		UNDO_ENTRY _u{ (uint16_t)LAYER_UPDATE_REGION.width(), (uint16_t)LAYER_UPDATE_REGION.height() };
 		_u.x = (uint16_t)LAYER_UPDATE_REGION.left;
 		_u.y = (uint16_t)LAYER_UPDATE_REGION.top;
 		_u.layer = CURRENT_LAYER;
@@ -747,14 +739,8 @@ void SYSTEM_LAYER_UPDATE()
 		SDL_SetTextureBlendMode(BRUSH_TEXTURE, SDL_BLENDMODE_NONE);
 		SDL_UpdateTexture(BRUSH_TEXTURE, &dirty_rect, &BRUSH_PIXELS[dirty_region_start_index], CANVAS_PITCH);
 
-		// if we're back a few steps in the undo reel, we clear all the above undo steps.
-		while (UNDO_POS > 0) {
-			UNDO_LIST.pop_back();
-			UNDO_POS--;
-		};
-
 		// add the new undo
-		UNDO_LIST.push_back(std::move(_u));
+		push_undo_entry(std::move(_u));
 
 		// update the layer we drew to
 		SDL_UpdateTexture(LAYERS[CURRENT_LAYER].texture, &dirty_rect, &layer_data[dirty_region_start_index], CANVAS_PITCH);
