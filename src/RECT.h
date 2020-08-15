@@ -23,8 +23,12 @@ struct [[nodiscard]] RECT {
 	int width() const;
 	int height() const;
 
-	// expand to encompass passed RECT
-	RECT include(RECT) const;
+	// expand to encompass the passed RECT or point
+	RECT include_region(RECT) const;
+	RECT include_point(int x, int y) const;
+
+	// shrink to fit within boundary
+	RECT clip_to(RECT boundary) const;
 
 	SDL_Rect to_sdl() const;
 };

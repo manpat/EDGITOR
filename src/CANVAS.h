@@ -5,9 +5,8 @@
 #include <vector>
 #include <algorithm>
 
-#include "RECT.h"
-
 struct COLOR;
+struct RECT;
 struct SDL_Renderer;
 struct SDL_Texture;
 

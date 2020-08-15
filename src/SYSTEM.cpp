@@ -14,6 +14,7 @@
 #include "BRUSH.h"
 #include "UNDO.h"
 #include "COLOR.h"
+#include "RECT.h"
 
 #include <algorithm>
 #include <filesystem>
@@ -106,7 +107,6 @@ SDL_Renderer* INIT_RENDERER(SDL_Window* WINDOW)
 
 	BRUSH_CURSOR_PIXELS = new COLOR[_t_bs * _t_bs];
 	BRUSH_CURSOR_PIXELS_CLEAR = new COLOR[_t_bs * _t_bs];
-	BRUSH_CURSOR_PIXELS_CLEAR_RECT = { 0, 0, 1, 1 };
 
 	for (int i = 0; i < (_t_bs * _t_bs); i++)
 	{
@@ -660,27 +660,22 @@ void SYSTEM_BRUSH_UPDATE()
 			// this is because a complex shape might be drawn in one tick; like floodfill
 	if (BRUSH_UPDATE) {
 		// make sure the brush_update isn't beyond the canvas
-		BRUSH_UPDATE_X1 = (clamp(BRUSH_UPDATE_X1, 0, CANVAS_W));
-		BRUSH_UPDATE_Y1 = (clamp(BRUSH_UPDATE_Y1, 0, CANVAS_H));
-		BRUSH_UPDATE_X2 = (clamp(BRUSH_UPDATE_X2, 0, CANVAS_W));
-		BRUSH_UPDATE_Y2 = (clamp(BRUSH_UPDATE_Y2, 0, CANVAS_H));
-
-		RECT const brush_update_region {BRUSH_UPDATE_X1, BRUSH_UPDATE_Y1, BRUSH_UPDATE_X2, BRUSH_UPDATE_Y2};
+		RECT const canvas_rect = RECT::from_wh(CANVAS_W, CANVAS_H);
+		RECT const clipped_brush_update_region = BRUSH_UPDATE_REGION.clip_to(canvas_rect);
 
 		// update the brush texture
-		SDL_Rect const brush_update_region_sdl = brush_update_region.to_sdl();
+		SDL_Rect const brush_update_region_sdl = clipped_brush_update_region.to_sdl();
+		int const brush_start_index = clipped_brush_update_region.top * CANVAS_W + clipped_brush_update_region.left;
+
 		SDL_SetTextureBlendMode(BRUSH_TEXTURE, SDL_BLENDMODE_NONE);
-		SDL_UpdateTexture(BRUSH_TEXTURE, &brush_update_region_sdl, &BRUSH_PIXELS[BRUSH_UPDATE_Y1 * CANVAS_W + BRUSH_UPDATE_X1], CANVAS_PITCH);
+		SDL_UpdateTexture(BRUSH_TEXTURE, &brush_update_region_sdl, &BRUSH_PIXELS[brush_start_index], CANVAS_PITCH);
 
 		// the layer updates only when we stop drawing - for performance.
 		// so we constantly update the min and max bounds
-		LAYER_UPDATE_REGION = LAYER_UPDATE_REGION.include(brush_update_region);
+		LAYER_UPDATE_REGION = LAYER_UPDATE_REGION.include_region(clipped_brush_update_region);
 
 		// reset the brush bounds with every tick
-		BRUSH_UPDATE_X1 = INT16_MAX;
-		BRUSH_UPDATE_Y1 = INT16_MAX;
-		BRUSH_UPDATE_X2 = INT16_MIN;
-		BRUSH_UPDATE_Y2 = INT16_MIN;
+		BRUSH_UPDATE_REGION = RECT::empty();
 	}
 }
 

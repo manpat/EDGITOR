@@ -7,6 +7,7 @@
 struct SDL_Texture;
 struct SDL_Rect;
 struct COLOR;
+struct RECT;
 
 struct BRUSH_DATA
 {
@@ -38,17 +39,12 @@ extern bool BRUSH_UPDATE;
 extern int16_t BRUSH_X;
 extern int16_t BRUSH_Y;
 extern uint16_t BRUSH_W;
-extern int16_t BRUSH_UPDATE_X1;
-extern int16_t BRUSH_UPDATE_Y1;
-extern int16_t BRUSH_UPDATE_X2;
-extern int16_t BRUSH_UPDATE_Y2;
+extern RECT BRUSH_UPDATE_REGION;
 extern std::unique_ptr<COLOR[]> BRUSH_PIXELS;
 extern COLOR BRUSH_COLOR;
 extern COLOR UNDO_COLOR;
 extern COLOR* BRUSH_CURSOR_PIXELS;
 extern COLOR* BRUSH_CURSOR_PIXELS_CLEAR;
-extern SDL_Rect BRUSH_CURSOR_PIXELS_CLEAR_RECT;
-extern uint16_t BRUSH_CURSOR_PIXELS_CLEAR_POS;
 
 
 extern std::vector<std::unique_ptr<BRUSH_DATA>> BRUSH_LIST;

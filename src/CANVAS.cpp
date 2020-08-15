@@ -85,10 +85,7 @@ void set_pixel(const int16_t x, const int16_t y, const COLOR c)
 	if (out_canvas(x, y)) return;
 
 	BRUSH_PIXELS[y * CANVAS_W + x] = c;
-	BRUSH_UPDATE_X1 = std::min(BRUSH_UPDATE_X1, int16_t(x - 1));
-	BRUSH_UPDATE_Y1 = std::min(BRUSH_UPDATE_Y1, int16_t(y - 1));
-	BRUSH_UPDATE_X2 = std::max(BRUSH_UPDATE_X2, int16_t(x + 1));
-	BRUSH_UPDATE_Y2 = std::max(BRUSH_UPDATE_Y2, int16_t(y + 1));
+	BRUSH_UPDATE_REGION = BRUSH_UPDATE_REGION.include_point(x, y);
 }
 
 void set_pixel_brush(int x, int y, COLOR c)
@@ -113,10 +110,7 @@ void set_pixel_layer(const int16_t x, const int16_t y, const COLOR c, uint16_t l
 	if (out_canvas(x, y)) return;
 
 	LAYERS[l].pixels[y * CANVAS_W + x] = c;
-	BRUSH_UPDATE_X1 = std::min(BRUSH_UPDATE_X1, int16_t(x - 1));
-	BRUSH_UPDATE_Y1 = std::min(BRUSH_UPDATE_Y1, int16_t(y - 1));
-	BRUSH_UPDATE_X2 = std::max(BRUSH_UPDATE_X2, int16_t(x + 1));
-	BRUSH_UPDATE_Y2 = std::max(BRUSH_UPDATE_Y2, int16_t(y + 1));
+	BRUSH_UPDATE_REGION = BRUSH_UPDATE_REGION.include_point(x, y);
 }
 
 void set_pixel_line(int16_t x0, int16_t y0, const int16_t x1, const int16_t y1, COLOR c)

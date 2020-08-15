@@ -1,12 +1,13 @@
 #include "RECT.h"
+#include "FUNCTIONS.h"
 
 #include <limits>
 
 // manpat: really not a fan of this - this should be cmakes job :(
 #ifdef __APPLE__
-#include <SDL2/SDL.h>
+#include <SDL2/SDL_rect.h>
 #else
-#include <SDL.h>
+#include <SDL_rect.h>
 #endif
 
 /*static*/ RECT RECT::empty()
@@ -19,7 +20,7 @@
 	};
 }
 
-/*static*/ RECT from_wh(int w, int h)
+/*static*/ RECT RECT::from_wh(int w, int h)
 {
 	return {0, 0, w, h};
 }
@@ -61,7 +62,7 @@ int RECT::height() const
 }
 
 
-RECT RECT::include(RECT other) const
+RECT RECT::include_region(RECT other) const
 {
 	return {
 		std::min(this->left, other.left),
@@ -71,9 +72,29 @@ RECT RECT::include(RECT other) const
 	};
 }
 
+RECT RECT::include_point(int x, int y) const
+{
+	return {
+		std::min(this->left, x),
+		std::min(this->top, y),
+		std::max(this->right, x+1),
+		std::max(this->bottom, y+1),
+	};
+}
+
+RECT RECT::clip_to(RECT boundary) const
+{
+	return {
+		clamp(this->left, boundary.left, boundary.right),
+		clamp(this->top, boundary.top, boundary.bottom),
+		clamp(this->right, boundary.left, boundary.right),
+		clamp(this->bottom, boundary.top, boundary.bottom),
+	};
+}
+
 SDL_Rect RECT::to_sdl() const
 {
-	return SDL_Rect {
+	return {
 		this->left, this->top,
 		this->width(), this->height(),
 	};

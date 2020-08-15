@@ -4,6 +4,7 @@
 #include "FUNCTIONS.h"
 #include "VARIABLES.h"
 #include "BRUSH.h"
+#include "RECT.h"
 
 // manpat: really not a fan of this - this should be cmakes job :(
 #ifdef __APPLE__
@@ -42,7 +43,7 @@ void function_undo(int n)
 
 	UNDO_UPDATE = 1;
 	UNDO_UPDATE_LAYER = _l;
-	UNDO_UPDATE_RECT = { BRUSH_UPDATE_X1, BRUSH_UPDATE_Y1, (BRUSH_UPDATE_X2 - BRUSH_UPDATE_X1), (BRUSH_UPDATE_Y2 - BRUSH_UPDATE_Y1) };
+	UNDO_UPDATE_RECT = BRUSH_UPDATE_REGION.to_sdl();
 	CURRENT_LAYER = _l;
 	CANVAS_UPDATE = true;
 }
