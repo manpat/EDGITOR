@@ -155,28 +155,44 @@ SDL_Renderer* INIT_RENDERER(SDL_Window* WINDOW)
 
 	UIBOX_TOOLS = uibox_new(0, 0, 128, 512, 0, "TOOLS");
 	
-	uibox_add_element_button(UIBOX_TOOLS, 0, 2, -1, 1, "BRUSH", "> BRUSH", &CURRENT_TOOL, TOOL::BRUSH);
-	uibox_add_element_button(UIBOX_TOOLS, 0, 3, -1, 1, "ERASER", "> ERASER", &CURRENT_TOOL, TOOL::ERASER);
-	uibox_add_element_button(UIBOX_TOOLS, 0, 4, -1, 1, "PICKER", "> PICKER", &CURRENT_TOOL, TOOL::PICKER);
-	uibox_add_element_button(UIBOX_TOOLS, 0, 5, -1, 1, "FILL", "> FILL", &CURRENT_TOOL, TOOL::FILL);
-	uibox_add_element_button(UIBOX_TOOLS, 0, 5, -1, 1, "CANVAS", "> CANVAS", &CURRENT_TOOL, TOOL::CANVAS);
-	uibox_add_element_textbox(UIBOX_TOOLS, 2, 7, "MOUSE:");
-	uibox_add_element_textbox(UIBOX_TOOLS, 2, 8, "X ");
-	uibox_add_element_varbox(UIBOX_TOOLS, 4, 8, "", (uint16_t*)(&CANVAS_MOUSE_X), 0);
-	uibox_add_element_textbox(UIBOX_TOOLS, 2, 9, "Y ");
-	uibox_add_element_varbox(UIBOX_TOOLS, 4, 9, "", (uint16_t*)(&CANVAS_MOUSE_Y), 0);
-	uibox_add_element_textbox(UIBOX_TOOLS, 2, 10, "CELL X ");
-	uibox_add_element_varbox(UIBOX_TOOLS, 9, 10, "", (uint16_t*)(&CANVAS_MOUSE_CELL_X), 0);
-	uibox_add_element_textbox(UIBOX_TOOLS, 2, 11, "CELL Y ");
-	uibox_add_element_varbox(UIBOX_TOOLS, 9, 11, "", (uint16_t*)(&CANVAS_MOUSE_CELL_Y), 0);
-	uibox_add_element_textbox(UIBOX_TOOLS, 2, 13, "CANVAS:");
-	uibox_add_element_textbox(UIBOX_TOOLS, 2, 14, "W ");
-	uibox_add_element_varbox(UIBOX_TOOLS, 4, 14, "", (uint16_t*)(&CANVAS_W), 0);
-	uibox_add_element_textbox(UIBOX_TOOLS, 2, 15, "H ");
-	uibox_add_element_varbox(UIBOX_TOOLS, 4, 15, "", (uint16_t*)(&CANVAS_H), 0);
-	uibox_add_element_textbox(UIBOX_TOOLS, 2, 16, "ZOOM ");
-	//uibox_add_element_varbox(UIBOX_TOOLS, 7, 16, "", (uint16_t*)(&CANVAS_ZOOM), 0);
-	uibox_add_element_varbox_f(UIBOX_TOOLS, 7, 16, "", &CANVAS_ZOOM, 0);
+	int row = 2;
+
+	uibox_add_element_button(UIBOX_TOOLS, 0, row, -1, 1, "BRUSH", "> BRUSH", &CURRENT_TOOL, TOOL::BRUSH);
+	row++;
+	uibox_add_element_button(UIBOX_TOOLS, 0, row, -1, 1, "ERASER", "> ERASER", &CURRENT_TOOL, TOOL::ERASER);
+	row++;
+	uibox_add_element_button(UIBOX_TOOLS, 0, row, -1, 1, "PICKER", "> PICKER", &CURRENT_TOOL, TOOL::PICKER);
+	row++;
+	uibox_add_element_button(UIBOX_TOOLS, 0, row, -1, 1, "FILL", "> FILL", &CURRENT_TOOL, TOOL::FILL);
+	row++;
+	uibox_add_element_button(UIBOX_TOOLS, 0, row, -1, 1, "CANVAS", "> CANVAS", &CURRENT_TOOL, TOOL::CANVAS);
+	row += 2;
+
+	uibox_add_element_textbox(UIBOX_TOOLS, 2, row, "MOUSE:");
+	uibox_add_element_textbox(UIBOX_TOOLS, 2, row+1, "X ");
+	uibox_add_element_varbox(UIBOX_TOOLS, 4, row+1, "", (uint16_t*)(&CANVAS_MOUSE_X), 0);
+	uibox_add_element_textbox(UIBOX_TOOLS, 2, row+2, "Y ");
+	uibox_add_element_varbox(UIBOX_TOOLS, 4, row+2, "", (uint16_t*)(&CANVAS_MOUSE_Y), 0);
+	row += 3;
+
+	uibox_add_element_textbox(UIBOX_TOOLS, 2, row, "CELL X ");
+	uibox_add_element_varbox(UIBOX_TOOLS, 9, row, "", (uint16_t*)(&CANVAS_MOUSE_CELL_X), 0);
+	row++;
+
+	uibox_add_element_textbox(UIBOX_TOOLS, 2, row, "CELL Y ");
+	uibox_add_element_varbox(UIBOX_TOOLS, 9, row, "", (uint16_t*)(&CANVAS_MOUSE_CELL_Y), 0);
+	row += 2;
+
+	uibox_add_element_textbox(UIBOX_TOOLS, 2, row, "CANVAS:");
+	uibox_add_element_textbox(UIBOX_TOOLS, 2, row+1, "W ");
+	uibox_add_element_varbox(UIBOX_TOOLS, 4, row+1, "", (uint16_t*)(&CANVAS_W), 0);
+	uibox_add_element_textbox(UIBOX_TOOLS, 2, row+2, "H ");
+	uibox_add_element_varbox(UIBOX_TOOLS, 4, row+2, "", (uint16_t*)(&CANVAS_H), 0);
+	row += 3;
+
+	uibox_add_element_textbox(UIBOX_TOOLS, 2, row, "ZOOM ");
+	//uibox_add_element_varbox(UIBOX_TOOLS, 7, row, "", (uint16_t*)(&CANVAS_ZOOM), 0);
+	uibox_add_element_varbox_f(UIBOX_TOOLS, 7, row, "", &CANVAS_ZOOM, 0);
 	
 
 	uibox_add_element_textbox(UIBOX_COLOR, 2, 2, "R:");

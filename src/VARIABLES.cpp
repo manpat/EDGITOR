@@ -112,5 +112,3 @@ SDL_Cursor* create_system_cursor()
 
 	return SDL_CreateCursor(data, mask, 8, 8, 3, 3);
 }
-
-bool DEBUG_BOOL = false;

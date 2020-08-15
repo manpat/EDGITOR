@@ -128,8 +128,6 @@ const uint8_t CHAR_ARWL = 0x1b;
 const uint8_t CHAR_ARWR = 0x1a;
 #define STR_ARWR "\x1a"
 
-extern bool DEBUG_BOOL;
-
 /*
 
 	*	_0	_1	_2	_3	_4	_5	_6	_7	_8	_9	_a	_b	_c	_d	_e	_f
