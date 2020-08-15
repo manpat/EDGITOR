@@ -1,6 +1,6 @@
 #include "RECT.h"
-#include "FUNCTIONS.h"
 
+#include <algorithm>
 #include <limits>
 
 // manpat: really not a fan of this - this should be cmakes job :(
@@ -85,10 +85,10 @@ RECT RECT::include_point(int x, int y) const
 RECT RECT::clip_to(RECT boundary) const
 {
 	return {
-		clamp(this->left, boundary.left, boundary.right),
-		clamp(this->top, boundary.top, boundary.bottom),
-		clamp(this->right, boundary.left, boundary.right),
-		clamp(this->bottom, boundary.top, boundary.bottom),
+		std::clamp(this->left, boundary.left, boundary.right),
+		std::clamp(this->top, boundary.top, boundary.bottom),
+		std::clamp(this->right, boundary.left, boundary.right),
+		std::clamp(this->bottom, boundary.top, boundary.bottom),
 	};
 }
 

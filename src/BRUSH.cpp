@@ -12,7 +12,7 @@
 
 SDL_Texture* BRUSH_CURSOR_TEXTURE;
 SDL_Texture* BRUSH_TEXTURE;
-bool BRUSH_UPDATE = 0;
+bool BRUSH_UPDATE = false;
 
 int16_t BRUSH_X = 0;
 int16_t BRUSH_Y = 0;

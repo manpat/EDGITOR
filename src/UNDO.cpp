@@ -6,16 +6,8 @@
 #include "BRUSH.h"
 #include "RECT.h"
 
-// manpat: really not a fan of this - this should be cmakes job :(
-#ifdef __APPLE__
-#include <SDL2/SDL_rect.h>
-#else
-#include <SDL_rect.h>
-#endif
-
-uint16_t UNDO_UPDATE = 0;
 uint16_t UNDO_UPDATE_LAYER = 0;
-SDL_Rect UNDO_UPDATE_RECT = { 0, 0, 1, 1 };
+RECT UNDO_UPDATE_REGION = RECT::empty();
 
 namespace
 {
@@ -48,24 +40,19 @@ void clear_undo_stack()
 
 static void apply_undo_data(UNDO_ENTRY const* undo_entry, bool is_undo)
 {
-	int const start_x = undo_entry->x;
-	int const start_y = undo_entry->y;
+	auto const region = undo_entry->affected_region;
 	auto const& data = is_undo? undo_entry->undo_pixels : undo_entry->redo_pixels;
 
-	for (int y = 0; y < undo_entry->h; y++)
+	for (auto [x, y] : region)
 	{
-		for (int x = 0; x < undo_entry->w; x++)
-		{
-			const int index = x + y * undo_entry->w;
-			set_pixel_layer(x + start_x, y + start_y, data[index], undo_entry->layer);
-		}
+		const int index = (x - region.left) + (y - region.top) * region.width();
+		set_pixel_layer(x, y, data[index], undo_entry->affected_layer);
 	}
 
-	UNDO_UPDATE = 1;
-	UNDO_UPDATE_LAYER = undo_entry->layer;
-	UNDO_UPDATE_RECT = BRUSH_UPDATE_REGION.to_sdl();
-	CURRENT_LAYER = undo_entry->layer;
 	CANVAS_UPDATE = true;
+	CURRENT_LAYER = undo_entry->affected_layer;
+	UNDO_UPDATE_LAYER = undo_entry->affected_layer;
+	UNDO_UPDATE_REGION = region;
 }
 
 

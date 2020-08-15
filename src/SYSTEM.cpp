@@ -634,7 +634,7 @@ void SYSTEM_INPUT_UPDATE()
 				//BRUSH_PIXELS[i * CANVAS_W + j] = CURRENT_LAYER_PTR[i * CANVAS_W + j];
 				//BRUSH_PIXELS[i * CANVAS_W + j] = 0xff0000ff;
 				set_pixel(j, i, 0xff0000ff);
-				BRUSH_UPDATE = 1;
+				BRUSH_UPDATE = true;
 				LAYER_UPDATE = 2;
 			}
 		}*/
@@ -691,10 +691,7 @@ void SYSTEM_LAYER_UPDATE()
 {
 	if ((LAYER_UPDATE == 1) && !LAYER_UPDATE_REGION.is_empty())
 	{
-		UNDO_ENTRY _u{ (uint16_t)LAYER_UPDATE_REGION.width(), (uint16_t)LAYER_UPDATE_REGION.height() };
-		_u.x = (uint16_t)LAYER_UPDATE_REGION.left;
-		_u.y = (uint16_t)LAYER_UPDATE_REGION.top;
-		_u.layer = CURRENT_LAYER;
+		UNDO_ENTRY _u { LAYER_UPDATE_REGION, CURRENT_LAYER };
 
 		COLOR* layer_data = (LAYERS[CURRENT_LAYER].pixels.get());
 		for (auto [_x, _y] : LAYER_UPDATE_REGION) {
@@ -762,29 +759,33 @@ void SYSTEM_LAYER_UPDATE()
 void SYSTEM_CANVAS_UPDATE()
 {
 	// CANVAS UPDATE
-	if (CANVAS_UPDATE) {
-		if (UNDO_UPDATE)
-		{
-			SDL_SetTextureBlendMode(LAYERS[UNDO_UPDATE_LAYER].texture, SDL_BLENDMODE_NONE);
-			UNDO_UPDATE_RECT.x = (clamp(UNDO_UPDATE_RECT.x, 0, CANVAS_W - 1));
-			UNDO_UPDATE_RECT.y = (clamp(UNDO_UPDATE_RECT.y, 0, CANVAS_H - 1));
-			UNDO_UPDATE_RECT.w = (clamp(UNDO_UPDATE_RECT.w, 1, CANVAS_W));
-			UNDO_UPDATE_RECT.h = (clamp(UNDO_UPDATE_RECT.h, 1, CANVAS_H));
-			SDL_UpdateTexture(LAYERS[UNDO_UPDATE_LAYER].texture, &UNDO_UPDATE_RECT, &LAYERS[UNDO_UPDATE_LAYER].pixels[UNDO_UPDATE_RECT.y * CANVAS_W + UNDO_UPDATE_RECT.x], CANVAS_PITCH);
-		}
-		else
-		{
-			for (const auto& layer : LAYERS) {
-				SDL_SetTextureBlendMode(layer.texture, SDL_BLENDMODE_NONE);
-				SDL_UpdateTexture(layer.texture, nullptr, &layer.pixels[0], CANVAS_PITCH);
-			}
-		}
-
-		SDL_UpdateTexture(BRUSH_TEXTURE, nullptr, BRUSH_PIXELS.get(), CANVAS_PITCH);
-		CANVAS_UPDATE = 0;
-		UNDO_UPDATE = 0;
-		UNDO_UPDATE_LAYER = 0;
+	if (!CANVAS_UPDATE)
+	{
+		return;
 	}
+
+	if (!UNDO_UPDATE_REGION.is_empty())
+	{
+		auto const canvas_rect = RECT::from_wh(CANVAS_W, CANVAS_H);
+		auto const sdl_rect = UNDO_UPDATE_REGION.clip_to(canvas_rect).to_sdl();
+		auto const layer = &LAYERS[UNDO_UPDATE_LAYER];
+		auto const update_start_index = sdl_rect.y * CANVAS_W + sdl_rect.x;
+		UNDO_UPDATE_REGION = RECT::empty();
+
+		SDL_SetTextureBlendMode(layer->texture, SDL_BLENDMODE_NONE);
+		SDL_UpdateTexture(layer->texture, &sdl_rect, &layer->pixels[update_start_index], CANVAS_PITCH);
+	}
+	else
+	{
+		for (const auto& layer : LAYERS) {
+			SDL_SetTextureBlendMode(layer.texture, SDL_BLENDMODE_NONE);
+			SDL_UpdateTexture(layer.texture, nullptr, &layer.pixels[0], CANVAS_PITCH);
+		}
+	}
+
+	SDL_UpdateTexture(BRUSH_TEXTURE, nullptr, BRUSH_PIXELS.get(), CANVAS_PITCH);
+	CANVAS_UPDATE = false;
+	UNDO_UPDATE_LAYER = 0;
 }
 
 

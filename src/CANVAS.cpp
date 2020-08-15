@@ -65,7 +65,7 @@ void layer_new(SDL_Renderer* _renderer, int16_t _x, int16_t _y, int16_t _a, /*SD
 	new_layer.alpha = _a;
 	new_layer.blendmode = _b;
 	LAYERS.push_back(std::move(new_layer));
-	CANVAS_UPDATE = 1;
+	CANVAS_UPDATE = true;
 	CURRENT_LAYER = 0;
 	CURRENT_LAYER_PTR = LAYERS[CURRENT_LAYER].pixels.get();
 }
@@ -125,7 +125,7 @@ void set_pixel_line(int16_t x0, int16_t y0, const int16_t x1, const int16_t y1, 
 		if (e2 >= dy) { err += dy; x0 += sx; }
 		if (e2 <= dx) { err += dx; y0 += sy; }
 	}
-	BRUSH_UPDATE = 1;
+	BRUSH_UPDATE = true;
 	LAYER_UPDATE = 2;
 }
 
@@ -160,7 +160,7 @@ void floodfill(uint16_t x, uint16_t y, const uint16_t width, const uint16_t heig
 		if (x == ox && y == oy) break;
 	}
 	floodfill_core(x, y, width, height, col_old, col_new);
-	BRUSH_UPDATE = 1;
+	BRUSH_UPDATE = true;
 	LAYER_UPDATE = 2;
 }
 
@@ -266,8 +266,8 @@ void floodfill(int x, int y, COLOR oldColor, COLOR newColor)
 			x1++;
 		}
 	}
-	BRUSH_UPDATE = 1;
+	BRUSH_UPDATE = true;
 	LAYER_UPDATE = 2;
-	CANVAS_UPDATE = 1;
+	CANVAS_UPDATE = true;
 }
 

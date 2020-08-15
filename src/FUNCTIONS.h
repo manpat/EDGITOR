@@ -19,7 +19,7 @@ inline float clampf(const float x, const float lo, const float hi)
 	return (x) < (lo) ? (lo) : (x) > (hi) ? (hi) : (x);
 }
 
-inline int16_t clamp(const int16_t x, const int16_t lo, const int16_t hi)
+inline int clamp(const int x, const int lo, const int hi)
 {
 	return (x) < (lo) ? (lo) : (x) > (hi) ? (hi) : (x);
 }

@@ -60,7 +60,7 @@ int main(int, char*[])
         
 		const Uint64 fps_start = SDL_GetPerformanceCounter(); // fps counter
 
-		BRUSH_UPDATE = 0; // reset brush update
+		BRUSH_UPDATE = false; // reset brush update
 
 		float t_win_w = (float)WINDOW_W, t_win_h = (float)WINDOW_H; // temporary window size
 
