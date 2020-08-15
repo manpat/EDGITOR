@@ -5,6 +5,8 @@
 #include <vector>
 #include <algorithm>
 
+#include "RECT.h"
+
 struct COLOR;
 struct SDL_Renderer;
 struct SDL_Texture;
@@ -85,10 +87,7 @@ extern float CELL_H_ANIM;
 extern uint16_t CURRENT_LAYER;
 extern COLOR* CURRENT_LAYER_PTR;
 extern int16_t LAYER_UPDATE;
-extern int16_t LAYER_UPDATE_X1;
-extern int16_t LAYER_UPDATE_Y1;
-extern int16_t LAYER_UPDATE_X2;
-extern int16_t LAYER_UPDATE_Y2;
+extern RECT LAYER_UPDATE_REGION;
 
 
 extern std::vector<LAYER_INFO> LAYERS;

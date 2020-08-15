@@ -9,7 +9,6 @@
 #include <stack>
 //#include <stddef.h>         // ptrdiff_t
 #include <type_traits>      // std::is_pod
-using namespace std;
 
 typedef ptrdiff_t   Size;
 typedef Size        Index;
@@ -28,20 +27,20 @@ void reserve(Size const newBufSize, std::stack< Type, Container >& st)
     Access::container(st).reserve(newBufSize);
 }
 
-template< class Type, bool elemTypeIsPOD = !!std::is_pod< Type >::value >
+template< class Type, bool elemTypeIsPOD = std::is_pod_v<Type> >
 class faststack;
 
 template< class Type >
 class faststack< Type, true >
 {
 private:
-    Type* st_;
+    Type*   st_;
     Index   lastIndex_;
     Size    capacity_;
 
 public:
-    Size const size() const { return lastIndex_ + 1; }
-    Size const capacity() const { return capacity_; }
+    Size size() const { return lastIndex_ + 1; }
+    Size capacity() const { return capacity_; }
 
     void reserve(Size const newCapacity)
     {
@@ -107,7 +106,7 @@ public:
         capacity_ = (newBufSize < other.size() ? other.size() : newBufSize);
         st_ = new Type[capacity_];
         lastIndex_ = other.lastIndex_;
-        copy(other.st_, other.st_ + other.size(), st_);   // Can't throw for POD.
+        std::copy(other.st_, other.st_ + other.size(), st_);   // Can't throw for POD.
     }
 };
 

@@ -1,9 +1,10 @@
 #include "CANVAS.h"
 #include "COLOR.h"
+#include "RECT.h"
 #include "VARIABLES.h"
 #include "BRUSH.h"
-#include <stack>
 #include "SUPERSTACK.h"
+#include <stack>
 
 
 // CANVAS
@@ -48,10 +49,7 @@ float CELL_H_ANIM = 0.0;
 uint16_t CURRENT_LAYER = 0;
 COLOR* CURRENT_LAYER_PTR = nullptr;
 int16_t LAYER_UPDATE = 0;
-int16_t LAYER_UPDATE_X1 = INT16_MAX;
-int16_t LAYER_UPDATE_Y1 = INT16_MAX;
-int16_t LAYER_UPDATE_X2 = INT16_MIN;
-int16_t LAYER_UPDATE_Y2 = INT16_MIN;
+RECT LAYER_UPDATE_REGION = RECT::empty();
 std::vector<LAYER_INFO> LAYERS;
 
 

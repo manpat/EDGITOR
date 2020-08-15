@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 struct COLOR {
 	uint8_t r, g, b, a;
 
@@ -24,3 +26,8 @@ constexpr COLOR COL_LTGRAY	{ 0xc0, 0xc0, 0xc0, 0xff };
 constexpr COLOR COL_GRAY	{ 0x80, 0x80, 0x80, 0xff };
 constexpr COLOR COL_DKGRAY	{ 0x40, 0x40, 0x40, 0xff };
 constexpr COLOR COL_BLACK	{ 0x00, 0x00, 0x00, 0xff };
+
+
+
+COLOR blend_colors(COLOR src_color, COLOR dst_color);
+

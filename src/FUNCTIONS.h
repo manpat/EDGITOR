@@ -9,30 +9,30 @@
  //   FUNCTIONS   ///////////////////////////////////////////////// ///////  //////   /////    ////     ///      //       /
 //
 
-inline const float reach_tween(const float a, const float b, const float t)
+inline float reach_tween(const float a, const float b, const float t)
 {
 	return (a != b) ? (a + ((1 / t) * (b - a))) : (a);
 }
 
-inline const float clampf(const float x, const float lo, const float hi)
+inline float clampf(const float x, const float lo, const float hi)
 {
 	return (x) < (lo) ? (lo) : (x) > (hi) ? (hi) : (x);
 }
 
-inline const int16_t clamp(const int16_t x, const int16_t lo, const int16_t hi)
+inline int16_t clamp(const int16_t x, const int16_t lo, const int16_t hi)
 {
 	return (x) < (lo) ? (lo) : (x) > (hi) ? (hi) : (x);
 }
 
-inline const int16_t sign(const int16_t x) {
+inline int16_t sign(const int16_t x) {
 	return (x > 0) - (x < 0);
 }
 
-inline const float sign(const float x) {
+inline float sign(const float x) {
 	return (x > 0) - (x < 0);
 }
 
-inline const bool point_in_rect(const int16_t px, const int16_t py, const int16_t rx, const int16_t ry, const int16_t rw, const int16_t rh)
+inline bool point_in_rect(const int16_t px, const int16_t py, const int16_t rx, const int16_t ry, const int16_t rw, const int16_t rh)
 {
 	return (px >= rx && py >= ry && px < (rx + rw) && py < (ry + rh));
 }
@@ -117,56 +117,8 @@ inline void lab2rgb(float l_s, float a_s, float b_s, float& R, float& G, float& 
 	B = clamp(var_B * 255., 0.0f, 255.0f);
 }
 
-inline const COLOR blend_colors(const COLOR src_color, const COLOR dst_color) {
-	const float src_cola = src_color.a / 255.0f;
-	const float dest_cola = dst_color.a / 255.0f * (1. - src_cola);
-	const float new_cola = (src_cola + dest_cola);
-
-	return COLOR {
-		uint8_t((src_color.r/255.0f * src_cola + dst_color.r/255.0f * dest_cola) / new_cola * 255.0f),
-		uint8_t((src_color.g/255.0f * src_cola + dst_color.g/255.0f * dest_cola) / new_cola * 255.0f),
-		uint8_t((src_color.b/255.0f * src_cola + dst_color.b/255.0f * dest_cola) / new_cola * 255.0f),
-		uint8_t(new_cola * 255.0f),
-	};
-}
-
-/*COLOR surface_get_pixel(SDL_Surface* surface, int pos)
-{
-	int bpp = surface->format->BytesPerPixel;
-	/* Here p is the address to the pixel we want to retrieve *
-	Uint8* p = (Uint8*)surface->pixels + pos * bpp;
-
-	return COLOR{ p[0], p[1], p[2], p[3] };
-
-	/*
-	switch (bpp)
-	{
-	case 1:
-		return *p;
-		break;
-
-	case 2:
-		return *(Uint16*)p;
-		break;
-
-	case 3:
-		if (SDL_BYTEORDER == SDL_BIG_ENDIAN)
-			return p[0] << 16 | p[1] << 8 | p[2];
-		else
-			return p[0] | p[1] << 8 | p[2] << 16;
-		break;
-
-	case 4:
-		return *(Uint32*)p;
-		break;
-
-	default:
-		return 0;       /* shouldn't happen, but avoids warnings *
-	}*
-}*/
-
 template <typename T>
-inline void move_to_end(std::vector<T>& v, size_t index)
+void move_to_end(std::vector<T>& v, size_t index)
 {
 	auto it = v.begin() + index;
 	std::rotate(it, it + 1, v.end());

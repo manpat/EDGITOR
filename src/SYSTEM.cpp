@@ -13,6 +13,7 @@
 #include "CANVAS.h"
 #include "BRUSH.h"
 #include "UNDO.h"
+#include "COLOR.h"
 
 #include <algorithm>
 #include <filesystem>
@@ -563,11 +564,11 @@ void SYSTEM_INPUT_UPDATE()
 	{
 		if (MOUSEBUTTON_PRESSED_MIDDLE)
 		{
-			CANVAS_PANX = (float)((float)MOUSE_X - CANVAS_X);
-			CANVAS_PANY = (float)((float)MOUSE_Y - CANVAS_Y);
+			CANVAS_PANX = (float)MOUSE_X - CANVAS_X;
+			CANVAS_PANY = (float)MOUSE_Y - CANVAS_Y;
 		}
-		CANVAS_X = (float)((float)MOUSE_X - CANVAS_PANX);
-		CANVAS_Y = (float)((float)MOUSE_Y - CANVAS_PANY);
+		CANVAS_X = (float)MOUSE_X - CANVAS_PANX;
+		CANVAS_Y = (float)MOUSE_Y - CANVAS_PANY;
 	}
 
 	if (MOUSEBUTTON_LEFT)
@@ -598,11 +599,11 @@ void SYSTEM_INPUT_UPDATE()
 			case TOOL::CANVAS:
 				if (MOUSEBUTTON_PRESSED_LEFT)
 				{
-					CANVAS_PANX = (float)((float)MOUSE_X - CANVAS_X);
-					CANVAS_PANY = (float)((float)MOUSE_Y - CANVAS_Y);
+					CANVAS_PANX = (float)MOUSE_X - CANVAS_X;
+					CANVAS_PANY = (float)MOUSE_Y - CANVAS_Y;
 				}
-				CANVAS_X = (float)((float)MOUSE_X - CANVAS_PANX);
-				CANVAS_Y = (float)((float)MOUSE_Y - CANVAS_PANY);
+				CANVAS_X = (float)MOUSE_X - CANVAS_PANX;
+				CANVAS_Y = (float)MOUSE_Y - CANVAS_PANY;
 				break;
 			}
 		}
@@ -664,21 +665,16 @@ void SYSTEM_BRUSH_UPDATE()
 		BRUSH_UPDATE_X2 = (clamp(BRUSH_UPDATE_X2, 0, CANVAS_W));
 		BRUSH_UPDATE_Y2 = (clamp(BRUSH_UPDATE_Y2, 0, CANVAS_H));
 
-		SDL_Rect const brush_dirty_rect{
-			BRUSH_UPDATE_X1, BRUSH_UPDATE_Y1,
-			(BRUSH_UPDATE_X2 - BRUSH_UPDATE_X1), (BRUSH_UPDATE_Y2 - BRUSH_UPDATE_Y1),
-		};
+		RECT const brush_update_region {BRUSH_UPDATE_X1, BRUSH_UPDATE_Y1, BRUSH_UPDATE_X2, BRUSH_UPDATE_Y2};
 
 		// update the brush texture
+		SDL_Rect const brush_update_region_sdl = brush_update_region.to_sdl();
 		SDL_SetTextureBlendMode(BRUSH_TEXTURE, SDL_BLENDMODE_NONE);
-		SDL_UpdateTexture(BRUSH_TEXTURE, &brush_dirty_rect, &BRUSH_PIXELS[BRUSH_UPDATE_Y1 * CANVAS_W + BRUSH_UPDATE_X1], CANVAS_PITCH);
+		SDL_UpdateTexture(BRUSH_TEXTURE, &brush_update_region_sdl, &BRUSH_PIXELS[BRUSH_UPDATE_Y1 * CANVAS_W + BRUSH_UPDATE_X1], CANVAS_PITCH);
 
 		// the layer updates only when we stop drawing - for performance.
 		// so we constantly update the min and max bounds
-		LAYER_UPDATE_X1 = std::min(LAYER_UPDATE_X1, BRUSH_UPDATE_X1);
-		LAYER_UPDATE_Y1 = std::min(LAYER_UPDATE_Y1, BRUSH_UPDATE_Y1);
-		LAYER_UPDATE_X2 = std::max(LAYER_UPDATE_X2, BRUSH_UPDATE_X2);
-		LAYER_UPDATE_Y2 = std::max(LAYER_UPDATE_Y2, BRUSH_UPDATE_Y2);
+		LAYER_UPDATE_REGION = LAYER_UPDATE_REGION.include(brush_update_region);
 
 		// reset the brush bounds with every tick
 		BRUSH_UPDATE_X1 = INT16_MAX;
@@ -690,59 +686,55 @@ void SYSTEM_BRUSH_UPDATE()
 
 void SYSTEM_LAYER_UPDATE()
 {
-	// LAYER UPDATE
-	int t_layer_update_w = std::max((int)LAYER_UPDATE_X2 - (int)LAYER_UPDATE_X1, 0), t_layer_update_h = std::max((int)LAYER_UPDATE_Y2 - (int)LAYER_UPDATE_Y1, 0); // probably don't need these max()
-
-	if ((LAYER_UPDATE == 1) && (t_layer_update_w > 0) && (t_layer_update_h > 0))
+	if ((LAYER_UPDATE == 1) && !LAYER_UPDATE_REGION.is_empty())
 	{
-		UNDO_DATA _u{ (uint16_t)t_layer_update_w, (uint16_t)t_layer_update_h };
-		_u.x = (uint16_t)LAYER_UPDATE_X1;
-		_u.y = (uint16_t)LAYER_UPDATE_Y1;
+		UNDO_DATA _u{ (uint16_t)LAYER_UPDATE_REGION.width(), (uint16_t)LAYER_UPDATE_REGION.height() };
+		_u.x = (uint16_t)LAYER_UPDATE_REGION.left;
+		_u.y = (uint16_t)LAYER_UPDATE_REGION.top;
 		_u.layer = CURRENT_LAYER;
 
 		COLOR* layer_data = (LAYERS[CURRENT_LAYER].pixels.get());
-		for (int16_t _y = LAYER_UPDATE_Y1; _y < LAYER_UPDATE_Y2; ++_y) {
-			for (int16_t _x = LAYER_UPDATE_X1; _x < LAYER_UPDATE_X2; ++_x) {
-				const int _pos = (_y * CANVAS_W + _x);
-				const COLOR brush_color = BRUSH_PIXELS[_pos];
-				const COLOR dest_color = layer_data[_pos];
+		for (auto [_x, _y] : LAYER_UPDATE_REGION) {
+			const int _pos = (_y * CANVAS_W + _x);
+			const COLOR brush_color = BRUSH_PIXELS[_pos];
+			const COLOR dest_color = layer_data[_pos];
 
-				const COLOR empty{ 0, 0, 0, 0 };
+			const COLOR empty{ 0, 0, 0, 0 };
 
-				BRUSH_PIXELS[_pos] = empty; // clear the brush pixel
+			BRUSH_PIXELS[_pos] = empty; // clear the brush pixel
 
-				if (brush_color == empty) // if there's an empty pixel in the brush texture
-				{
-					_u.set(_x - LAYER_UPDATE_X1, _y - LAYER_UPDATE_Y1, dest_color, dest_color);
-					continue;
-				}
-
-				if (CURRENT_TOOL == 1) // if it's the erase tool
-				{
-					layer_data[_pos] = empty; // erase the destination pixel
-					_u.set(_x - LAYER_UPDATE_X1, _y - LAYER_UPDATE_Y1, dest_color, empty);
-					continue;
-				}
-
-				if (dest_color == empty) // if destination pixel is empty
-				{
-					layer_data[_pos] = brush_color; // make destination the saved brush pixel
-					_u.set(_x - LAYER_UPDATE_X1, _y - LAYER_UPDATE_Y1, dest_color, brush_color);
-					continue;
-				}
-
-				// if it isn't any of those edge cases, we properly mix the colours
-				const COLOR new_col = blend_colors(brush_color, dest_color);
-				layer_data[_pos] = new_col;
-				_u.set(_x - LAYER_UPDATE_X1, _y - LAYER_UPDATE_Y1, dest_color, new_col);
+			if (brush_color == empty) // if there's an empty pixel in the brush texture
+			{
+				_u.set(_x - LAYER_UPDATE_REGION.left, _y - LAYER_UPDATE_REGION.top, dest_color, dest_color);
+				continue;
 			}
+
+			if (CURRENT_TOOL == 1) // if it's the erase tool
+			{
+				layer_data[_pos] = empty; // erase the destination pixel
+				_u.set(_x - LAYER_UPDATE_REGION.left, _y - LAYER_UPDATE_REGION.top, dest_color, empty);
+				continue;
+			}
+
+			if (dest_color == empty) // if destination pixel is empty
+			{
+				layer_data[_pos] = brush_color; // make destination the saved brush pixel
+				_u.set(_x - LAYER_UPDATE_REGION.left, _y - LAYER_UPDATE_REGION.top, dest_color, brush_color);
+				continue;
+			}
+
+			// if it isn't any of those edge cases, we properly mix the colours
+			const COLOR new_col = blend_colors(brush_color, dest_color);
+			layer_data[_pos] = new_col;
+			_u.set(_x - LAYER_UPDATE_REGION.left, _y - LAYER_UPDATE_REGION.top, dest_color, new_col);
 		}
 
 		// clear the brush texture (since we made all pixels 0x00000000)
-		const SDL_Rect dirty_rect{ LAYER_UPDATE_X1, LAYER_UPDATE_Y1, t_layer_update_w, t_layer_update_h };
+		SDL_Rect const dirty_rect = LAYER_UPDATE_REGION.to_sdl();
+		int const dirty_region_start_index = LAYER_UPDATE_REGION.top * CANVAS_W + LAYER_UPDATE_REGION.left;
 
 		SDL_SetTextureBlendMode(BRUSH_TEXTURE, SDL_BLENDMODE_NONE);
-		SDL_UpdateTexture(BRUSH_TEXTURE, &dirty_rect, &BRUSH_PIXELS[LAYER_UPDATE_Y1 * CANVAS_W + LAYER_UPDATE_X1], CANVAS_PITCH);
+		SDL_UpdateTexture(BRUSH_TEXTURE, &dirty_rect, &BRUSH_PIXELS[dirty_region_start_index], CANVAS_PITCH);
 
 		// if we're back a few steps in the undo reel, we clear all the above undo steps.
 		while (UNDO_POS > 0) {
@@ -754,7 +746,7 @@ void SYSTEM_LAYER_UPDATE()
 		UNDO_LIST.push_back(std::move(_u));
 
 		// update the layer we drew to
-		SDL_UpdateTexture(LAYERS[CURRENT_LAYER].texture, &dirty_rect, &layer_data[LAYER_UPDATE_Y1 * CANVAS_W + LAYER_UPDATE_X1], CANVAS_PITCH);
+		SDL_UpdateTexture(LAYERS[CURRENT_LAYER].texture, &dirty_rect, &layer_data[dirty_region_start_index], CANVAS_PITCH);
 
 		LAYER_UPDATE = 0;
 	}
@@ -764,11 +756,7 @@ void SYSTEM_LAYER_UPDATE()
 
 		if (LAYER_UPDATE == 0)
 		{
-			LAYER_UPDATE_X1 = INT16_MAX;
-			LAYER_UPDATE_Y1 = INT16_MAX;
-			LAYER_UPDATE_X2 = INT16_MIN;
-			LAYER_UPDATE_Y2 = INT16_MIN;
-
+			LAYER_UPDATE_REGION = RECT::empty();
 			LAYER_UPDATE = -1;
 		}
 	}

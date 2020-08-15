@@ -34,19 +34,6 @@ namespace fs = std::filesystem;
 
 int main(int, char*[])
 {
-
-	/*typedef stack< Index, vector< Index > > SStack;
-	typedef FastStack< Index >              FStack;
-
-	test< SStack >("std::stack");
-	test< FStack >("FastStack");
-
-	cout << "Done";*/
-
-#if __APPLE__
-    SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengl");
-#endif
-    
 	//fs::create_directories("sandbox/a/b");
 	//std::ofstream("sandbox/file1.txt");
 	//std::ofstream("sandbox/file2.txt");

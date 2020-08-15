@@ -39,11 +39,17 @@ int16_t UIBOX_PANY = 0;
 
 int16_t ELEMENT_IN = -1;
 int16_t ELEMENT_CLICKED_IN = -1;
-bool ELEMENT_TOGGLE_BOOL = 0;
+bool ELEMENT_TOGGLE_BOOL = false;
 
 std::vector<std::unique_ptr<UIBOX_INFO>> UIBOXES;
-
 std::vector<std::pair<std::string, bool>> PATH_FILES;
+
+
+// NOTE(manpat): This is not strictly correct but is the best I can do for now.
+// The correct solution would be to use std::filesystem::path everywhere instead of doing path stuff
+// manually, but that's a much larger job than I have time for atm
+const auto PATH_SEP = static_cast<char>(std::filesystem::path::preferred_separator);
+
 
 void UPDATE_PATH_FILES()
 {
@@ -55,7 +61,7 @@ void UPDATE_PATH_FILES()
 		std::string _name;
 		for (auto _htap = _path.crbegin(); _htap != _path.crend(); ++_htap)
 		{
-			if (*_htap == '\\') break;
+			if (*_htap == PATH_SEP) break;
 			_name.insert(_name.begin(), *_htap);
 		}
 
@@ -273,7 +279,7 @@ void SYSTEM_UIBOX_UPDATE()
 				}
 			} while (uibox->creation_update); // only happens the moment a window is created
 
-			SDL_SetRenderTarget(RENDERER, NULL);
+			SDL_SetRenderTarget(RENDERER, nullptr);
 		}
 
 		if (uibox->shrink)
@@ -285,7 +291,7 @@ void SYSTEM_UIBOX_UPDATE()
 		else
 		{
 			SDL_Rect rect = { uibox->x, uibox->y, uibox->w, uibox->h };
-			SDL_RenderCopy(RENDERER, uibox->texture, NULL, &rect);
+			SDL_RenderCopy(RENDERER, uibox->texture, nullptr, &rect);
 		}
 	}
 
@@ -334,7 +340,6 @@ bool SYSTEM_UIBOX_HANDLE_MOUSE_DOWN(bool is_click, int mouse_x, int mouse_y)
 		// shrink [↓]
 		if (!uibox_click->in_grab && !uibox_click->grab && uibox_click->in_shrink)
 		{
-			UIBOX_CHAR* _charinfo;
 			uibox_click->shrink = !uibox_click->shrink;
 			uibox_click->h = (uibox_click->shrink) ? FONT_CHRH : (uibox_click->chr_h * FONT_CHRH);
 
@@ -393,18 +398,17 @@ void uibox_update_files()
 	if (UIBOX_FILES->scroll_element_list_create)
 	{
 		UIBOX_FILES->element_list.clear();
-		if (CURRENT_PATH.back() != '\\')
+		if (CURRENT_PATH.back() != PATH_SEP)
 		{
-			CURRENT_PATH += '\\';
+			CURRENT_PATH += PATH_SEP;
 			std::filesystem::current_path(CURRENT_PATH);
 		}
 		std::string _currentpath = CURRENT_PATH;
-		const char* _charpath = (_currentpath.c_str());
 		std::string _name;
 		int _tt = 0;
 		for (auto _htap = _currentpath.crbegin(); _htap != _currentpath.crend(); ++_htap)
 		{
-			if (*_htap == '\\' && _tt)
+			if (*_htap == PATH_SEP && _tt)
 			{
 				uibox_add_element_button_files_goto(UIBOX_FILES, (_currentpath.size() - _tt) + 2, 2, 0, 1, _name, &CURRENT_PATH, CURRENT_PATH.substr(0, (_currentpath.size() - _tt) + _name.size()));
 				_name.clear();
@@ -431,7 +435,7 @@ void uibox_update_files()
 
 		if (PATH_FILES[_file].second)
 		{
-			uibox_add_element_button_files_goto(UIBOX_FILES, 2, (4 + _file) - UIBOX_FILES->scroll_y, 0, 1, (_file < (PATH_FILES.size() - 1) ? STR_LINEBL STR_ARWR " " : STR_LINEBL STR_ARWR " ") + PATH_FILES[_file].first + "\\", &CURRENT_PATH, CURRENT_PATH + PATH_FILES[_file].first);
+			uibox_add_element_button_files_goto(UIBOX_FILES, 2, (4 + _file) - UIBOX_FILES->scroll_y, 0, 1, (_file < (PATH_FILES.size() - 1) ? STR_LINEBL STR_ARWR " " : STR_LINEBL STR_ARWR " ") + PATH_FILES[_file].first + PATH_SEP, &CURRENT_PATH, CURRENT_PATH + PATH_FILES[_file].first);
 		}
 		else
 		{

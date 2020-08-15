@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <deque>
+#include <filesystem>
 
 struct SDL_Renderer;
 struct SDL_Texture;

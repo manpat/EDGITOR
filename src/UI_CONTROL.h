@@ -17,8 +17,7 @@
 #include "SUPERSTACK.h"
 
 struct SDL_Texture;
-void UPDATE_PATH_FILES();
-extern std::vector<std::pair<std::string, bool>> PATH_FILES;
+
 constexpr uint16_t UIBOX_UPDATE_TICK = 0; // 0=go as fast as possible, >0=frame delay between character updates
 
 extern int16_t UIBOX_IN;
@@ -32,6 +31,7 @@ extern int16_t ELEMENT_CLICKED_IN;
 extern bool ELEMENT_TOGGLE_BOOL;
 
 extern std::vector<std::unique_ptr<UIBOX_INFO>> UIBOXES;
+extern std::vector<std::pair<std::string, bool>> PATH_FILES;
 
 struct UIBOX_CHAR {
 	bool update = 0;
@@ -64,7 +64,7 @@ struct UIBOX_INFO {
 	bool creation_update = true;
 	bool update = true;
 	bool element_update = true;
-	bool can_scroll = 0;
+	bool can_scroll = false;
 
 	bool can_grab = true;
 	bool in_grab = false;
@@ -95,7 +95,7 @@ struct UIBOX_INFO {
 	uint16_t scroll_x = 0;
 	uint16_t scroll_y = 0;
 	std::vector<uint16_t> scroll_element_list;
-	bool scroll_element_list_create = 1;
+	bool scroll_element_list_create = true;
 	uint16_t scroll_element_list_size = 0;
 
 	void construct()
@@ -139,6 +139,8 @@ struct UIBOX_INFO {
 	}
 };
 
+
+void UPDATE_PATH_FILES();
 
 void SYSTEM_UIBOX_UPDATE();
 
@@ -187,11 +189,11 @@ extern COLOR* UI_PIXELS_HUEBAR;
 
 // UIBOX_ELEMENT_MAIN
 struct UIBOX_ELEMENT_MAIN {
-	bool over = 0;
-	bool highlight = 1;
-	bool prev_sel = 0;
-	bool prev_over = 0;
-	bool const_update = 0;
+	bool over = false;
+	bool highlight = true;
+	bool prev_sel = false;
+	bool prev_over = false;
+	bool const_update = false;
 	
 	std::string text = "";
 	std::string sel_text = "";
@@ -208,30 +210,28 @@ struct UIBOX_ELEMENT_MAIN {
 	virtual void update(UIBOX_INFO* uibox)
 	{
 		for (uint16_t iy = 0; iy < h; iy++)
-		for (uint16_t ix = 0; ix < w; ix++)
 		{
-			uibox_set_char(uibox, x + ix + ((y + iy) * uibox->chr_w),
-				prev_sel ? (ix < sel_text.size() ? (sel_text.c_str())[ix] : 32) : (ix < text.size() ? (text.c_str())[ix] : 32),
-				COL_EMPTY,
-				(prev_over || prev_sel) ? COL_ACCENT : COL_BGUPDATE,
-				1);
+			for (uint16_t ix = 0; ix < w; ix++)
+			{
+				uibox_set_char(uibox, x + ix + ((y + iy) * uibox->chr_w),
+					prev_sel ? (ix < sel_text.size() ? (sel_text.c_str())[ix] : 32) : (ix < text.size() ? (text.c_str())[ix] : 32),
+					COL_EMPTY,
+					(prev_over || prev_sel) ? COL_ACCENT : COL_BGUPDATE,
+					1);
+			}
 		}
 	}
 	virtual bool is_sel()
 	{
-		return 0;
+		return false;
 	}
 };
 
 // TEXTBOX
 struct UIBOX_ELEMENT_TEXTBOX : public UIBOX_ELEMENT_MAIN {
-	void create(UIBOX_INFO* uibox)
+	void create(UIBOX_INFO* uibox) override
 	{
 		uibox_set_string(uibox, text, x, y, COL_WHITE, uibox->element_update);
-	}
-	void update(UIBOX_INFO* uibox)
-	{
-		//
 	}
 };
 
@@ -239,11 +239,11 @@ struct UIBOX_ELEMENT_TEXTBOX : public UIBOX_ELEMENT_MAIN {
 struct UIBOX_ELEMENT_VARBOX : public UIBOX_ELEMENT_MAIN {
 	uint16_t* input_var = nullptr;
 	uint16_t var = 0;
-	void create(UIBOX_INFO* uibox)
+	void create(UIBOX_INFO* uibox) override
 	{
 		uibox_set_string(uibox, text, x, y, COL_WHITE, uibox->element_update);
 	}
-	void update(UIBOX_INFO* uibox)
+	void update(UIBOX_INFO* uibox) override
 	{
 		char buffer[16];
 		sprintf(buffer, "%i", *input_var);
@@ -258,7 +258,7 @@ struct UIBOX_ELEMENT_VARBOX : public UIBOX_ELEMENT_MAIN {
 				1);
 		}
 	}
-	bool is_sel()
+	bool is_sel() override
 	{
 		bool _c = *input_var != var;
 		if (_c) var = *input_var;
@@ -269,11 +269,11 @@ struct UIBOX_ELEMENT_VARBOX : public UIBOX_ELEMENT_MAIN {
 struct UIBOX_ELEMENT_VARBOX_U8 : public UIBOX_ELEMENT_MAIN {
 	uint8_t* input_var = nullptr;
 	uint8_t var = 0;
-	void create(UIBOX_INFO* uibox)
+	void create(UIBOX_INFO* uibox) override
 	{
 		uibox_set_string(uibox, text, x, y, COL_WHITE, uibox->element_update);
 	}
-	void update(UIBOX_INFO* uibox)
+	void update(UIBOX_INFO* uibox) override
 	{
 		char buffer[4];
 		sprintf(buffer, "%i", *input_var);
@@ -288,7 +288,7 @@ struct UIBOX_ELEMENT_VARBOX_U8 : public UIBOX_ELEMENT_MAIN {
 				1);
 		}
 	}
-	bool is_sel()
+	bool is_sel() override
 	{
 		bool _c = *input_var != var;
 		if (_c) var = *input_var;
@@ -299,11 +299,11 @@ struct UIBOX_ELEMENT_VARBOX_U8 : public UIBOX_ELEMENT_MAIN {
 struct UIBOX_ELEMENT_VARBOX_F : public UIBOX_ELEMENT_MAIN {
 	float* input_var = nullptr;
 	float var = 0;
-	void create(UIBOX_INFO* uibox)
+	void create(UIBOX_INFO* uibox) override
 	{
 		uibox_set_string(uibox, text, x, y, COL_WHITE, uibox->element_update);
 	}
-	void update(UIBOX_INFO* uibox)
+	void update(UIBOX_INFO* uibox) override
 	{
 		char buffer[256];
 		sprintf(buffer, "%f", *input_var);
@@ -318,7 +318,7 @@ struct UIBOX_ELEMENT_VARBOX_F : public UIBOX_ELEMENT_MAIN {
 				1);
 		}
 	}
-	bool is_sel()
+	bool is_sel() override
 	{
 		bool _c = *input_var != var;
 		if (_c) var = *input_var;
@@ -331,15 +331,15 @@ struct UIBOX_ELEMENT_BUTTON : public UIBOX_ELEMENT_MAIN {
 	uint16_t* input_var = nullptr;
 	uint16_t button_var = 0;
 	
-	void create(UIBOX_INFO* uibox)
+	void create(UIBOX_INFO* uibox) override
 	{
 		uibox_set_string(uibox, text, x, y, COL_WHITE, uibox->element_update);
 	};
-	void set()
+	void set() override
 	{
 		*input_var = button_var;
 	}
-	bool is_sel()
+	bool is_sel() override
 	{
 		return *input_var == button_var;
 	}
@@ -349,15 +349,15 @@ struct UIBOX_ELEMENT_BUTTON_U8 : public UIBOX_ELEMENT_MAIN {
 	uint8_t* input_var = nullptr;
 	uint8_t button_var = 0;
 
-	void create(UIBOX_INFO* uibox)
+	void create(UIBOX_INFO* uibox) override
 	{
 		uibox_set_string(uibox, text, x, y, COL_WHITE, uibox->element_update);
 	};
-	void set()
+	void set() override
 	{
 		*input_var = button_var;
 	}
-	bool is_sel()
+	bool is_sel() override
 	{
 		return *input_var == button_var;
 	}
@@ -367,15 +367,15 @@ struct UIBOX_ELEMENT_BUTTON_STRING : public UIBOX_ELEMENT_MAIN {
 	std::string* input_var = nullptr;
 	std::string button_var = "";
 
-	void create(UIBOX_INFO* uibox)
+	void create(UIBOX_INFO* uibox) override
 	{
 		uibox_set_string(uibox, text, x, y, COL_WHITE, uibox->element_update);
 	};
-	void set()
+	void set() override
 	{
 		*input_var = button_var;
 	}
-	bool is_sel()
+	bool is_sel() override
 	{
 		return *input_var == button_var;
 	}
@@ -385,11 +385,11 @@ struct UIBOX_ELEMENT_BUTTON_FILES_GOTO : public UIBOX_ELEMENT_MAIN {
 	std::string* input_var = nullptr;
 	std::string button_var = "";
 
-	void create(UIBOX_INFO* uibox)
+	void create(UIBOX_INFO* uibox) override
 	{
 		uibox_set_string(uibox, text, x, y, COL_WHITE, uibox->element_update);
 	};
-	void set()
+	void set() override
 	{
 		MOUSEBUTTON_LEFT = 0;
 		MOUSEBUTTON_PRESSED_LEFT = 0;
@@ -428,7 +428,7 @@ struct UIBOX_ELEMENT_BUTTON_FILES_GOTO : public UIBOX_ELEMENT_MAIN {
 		}
 		UPDATE_PATH_FILES();
 	}
-	bool is_sel()
+	bool is_sel() override
 	{
 		return *input_var == button_var;
 	}
@@ -438,11 +438,12 @@ struct UIBOX_ELEMENT_BUTTON_FILES_LOAD : public UIBOX_ELEMENT_MAIN {
 	std::string file;
 	std::string path;
 
-	void create(UIBOX_INFO* uibox)
+	void create(UIBOX_INFO* uibox) override
 	{
 		uibox_set_string(uibox, text, x, y, COL_WHITE, uibox->element_update);
-	};
-	void set()
+	}
+
+	void set() override
 	{
 		MOUSEBUTTON_LEFT = 0;
 		MOUSEBUTTON_PRESSED_LEFT = 0;
@@ -492,16 +493,16 @@ struct UIBOX_ELEMENT_BUTTON_FILES_LOAD : public UIBOX_ELEMENT_MAIN {
 // TOGGLE
 struct UIBOX_ELEMENT_TOGGLE : public UIBOX_ELEMENT_MAIN {
 	bool* input_var = nullptr;
-	void create(UIBOX_INFO* uibox)
+	void create(UIBOX_INFO* uibox) override
 	{
 		uibox_set_string(uibox, text, x, y, COL_WHITE, uibox->element_update);
 	};
-	void set()
+	void set() override
 	{
 		if (MOUSEBUTTON_LEFT && MOUSEBUTTON_PRESSED_LEFT) ELEMENT_TOGGLE_BOOL = !(*input_var);
 		*input_var = ELEMENT_TOGGLE_BOOL;// !(*input_var);
 	}
-	bool is_sel()
+	bool is_sel() override
 	{
 		return *input_var == true;
 	}
@@ -509,15 +510,15 @@ struct UIBOX_ELEMENT_TOGGLE : public UIBOX_ELEMENT_MAIN {
 
 // SLIDER
 struct UIBOX_ELEMENT_SLIDER : public UIBOX_ELEMENT_MAIN {
-	void create(UIBOX_INFO* uibox) {};
+	void create(UIBOX_INFO*) override {}
 };
 
 // TEXTINPUT
 struct UIBOX_ELEMENT_TEXTINPUT : public UIBOX_ELEMENT_MAIN {
-	void create(UIBOX_INFO* uibox) {};
+	void create(UIBOX_INFO*) override {}
 };
 
 // NUM_INPUT
 struct UIBOX_ELEMENT_NUMINPUT : public UIBOX_ELEMENT_MAIN {
-	void create(UIBOX_INFO* uibox) {};
+	void create(UIBOX_INFO*) override {}
 };
