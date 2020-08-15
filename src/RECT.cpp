@@ -25,7 +25,7 @@
 	return {0, 0, w, h};
 }
 
-/*static*/ RECT from_xywh(int x, int y, int w, int h)
+/*static*/ RECT RECT::from_xywh(int x, int y, int w, int h)
 {
 	return {x, y, x+w, y+h};
 }
